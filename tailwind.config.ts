@@ -21,7 +21,7 @@ const config: Config = {
         laton: "var(--laton)",
       },
       fontFamily: {
-        display: ["Inter", "system-ui", "sans-serif"],
+        display: ["'Space Grotesk'", "Inter", "sans-serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
       },
     },

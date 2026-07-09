@@ -183,7 +183,7 @@ export default function PortafoliosPage() {
                   </button>
                   <button
                     onClick={() => eliminar(p)}
-                    className="rounded-lg px-2 py-2 text-xs text-neutro transition hover:text-red-600"
+                    className="rounded-lg px-2 py-2 text-xs text-neutro transition hover:text-red-400"
                   >
                     ✕
                   </button>

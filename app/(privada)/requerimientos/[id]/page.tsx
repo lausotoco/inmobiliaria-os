@@ -397,7 +397,7 @@ function SeccionMatches({
                     <button
                       onClick={() => onDescartar(m.id)}
                       disabled={accionando === m.id}
-                      className="rounded-lg border border-linea px-4 py-2 text-xs text-neutro transition hover:bg-fondo hover:text-red-600"
+                      className="rounded-lg border border-linea px-4 py-2 text-xs text-neutro transition hover:bg-fondo hover:text-red-400"
                     >
                       ✕ Descartar
                     </button>

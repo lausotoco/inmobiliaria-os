@@ -27,7 +27,7 @@ export default function Carrusel({
 
   if (imagenes.length === 0) {
     return (
-      <div className="flex aspect-[4/3] w-full items-center justify-center bg-neutral-100 text-5xl text-neutral-300">
+      <div className="flex aspect-[4/3] w-full items-center justify-center bg-white/[0.03] text-5xl text-white/10">
         ⌂
       </div>
     );

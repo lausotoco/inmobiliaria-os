@@ -120,7 +120,7 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
                   <button
                     onClick={() => eliminar(r.id)}
                     disabled={eliminando === r.id}
-                    className="rounded-lg px-2.5 py-1.5 text-xs text-red-500 transition hover:bg-red-50"
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-red-500 transition hover:bg-red-500/100/10"
                   >
                     {eliminando === r.id ? "…" : "Eliminar"}
                   </button>

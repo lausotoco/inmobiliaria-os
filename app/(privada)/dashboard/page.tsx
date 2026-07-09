@@ -91,8 +91,8 @@ export default function DashboardPage() {
     return (
       <div className="mt-32 flex flex-col items-center gap-4">
         <div className="relative size-10">
-          <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
-          <div className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
+          <div className="absolute inset-0 animate-ping rounded-full bg-cyan-500/20" />
+          <div className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-t-cyan-400" />
         </div>
         <p className="text-sm text-neutro">Cargando tu centro de control…</p>
       </div>
@@ -100,19 +100,19 @@ export default function DashboardPage() {
   }
 
   const kpis = [
-    { icono: "◉", valor: d.clientesActivos, etiqueta: "Clientes activos", href: "/clientes", detalle: `${d.clientesTotal} en total`, color: "from-emerald-500 to-teal-600" },
-    { icono: "◎", valor: d.reqsActivos, etiqueta: "Requerimientos", href: "/requerimientos", detalle: "activos buscando", color: "from-sky-500 to-blue-600" },
-    { icono: "⬢", valor: d.propsDisponibles, etiqueta: "Propiedades", href: "/propiedades", detalle: "disponibles", color: "from-violet-500 to-purple-600" },
-    { icono: "▣", valor: d.portEnviados, etiqueta: "Portafolios", href: "/portafolios", detalle: `${d.portVistos} vistos`, color: "from-amber-500 to-orange-600" },
+    { icono: "◉", valor: d.clientesActivos, etiqueta: "Clientes activos", href: "/clientes", detalle: `${d.clientesTotal} en total`, color: "from-cyan-400 to-blue-500" },
+    { icono: "◎", valor: d.reqsActivos, etiqueta: "Requerimientos", href: "/requerimientos", detalle: "activos buscando", color: "from-blue-500 to-indigo-500" },
+    { icono: "⬢", valor: d.propsDisponibles, etiqueta: "Propiedades", href: "/propiedades", detalle: "disponibles", color: "from-violet-500 to-purple-500" },
+    { icono: "▣", valor: d.portEnviados, etiqueta: "Portafolios", href: "/portafolios", detalle: `${d.portVistos} vistos`, color: "from-emerald-400 to-teal-500" },
   ];
 
   const embudo = [
-    { etapa: "Clientes activos", valor: d.clientesActivos, color: "from-emerald-500 to-emerald-400" },
-    { etapa: "Requerimientos", valor: d.reqsActivos, color: "from-teal-500 to-teal-400" },
+    { etapa: "Clientes activos", valor: d.clientesActivos, color: "from-cyan-400 to-cyan-300" },
+    { etapa: "Requerimientos", valor: d.reqsActivos, color: "from-sky-500 to-sky-400" },
     { etapa: "Matches aceptados", valor: d.matchesAceptados, color: "from-sky-500 to-sky-400" },
-    { etapa: "Portafolios enviados", valor: d.portEnviados, color: "from-blue-500 to-blue-400" },
+    { etapa: "Portafolios enviados", valor: d.portEnviados, color: "from-indigo-500 to-indigo-400" },
     { etapa: "Vistos por cliente", valor: d.portVistos, color: "from-violet-500 to-violet-400" },
-    { etapa: "Visitas programadas", valor: d.visitasProximas, color: "from-purple-500 to-purple-400" },
+    { etapa: "Visitas programadas", valor: d.visitasProximas, color: "from-purple-500 to-fuchsia-400" },
   ];
   const maxEmbudo = Math.max(1, ...embudo.map((e) => e.valor));
 
@@ -140,12 +140,12 @@ export default function DashboardPage() {
       {d.matchesSugeridos > 0 && (
         <Link
           href="/requerimientos"
-          className="anim-entrada mt-5 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-sky-500/5 to-transparent border border-emerald-500/20 px-5 py-3.5 transition hover:border-emerald-500/40"
+          className="anim-entrada mt-5 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-violet-500/5 to-transparent border border-cyan-500/20 px-5 py-3.5 transition hover:border-cyan-500/40"
           style={{ animationDelay: "80ms" }}
         >
-          <span className="flex size-8 items-center justify-center rounded-xl grad-acento text-xs font-bold text-white shadow-lg shadow-emerald-500/20">✦</span>
+          <span className="flex size-8 items-center justify-center rounded-xl grad-acento text-xs font-bold text-white shadow-lg shadow-cyan-500/30">✦</span>
           <span className="text-sm">
-            <span className="font-semibold text-emerald-700">{d.matchesSugeridos} match{d.matchesSugeridos !== 1 ? "es" : ""}</span>
+            <span className="font-semibold text-cyan-300">{d.matchesSugeridos} match{d.matchesSugeridos !== 1 ? "es" : ""}</span>
             <span className="text-neutro"> por revisar — la IA encontró propiedades compatibles</span>
           </span>
         </Link>

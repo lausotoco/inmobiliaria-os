@@ -227,7 +227,7 @@ export default function FormCliente({ cliente }: Props) {
       </label>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+        <p className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400">
           {error}
         </p>
       )}
