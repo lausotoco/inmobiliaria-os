@@ -27,7 +27,7 @@ export default function Carrusel({
 
   if (imagenes.length === 0) {
     return (
-      <div className="flex aspect-[4/3] w-full items-center justify-center bg-white/[0.03] text-5xl text-white/10">
+      <div className="flex aspect-[4/3] w-full items-center justify-center bg-neutral-100 text-5xl text-neutral-300">
         ⌂
       </div>
     );
@@ -58,14 +58,14 @@ export default function Carrusel({
           <button
             onClick={() => irA(Math.max(0, activa - 1))}
             aria-label="Foto anterior"
-            className="absolute left-3 top-1/2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60 sm:flex"
+            className="absolute left-3 top-1/2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-neutral-800 backdrop-blur transition hover:bg-white sm:flex"
           >
             ‹
           </button>
           <button
             onClick={() => irA(Math.min(imagenes.length - 1, activa + 1))}
             aria-label="Foto siguiente"
-            className="absolute right-3 top-1/2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:bg-black/60 sm:flex"
+            className="absolute right-3 top-1/2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-neutral-800 backdrop-blur transition hover:bg-white sm:flex"
           >
             ›
           </button>
@@ -85,7 +85,7 @@ export default function Carrusel({
           </div>
 
           {/* Contador */}
-          <span className="absolute right-3 top-3 rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+          <span className="absolute right-3 top-3 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-medium text-neutral-700 backdrop-blur">
             {activa + 1} / {imagenes.length}
           </span>
         </>

@@ -3,20 +3,17 @@
 @tailwind utilities;
 
 :root {
-  /* ── Dark luxury futurista ── */
-  --fondo: #06080F;
-  --superficie: rgba(14, 20, 40, 0.6);
-  --tinta: #F0F4FF;
-  --neutro: #6B7B9E;
-  --linea: rgba(255, 255, 255, 0.08);
+  /* ── Minimalismo editorial · Quiet Luxury ── */
+  --fondo: #FAFAF7;        /* blanco cálido */
+  --superficie: #FFFFFF;
+  --tinta: #141414;        /* negro profundo */
+  --neutro: #8C8C86;       /* gris suave */
+  --linea: #E6E6E1;        /* línea divisoria finísima */
 
-  --bosque: #00D4FF;                      /* acento primario (cyan eléctrico) */
-  --bosque-oscuro: #06080F;
-  --bosque-suave: rgba(0, 212, 255, 0.15);
-  --laton: #8B5CF6;                       /* acento secundario (violeta) */
-
-  --acento-grad-1: #00D4FF;
-  --acento-grad-2: #8B5CF6;
+  --bosque: #141414;       /* acción primaria = negro */
+  --bosque-oscuro: #000000;
+  --bosque-suave: #F0F0EB; /* gris cálido de apoyo */
+  --laton: #8C8C86;        /* etiquetas de sección */
 }
 
 html {
@@ -25,47 +22,24 @@ html {
 
 body {
   background-color: var(--fondo);
-  /* Orbes ambientales + grilla tech */
-  background-image:
-    radial-gradient(600px circle at 85% 10%, rgba(0, 212, 255, 0.05), transparent 70%),
-    radial-gradient(500px circle at 10% 90%, rgba(139, 92, 246, 0.05), transparent 70%),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 80px 80px, 80px 80px;
-  background-attachment: fixed;
   color: var(--tinta);
   -webkit-font-smoothing: antialiased;
   letter-spacing: -0.011em;
 }
 
 h1, h2, h3, .font-display {
-  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
+  letter-spacing: -0.03em;
 }
 
 ::selection {
-  background: rgba(0, 212, 255, 0.15);
-  color: #F0F4FF;
+  background: #EDEDE8;
+  color: #141414;
 }
 
-/* ── Animaciones ── */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
+/* ── Animaciones (sutiles, refinadas) ── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
+  from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -79,7 +53,7 @@ h1, h2, h3, .font-display {
 }
 
 .anim-entrada {
-  animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .anim-fade {
@@ -90,88 +64,65 @@ h1, h2, h3, .font-display {
   animation: crecer 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.anim-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* ── Glassmorphism ── */
+/* ── Tarjetas: blancas, hairline, sin sombras pesadas ── */
 .glass, .tarjeta-viva {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #FFFFFF;
+  border: 1px solid var(--linea);
 }
 
 .tarjeta-viva {
-  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
 }
 .tarjeta-viva:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(0, 212, 255, 0.08);
+  transform: translateY(-2px);
+  border-color: #CFCFC8;
+  box-shadow: 0 12px 32px -20px rgba(20, 20, 20, 0.18);
 }
 
-/* Superficies (cards genéricas del sistema) */
-.bg-superficie {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-/* ── Gradientes de acento ── */
+/* ── Acentos: monocromo ── */
 .grad-acento {
-  background: linear-gradient(135deg, #00D4FF, #8B5CF6);
+  background: #141414;
 }
 
 .grad-acento-texto {
-  background: linear-gradient(135deg, #00D4FF, #8B5CF6);
-  background-size: 200% 200%;
-  animation: gradientShift 4s ease infinite;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #141414;
 }
 
-/* ── Botón primario global ──
-   Todos los botones del sistema usan bg-bosque; aquí se convierten
-   al estilo del design system: pill cyan con glow, texto oscuro. */
+/* ── Botón primario global: pill negro, elegante ── */
 .bg-bosque {
-  background: linear-gradient(135deg, #00D4FF, #0EA5E9) !important;
-  color: #020617 !important;
+  background: #141414 !important;
+  color: #FFFFFF !important;
+  border-radius: 999px !important;
   font-weight: 600;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15), 0 4px 16px rgba(0, 0, 0, 0.3);
-  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  letter-spacing: 0.01em;
   border: none;
+  box-shadow: none;
+  transition: opacity 0.3s ease, transform 0.3s ease !important;
 }
 .bg-bosque:hover {
-  background: linear-gradient(135deg, #00D4FF, #8B5CF6) !important;
-  box-shadow:
-    0 0 30px rgba(0, 212, 255, 0.4),
-    0 0 60px rgba(0, 212, 255, 0.15),
-    0 8px 32px rgba(0, 0, 0, 0.4);
-  transform: translateY(-2px);
+  background: #141414 !important;
+  opacity: 0.82;
+  transform: translateY(-1px);
+  box-shadow: none;
 }
 
-/* Chips seleccionables activos (amenidades, filtros) usan border-bosque */
 .border-bosque {
-  border-color: #00D4FF !important;
+  border-color: #141414 !important;
 }
 
-/* ── Scrollbar ── */
+/* ── Scrollbar discreto ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #06080F; }
-::-webkit-scrollbar-thumb { background: #3A4560; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #6B7B9E; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D8D8D2; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #B9B9B3; }
 
 /* ── Foco ── */
 *:focus-visible {
-  outline: 2px solid rgba(0, 212, 255, 0.6);
+  outline: 1.5px solid #141414;
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
-/* Inputs sobre fondo oscuro */
 input, select, textarea {
-  color-scheme: dark;
+  color-scheme: light;
 }

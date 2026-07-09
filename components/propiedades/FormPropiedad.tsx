@@ -220,7 +220,7 @@ export default function FormPropiedad({ propiedad, datosIniciales }: Props) {
         <textarea name="descripcion" rows={4} defaultValue={base?.descripcion ?? ""} className={`mt-1.5 ${campo}`} placeholder="Descripción del inmueble…" />
       </label>
 
-      {error && <p className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400">{error}</p>}
+      {error && <p className="rounded-lg bg-[#F7EFEC] px-4 py-2 text-sm text-[#8E3B31]">{error}</p>}
 
       <div className="flex gap-3">
         <button type="submit" disabled={guardando} className="rounded-lg bg-bosque px-5 py-2.5 text-sm font-medium text-white transition hover:bg-bosque-oscuro disabled:opacity-60">

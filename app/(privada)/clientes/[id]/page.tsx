@@ -113,7 +113,7 @@ export default function ClienteDetallePage() {
             href={`https://wa.me/${cliente.whatsapp.replace(/\D/g, "")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 rounded-lg bg-emerald-600 px-5 py-2.5 text-center text-sm font-medium text-white transition hover:bg-emerald-700"
+            className="shrink-0 rounded-lg bg-[#141414] rounded-full px-5 py-2.5 text-center text-sm font-medium text-white transition hover:opacity-80"
           >
             WhatsApp →
           </a>
@@ -189,16 +189,16 @@ export default function ClienteDetallePage() {
         {tab === "editar" && (
           <div>
             <FormCliente cliente={cliente} />
-            <div className="mt-12 rounded-xl border border-red-500/25 bg-red-500/10 p-6">
-              <p className="text-sm font-medium text-red-400">Zona peligrosa</p>
-              <p className="mt-1 text-sm text-red-400">
+            <div className="mt-12 rounded-xl border border-[#E8D8D3] bg-[#F7EFEC] p-6">
+              <p className="text-sm font-medium text-[#8E3B31]">Zona peligrosa</p>
+              <p className="mt-1 text-sm text-[#8E3B31]">
                 Eliminar este cliente borra también todos sus requerimientos,
                 notas y portafolios asociados.
               </p>
               <button
                 onClick={eliminarCliente}
                 disabled={eliminando}
-                className="mt-4 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600 disabled:opacity-60"
+                className="mt-4 rounded-lg bg-[#8E3B31] px-4 py-2 text-sm font-medium text-white transition hover:opacity-85 disabled:opacity-60"
               >
                 {eliminando ? "Eliminando…" : "Eliminar cliente"}
               </button>

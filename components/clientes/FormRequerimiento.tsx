@@ -361,7 +361,7 @@ export default function FormRequerimiento({
       </label>
 
       {error && (
-        <p className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400">
+        <p className="rounded-lg bg-[#F7EFEC] px-4 py-2 text-sm text-[#8E3B31]">
           {error}
         </p>
       )}

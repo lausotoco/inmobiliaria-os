@@ -53,14 +53,14 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
   }
 
   const tabActiva =
-    "rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-[#020617] grad-acento shadow-[0_0_12px_rgba(0,212,255,0.3)]";
+    "rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-white grad-acento";
   const tabInactiva =
     "rounded-lg px-3.5 py-1.5 text-[12px] font-medium text-neutro transition hover:text-tinta";
 
   return (
-    <div className="rounded-2xl border border-[rgba(0,212,255,0.2)] bg-[rgba(0,212,255,0.05)] p-5 backdrop-blur">
+    <div className="rounded-2xl border border-[#E6E6E1] bg-[#F7F7F2] p-5 backdrop-blur">
       <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl grad-acento text-sm text-white shadow-[0_0_16px_rgba(0,212,255,0.3)]">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl grad-acento text-sm text-white">
           ✦
         </span>
         <div>
@@ -76,7 +76,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
       </div>
 
       {/* Tabs audio / texto */}
-      <div className="mt-4 inline-flex gap-1 rounded-xl border border-linea bg-white/[0.03] p-1">
+      <div className="mt-4 inline-flex gap-1 rounded-xl border border-linea bg-[#F5F5F0] p-1">
         <button
           type="button"
           onClick={() => { setModo("audio"); setError(null); }}
@@ -110,7 +110,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="rounded-xl border border-linea bg-white/[0.04] px-4 py-2.5 text-[13px] text-tinta transition hover:border-[#00D4FF]/40"
+              className="rounded-xl border border-linea bg-[#F5F5F0] px-4 py-2.5 text-[13px] text-tinta transition hover:border-[#141414]/30"
             >
               {archivo ? `🎵 ${archivo.name.slice(0, 32)}` : "Seleccionar audio…"}
             </button>
@@ -134,7 +134,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
             onChange={(e) => { setTextoPegado(e.target.value); setError(null); }}
             rows={5}
             placeholder={'Pega aquí el mensaje del cliente. Ej:\n"Hola Laura, estamos buscando un apto en Chía o Cajicá, de 3 habitaciones, máximo 550 millones. Nos urge porque entregamos el arriendo en 2 meses. Ojalá con terraza y que acepten mascotas…"'}
-            className="mt-3 w-full rounded-xl border border-linea bg-white/[0.03] px-4 py-3 text-[13px] text-tinta outline-none transition placeholder:text-[#3A4560] focus:border-[#00D4FF]/50"
+            className="mt-3 w-full rounded-xl border border-linea bg-[#F5F5F0] px-4 py-3 text-[13px] text-tinta outline-none transition placeholder:text-[#B9B9B3] focus:border-[#141414]/40"
           />
           <button
             type="button"
@@ -148,17 +148,17 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
       )}
 
       {error && (
-        <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-[13px] text-red-400">
+        <p className="mt-3 rounded-xl border border-[#E8D8D3] bg-[#F7EFEC] px-4 py-2.5 text-[13px] text-[#8E3B31]">
           {error}
         </p>
       )}
 
       {transcripcion && !error && modo === "audio" && (
         <details className="mt-3">
-          <summary className="cursor-pointer text-[12px] text-[#00D4FF]">
+          <summary className="cursor-pointer text-[12px] text-[#141414]">
             Ver transcripción del audio
           </summary>
-          <p className="mt-2 rounded-xl bg-white/[0.03] px-4 py-3 text-[12px] leading-relaxed text-neutro">
+          <p className="mt-2 rounded-xl bg-[#F5F5F0] px-4 py-3 text-[12px] leading-relaxed text-neutro">
             "{transcripcion}"
           </p>
         </details>

@@ -270,7 +270,7 @@ export default function NuevoPortafolioPage() {
                       onClick={() => toggle(p.id)}
                       className={`overflow-hidden rounded-xl border-2 text-left transition ${
                         activa
-                          ? "border-bosque bg-[rgba(0,212,255,0.06)]"
+                          ? "border-bosque bg-[#F7F7F2]"
                           : "border-linea bg-superficie hover:border-bosque/30"
                       }`}
                     >

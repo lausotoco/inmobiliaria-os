@@ -9,11 +9,19 @@ type Props = { params: { token: string } };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// ── Estética: minimalismo editorial · quiet luxury · diseño suizo ──
+// Paleta reducida: blanco cálido, negro profundo, grises suaves.
+const C = {
+  fondo: "#FAFAF7",
+  negro: "#141414",
+  gris: "#8C8C86",
+  grisClaro: "#B9B9B3",
+  linea: "#E6E6E1",
+};
+
 export default async function PortafolioPublicoPage({ params }: Props) {
   const supabase = createClient();
 
-  // La función portafolio_publico (security definer) devuelve todo el
-  // portafolio en una sola llamada, sin exponer nada más de la base.
   const { data: portafolio, error } = await supabase.rpc(
     "portafolio_publico",
     { p_token: params.token }
@@ -21,18 +29,22 @@ export default async function PortafolioPublicoPage({ params }: Props) {
 
   if (error || !portafolio) {
     return (
-      <Envoltura>
-        <div className="px-6 text-center">
-          <p className="font-display text-2xl font-semibold text-[#F0F4FF]">
+      <main
+        className="flex min-h-screen items-center justify-center px-6"
+        style={{ backgroundColor: C.fondo, fontFamily: "Inter, sans-serif" }}
+      >
+        <div className="text-center">
+          <p
+            className="text-2xl font-semibold tracking-tight"
+            style={{ color: C.negro }}
+          >
             Este portafolio no está disponible
           </p>
-          <p className="mt-2 text-sm text-[#6B7B9E]">
-            {error
-              ? "Falta ejecutar la actualización de la base de datos (supabase/actualizacion-portafolio-publico.sql)."
-              : "El enlace puede ser incorrecto o haber sido eliminado."}
+          <p className="mt-3 text-sm" style={{ color: C.gris }}>
+            El enlace puede ser incorrecto o haber sido retirado.
           </p>
         </div>
-      </Envoltura>
+      </main>
     );
   }
 
@@ -46,173 +58,239 @@ export default async function PortafolioPublicoPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[#06080F]">
-      {/* ── Portada ── */}
-      <header className="px-6 pb-14 pt-16 text-center sm:pt-24">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#00D4FF]">
-          Portafolio exclusivo
-        </p>
-        <h1 className="mx-auto mt-4 max-w-xl font-display text-3xl font-bold leading-[1.05] tracking-[-0.03em] text-[#F0F4FF] sm:text-5xl">
-          {portafolio.titulo || `Selección para ${primerNombre}`}
-        </h1>
-        {portafolio.mensaje_personal && (
-          <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-[#6B7B9E]">
-            {portafolio.mensaje_personal}
+    <main
+      className="min-h-screen antialiased"
+      style={{
+        backgroundColor: C.fondo,
+        color: C.negro,
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
+      <div className="mx-auto max-w-2xl px-6 sm:px-8">
+        {/* ── Cabecera editorial ── */}
+        <header className="pb-16 pt-20 sm:pt-28">
+          <p
+            className="text-[11px] font-semibold uppercase"
+            style={{ color: C.gris, letterSpacing: "0.28em" }}
+          >
+            Portafolio privado
           </p>
-        )}
-        <p className="mt-7 text-xs text-[#3A4560]">
-          {propiedades.length} propiedad{propiedades.length !== 1 ? "es" : ""}{" "}
-          seleccionada{propiedades.length !== 1 ? "s" : ""} · {APP.marca}
-        </p>
-      </header>
 
-      {/* ── Propiedades ── */}
-      <div className="mx-auto max-w-lg space-y-8 px-4 pb-16 sm:max-w-xl">
-        {propiedades.map((p: any, idx: number) => {
-          const imgs: string[] = (p.imagenes ?? []).map((r: string) =>
-            urlImagen(r)
-          );
-          const amenidades: string[] = p.amenidades ?? [];
+          <h1
+            className="mt-6 text-[40px] font-bold leading-[1.04] sm:text-[56px]"
+            style={{ letterSpacing: "-0.035em" }}
+          >
+            {portafolio.titulo || `Selección para ${primerNombre}`}
+          </h1>
 
-          const mapsQuery = encodeURIComponent(
-            [p.direccion, p.barrio, p.ciudad, "Colombia"]
-              .filter(Boolean)
-              .join(", ")
-          );
-
-          const waTexto = encodeURIComponent(
-            `Hola, me interesa la propiedad "${p.titulo ?? `#${idx + 1}`}" del portafolio que me enviaste 🙌`
-          );
-
-          return (
-            <article
-              key={p.id}
-              className="overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.04] shadow-[0_40px_80px_rgba(0,0,0,0.5),0_0_60px_rgba(0,212,255,0.06)] backdrop-blur-[20px]"
+          {portafolio.mensaje_personal && (
+            <p
+              className="mt-8 max-w-md text-[15px] font-light leading-[1.8]"
+              style={{ color: C.gris }}
             >
-              <Carrusel imagenes={imgs} alt={p.titulo ?? "Propiedad"} />
+              {portafolio.mensaje_personal}
+            </p>
+          )}
 
-              <div className="p-6">
-                <p className="grad-acento-texto font-display text-3xl font-bold tracking-tight">
-                  {formatoCOP(p.precio)}
-                </p>
-                <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-[#F0F4FF]">
-                  {p.titulo || "Propiedad"}
-                </h2>
-                {(p.barrio || p.ciudad) && (
-                  <p className="mt-0.5 text-sm text-[#6B7B9E]">
-                    {[p.barrio, p.ciudad].filter(Boolean).join(", ")}
-                  </p>
-                )}
+          <div
+            className="mt-12 flex items-baseline justify-between border-t pt-5"
+            style={{ borderColor: C.linea }}
+          >
+            <p
+              className="text-[11px] font-medium uppercase"
+              style={{ color: C.grisClaro, letterSpacing: "0.14em" }}
+            >
+              {propiedades.length} propiedad{propiedades.length !== 1 ? "es" : ""}
+            </p>
+            <p
+              className="text-[11px] font-medium uppercase"
+              style={{ color: C.grisClaro, letterSpacing: "0.14em" }}
+            >
+              {APP.marca}
+            </p>
+          </div>
+        </header>
 
-                {/* Datos clave */}
-                <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-                  {[
-                    { v: p.area ? `${p.area}` : null, u: "m²" },
-                    { v: p.habitaciones, u: "hab" },
-                    { v: p.banos, u: "baños" },
-                    { v: p.parqueaderos, u: "parq" },
-                    { v: p.administracion ? formatoCOP(p.administracion) : null, u: "admón" },
-                    { v: p.estrato ? `E${p.estrato}` : null, u: "estrato" },
-                  ]
-                    .filter((d) => d.v !== null && d.v !== undefined)
-                    .map((d) => (
-                      <div key={d.u} className="rounded-xl border border-white/[0.06] bg-white/[0.04] px-2 py-3">
-                        <p className="text-sm font-semibold text-[#F0F4FF]">{d.v}</p>
-                        <p className="text-[11px] text-[#3A4560]">{d.u}</p>
-                      </div>
-                    ))}
+        {/* ── Propiedades ── */}
+        <div className="space-y-24 pb-24">
+          {propiedades.map((p: any, idx: number) => {
+            const imgs: string[] = (p.imagenes ?? []).map((r: string) =>
+              urlImagen(r)
+            );
+            const amenidades: string[] = p.amenidades ?? [];
+
+            const mapsQuery = encodeURIComponent(
+              [p.direccion, p.barrio, p.ciudad, "Colombia"]
+                .filter(Boolean)
+                .join(", ")
+            );
+
+            const waTexto = encodeURIComponent(
+              `Hola, me interesa la propiedad "${p.titulo ?? `nº ${idx + 1}`}" del portafolio que me compartiste.`
+            );
+
+            const datos = [
+              { v: p.area ? `${p.area} m²` : null, k: "Área" },
+              { v: p.habitaciones, k: "Habitaciones" },
+              { v: p.banos, k: "Baños" },
+              { v: p.parqueaderos, k: "Parqueaderos" },
+              {
+                v: p.administracion ? formatoCOP(p.administracion) : null,
+                k: "Administración",
+              },
+              { v: p.estrato ? `Estrato ${p.estrato}` : null, k: "Estrato" },
+            ].filter((d) => d.v !== null && d.v !== undefined);
+
+            return (
+              <article key={p.id}>
+                {/* Número editorial */}
+                <div className="mb-5 flex items-baseline justify-between">
+                  <span
+                    className="text-[11px] font-semibold"
+                    style={{ color: C.grisClaro, letterSpacing: "0.14em" }}
+                  >
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <span
+                    className="text-[11px] font-medium uppercase"
+                    style={{ color: C.grisClaro, letterSpacing: "0.14em" }}
+                  >
+                    {[p.barrio, p.ciudad].filter(Boolean).join(" · ")}
+                  </span>
                 </div>
 
-                {p.nota && (
-                  <p className="mt-5 rounded-xl border border-[rgba(0,212,255,0.2)] bg-[rgba(0,212,255,0.08)] px-4 py-3 text-sm italic text-[#00D4FF]">
-                    ✦ {p.nota}
-                  </p>
-                )}
+                {/* Imagen */}
+                <div className="overflow-hidden rounded-[6px]">
+                  <Carrusel imagenes={imgs} alt={p.titulo ?? "Propiedad"} />
+                </div>
 
-                {p.descripcion && (
-                  <p className="mt-5 text-sm leading-relaxed text-[#6B7B9E]">
-                    {p.descripcion}
+                {/* Precio + título */}
+                <div className="mt-8">
+                  <p
+                    className="text-[32px] font-bold leading-none sm:text-[38px]"
+                    style={{ letterSpacing: "-0.03em" }}
+                  >
+                    {formatoCOP(p.precio)}
                   </p>
-                )}
+                  <h2
+                    className="mt-3 text-[17px] font-medium"
+                    style={{ letterSpacing: "-0.01em" }}
+                  >
+                    {p.titulo || "Propiedad"}
+                  </h2>
+                </div>
 
-                {amenidades.length > 0 && (
-                  <div className="mt-5 flex flex-wrap gap-1.5">
-                    {amenidades.map((a) => (
-                      <span
-                        key={a}
-                        className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-[#6B7B9E]"
+                {/* Datos — tabla suiza */}
+                {datos.length > 0 && (
+                  <div
+                    className="mt-8 grid grid-cols-2 gap-x-8 sm:grid-cols-3"
+                  >
+                    {datos.map((d) => (
+                      <div
+                        key={d.k}
+                        className="border-t py-3.5"
+                        style={{ borderColor: C.linea }}
                       >
-                        {a}
-                      </span>
+                        <p
+                          className="text-[10px] font-medium uppercase"
+                          style={{ color: C.grisClaro, letterSpacing: "0.12em" }}
+                        >
+                          {d.k}
+                        </p>
+                        <p className="mt-1 text-[14px] font-semibold">{d.v}</p>
+                      </div>
                     ))}
                   </div>
                 )}
 
-                <div className="mt-6 grid grid-cols-2 gap-2.5">
+                {/* Nota personal */}
+                {p.nota && (
+                  <p
+                    className="mt-8 border-l pl-5 text-[14px] font-light italic leading-[1.8]"
+                    style={{ borderColor: C.negro, color: C.gris }}
+                  >
+                    {p.nota}
+                  </p>
+                )}
+
+                {/* Descripción */}
+                {p.descripcion && (
+                  <p
+                    className="mt-8 max-w-xl text-[14px] font-light leading-[1.85]"
+                    style={{ color: C.gris }}
+                  >
+                    {p.descripcion}
+                  </p>
+                )}
+
+                {/* Amenidades — línea editorial */}
+                {amenidades.length > 0 && (
+                  <p
+                    className="mt-6 text-[12px] font-light leading-[2]"
+                    style={{ color: C.grisClaro, letterSpacing: "0.02em" }}
+                  >
+                    {amenidades.join("  ·  ")}
+                  </p>
+                )}
+
+                {/* Acciones */}
+                <div className="mt-10 flex flex-col gap-3 sm:flex-row">
                   {waDigits && (
                     <a
                       href={`https://wa.me/${waDigits}?text=${waTexto}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="col-span-2 rounded-full py-3.5 text-center font-display text-sm font-semibold text-[#020617] shadow-[0_0_15px_rgba(0,212,255,0.15)] transition-all duration-[400ms] hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(0,212,255,0.4)]" style={{ background: "linear-gradient(135deg, #00D4FF, #0EA5E9)" }}
+                      className="rounded-full px-8 py-3.5 text-center text-[13px] font-semibold text-white transition-opacity duration-300 hover:opacity-80"
+                      style={{ backgroundColor: C.negro, letterSpacing: "0.02em" }}
                     >
-                      Me interesa — hablar por WhatsApp
+                      Me interesa esta propiedad
                     </a>
                   )}
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-xl border border-white/[0.08] py-3 text-center text-sm text-[#F0F4FF] transition hover:border-[#00D4FF]/40 hover:bg-[rgba(0,212,255,0.08)]"
+                    className="rounded-full border px-8 py-3.5 text-center text-[13px] font-medium transition-colors duration-300"
+                    style={{ borderColor: C.linea, color: C.negro }}
                   >
-                    📍 Ubicación
+                    Ver ubicación
                   </a>
-                  {p.url_original ? (
-                    <a
-                      href={p.url_original}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-xl border border-white/[0.08] py-3 text-center text-sm text-[#F0F4FF] transition hover:border-[#00D4FF]/40 hover:bg-[rgba(0,212,255,0.08)]"
-                    >
-                      Anuncio original ↗
-                    </a>
-                  ) : (
-                    <span className="rounded-xl border border-white/[0.04] py-3 text-center text-sm text-white/15">
-                      —
-                    </span>
-                  )}
                 </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+              </article>
+            );
+          })}
+        </div>
 
-      <footer className="border-t border-white/10 px-6 py-10 text-center">
-        <p className="font-display text-lg font-semibold text-[#F0F4FF]">{APP.marca}</p>
-        {waDigits && (
-          <a
-            href={`https://wa.me/${waDigits}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-block rounded-xl border border-white/[0.08] bg-white/[0.04] px-6 py-3 text-sm font-medium text-[#F0F4FF] backdrop-blur transition hover:border-[#00D4FF]/40 hover:bg-[rgba(0,212,255,0.1)]"
+        {/* ── Pie ── */}
+        <footer
+          className="border-t pb-16 pt-12 text-center"
+          style={{ borderColor: C.linea }}
+        >
+          <p
+            className="text-[15px] font-semibold"
+            style={{ letterSpacing: "-0.01em" }}
           >
-            Escribirme por WhatsApp
-          </a>
-        )}
-        <p className="mt-6 text-[11px] text-[#3A4560]">
-          Este portafolio es privado y fue preparado exclusivamente para{" "}
-          {portafolio.cliente_nombre ?? "ti"}.
-        </p>
-      </footer>
-    </main>
-  );
-}
-
-function Envoltura({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-[#06080F]">
-      {children}
+            {APP.marca}
+          </p>
+          {waDigits && (
+            <a
+              href={`https://wa.me/${waDigits}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-block rounded-full border px-8 py-3 text-[13px] font-medium transition-colors duration-300"
+              style={{ borderColor: C.linea, color: C.negro }}
+            >
+              Escribirme por WhatsApp
+            </a>
+          )}
+          <p
+            className="mt-10 text-[10px] font-medium uppercase"
+            style={{ color: C.grisClaro, letterSpacing: "0.18em" }}
+          >
+            Preparado exclusivamente para {portafolio.cliente_nombre ?? "ti"}
+          </p>
+        </footer>
+      </div>
     </main>
   );
 }

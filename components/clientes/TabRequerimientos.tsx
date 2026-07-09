@@ -78,7 +78,7 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
             }}
           />
           {datosAudio && (
-            <p className="mt-3 rounded-xl border border-[rgba(52,211,153,0.25)] bg-emerald-500/10 px-4 py-2.5 text-[13px] text-[#34D399]">
+            <p className="mt-3 rounded-xl border border-[#E6E6E1] bg-[#F5F5F0] px-4 py-2.5 text-[13px] text-[#141414]">
               ✓ Audio analizado — el formulario se llenó automáticamente. Revisa,
               ajusta lo que falte y guarda.
             </p>
@@ -160,7 +160,7 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
                   <button
                     onClick={() => eliminar(r.id)}
                     disabled={eliminando === r.id}
-                    className="rounded-lg px-2.5 py-1.5 text-xs text-red-500 transition hover:bg-red-500/100/10"
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-[#8E3B31] transition hover:bg-[#F7EFEC]0/10"
                   >
                     {eliminando === r.id ? "…" : "Eliminar"}
                   </button>

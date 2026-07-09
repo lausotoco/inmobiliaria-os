@@ -139,9 +139,9 @@ export default function RequerimientoDetallePage() {
 
   function colorScore(score: number | null) {
     if (score === null) return "text-neutro";
-    if (score >= 80) return "text-emerald-600";
-    if (score >= 60) return "text-amber-600";
-    return "text-red-500";
+    if (score >= 80) return "text-[#141414]";
+    if (score >= 60) return "text-[#8C8C86]";
+    return "text-[#B9B9B3]";
   }
 
   if (cargando) {
@@ -366,7 +366,7 @@ function SeccionMatches({
                     </p>
                     {m.probabilidad_cierre !== null &&
                       m.probabilidad_cierre !== undefined && (
-                        <p className="mt-1.5 rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-semibold text-[#00D4FF]">
+                        <p className="mt-1.5 rounded-lg bg-[#F0F0EB] px-2 py-1 text-[11px] font-semibold text-[#141414]">
                           cierre: {m.probabilidad_cierre}%
                         </p>
                       )}
@@ -406,7 +406,7 @@ function SeccionMatches({
                     <button
                       onClick={() => onDescartar(m.id)}
                       disabled={accionando === m.id}
-                      className="rounded-lg border border-linea px-4 py-2 text-xs text-neutro transition hover:bg-fondo hover:text-red-400"
+                      className="rounded-lg border border-linea px-4 py-2 text-xs text-neutro transition hover:bg-fondo hover:text-[#8E3B31]"
                     >
                       ✕ Descartar
                     </button>
