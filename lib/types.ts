@@ -168,6 +168,8 @@ export type Tarea = {
   cliente_id: string | null;
   descripcion: string;
   fecha_limite: string | null;
-  origen: "manual" | "asistente_ia";
+  origen: "manual" | "asistente_ia" | "automatica";
+  tipo_auto: string | null;
   estado: "pendiente" | "completada";
+  created_at: string;
 };

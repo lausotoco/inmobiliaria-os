@@ -42,6 +42,9 @@ export default function DashboardPage() {
   }
 
   async function cargar() {
+    // Genera/actualiza tareas automáticas antes de leer los datos
+    await supabase.rpc("generar_tareas_automaticas");
+
     const [
       clientesActivos, clientesTotal, reqsActivos, propsDisponibles,
       matchesSugeridos, matchesAceptados, portEnviados, portVistos, visitasProximas,
@@ -245,15 +248,67 @@ export default function DashboardPage() {
         </Panel>
 
         <Panel titulo="Tareas pendientes" vacio="Sin tareas pendientes." delay={640}>
-          {d.tareasPendientes.map((t: any) => (
-            <div key={t.id} className="py-3.5">
-              <p className="text-[13px]">{t.descripcion}</p>
-              <p className="mt-0.5 text-[11px] font-light text-[#B9B9B3]">
-                {t.clientes?.nombre ? `${t.clientes.nombre} · ` : ""}
-                {t.fecha_limite ? `vence ${formatoFecha(t.fecha_limite)}` : "sin fecha"}
-              </p>
-            </div>
-          ))}
+          {d.tareasPendientes.length > 0 && (
+            <>
+              {d.tareasPendientes.map((t: any) => {
+                const vencida =
+                  t.fecha_limite &&
+                  t.fecha_limite < new Date().toISOString().slice(0, 10);
+                return (
+                  <div key={t.id} className="flex items-start gap-3 py-3.5">
+                    <button
+                      onClick={async () => {
+                        await supabase
+                          .from("tareas")
+                          .update({ estado: "completada" })
+                          .eq("id", t.id);
+                        setD((prev: any) =>
+                          prev
+                            ? {
+                                ...prev,
+                                tareasPendientes: prev.tareasPendientes.filter(
+                                  (x: any) => x.id !== t.id
+                                ),
+                              }
+                            : prev
+                        );
+                      }}
+                      title="Marcar completada"
+                      className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-linea text-[10px] text-transparent transition hover:border-bosque hover:text-bosque"
+                    >
+                      ✓
+                    </button>
+                    <div className="min-w-0">
+                      <p className="text-[13px]">
+                        {t.descripcion}
+                        {t.origen === "automatica" && (
+                          <span className="ml-1.5 text-[9px] font-semibold uppercase tracking-wider text-[#B9B9B3]">
+                            auto
+                          </span>
+                        )}
+                      </p>
+                      <p
+                        className={`mt-0.5 text-[11px] font-light ${
+                          vencida ? "font-medium text-[#8E3B31]" : "text-[#B9B9B3]"
+                        }`}
+                      >
+                        {t.clientes?.nombre ? `${t.clientes.nombre} · ` : ""}
+                        {t.fecha_limite
+                          ? `${vencida ? "venció" : "vence"} ${formatoFecha(t.fecha_limite)}`
+                          : "sin fecha"}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+              <Link
+                href="/tareas"
+                className="block py-3 text-[11px] font-medium uppercase tracking-widest text-neutro transition hover:text-tinta"
+              >
+                Ver todas →
+              </Link>
+            </>
+          )}
         </Panel>
 
         <Panel titulo="Actividad reciente" vacio="Aquí verás tus últimas notas y envíos." delay={700}>

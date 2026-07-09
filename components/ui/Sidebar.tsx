@@ -12,6 +12,7 @@ const ENLACES = [
   { href: "/requerimientos", etiqueta: "Requerimientos" },
   { href: "/propiedades", etiqueta: "Propiedades" },
   { href: "/portafolios", etiqueta: "Portafolios" },
+  { href: "/tareas", etiqueta: "Tareas" },
 ];
 
 export default function Sidebar({ email }: { email: string }) {
