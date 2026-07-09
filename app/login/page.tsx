@@ -24,7 +24,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError("Correo o contraseña incorrectos. Revisa e intenta de nuevo.");
+      setError("Correo o contraseña incorrectos.");
       setCargando(false);
       return;
     }
@@ -34,20 +34,28 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bosque-oscuro px-6">
-      <div className="w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <p className="font-display text-3xl font-medium text-white">
+    <main className="flex min-h-screen items-center justify-center bg-[#111714] px-6">
+      {/* Efecto de fondo sutil */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,rgba(15,117,86,0.15),transparent_50%)]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(14,165,233,0.08),transparent_50%)]" />
+
+      <div className="relative w-full max-w-sm">
+        <div className="anim-entrada mb-10 text-center">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl grad-acento text-2xl font-bold text-white shadow-xl shadow-emerald-500/20">
+            S
+          </div>
+          <p className="mt-5 text-2xl font-bold tracking-tight text-white">
             {APP.nombre}
           </p>
-          <p className="mt-2 text-sm text-white/60">{APP.descripcion}</p>
+          <p className="mt-1 text-sm text-white/40">{APP.descripcion}</p>
         </div>
 
         <form
           onSubmit={iniciarSesion}
-          className="rounded-2xl bg-superficie p-8 shadow-2xl"
+          className="anim-entrada rounded-2xl border border-white/[0.06] bg-white/[0.03] p-8 shadow-2xl backdrop-blur-xl"
+          style={{ animationDelay: "100ms" }}
         >
-          <label className="block text-sm font-medium text-tinta">
+          <label className="block text-[13px] font-medium text-white/70">
             Correo
             <input
               type="email"
@@ -55,11 +63,12 @@ export default function LoginPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-linea bg-fondo px-3 py-2.5 text-tinta outline-none transition focus:border-bosque focus:ring-2 focus:ring-bosque-suave"
+              className="mt-1.5 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="tu@correo.com"
             />
           </label>
 
-          <label className="mt-5 block text-sm font-medium text-tinta">
+          <label className="mt-5 block text-[13px] font-medium text-white/70">
             Contraseña
             <input
               type="password"
@@ -67,12 +76,13 @@ export default function LoginPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-linea bg-fondo px-3 py-2.5 text-tinta outline-none transition focus:border-bosque focus:ring-2 focus:ring-bosque-suave"
+              className="mt-1.5 w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="••••••••"
             />
           </label>
 
           {error && (
-            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mt-4 rounded-xl bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
               {error}
             </p>
           )}
@@ -80,14 +90,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={cargando}
-            className="mt-6 w-full rounded-lg bg-bosque py-2.5 font-medium text-white transition hover:bg-bosque-oscuro disabled:opacity-60"
+            className="mt-6 w-full rounded-xl grad-acento py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98] disabled:opacity-60"
           >
             {cargando ? "Entrando…" : "Entrar"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-white/40">
-          Acceso privado. El registro de nuevas cuentas está deshabilitado.
+        <p className="anim-entrada mt-8 text-center text-[11px] text-white/20" style={{ animationDelay: "200ms" }}>
+          Sistema privado · El registro de nuevas cuentas está deshabilitado
         </p>
       </div>
     </main>

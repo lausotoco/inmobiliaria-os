@@ -17,7 +17,9 @@ export default async function LayoutPrivado({
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar email={user.email ?? ""} />
-      <main className="flex-1 px-5 py-8 md:px-10">{children}</main>
+      <main className="flex-1 overflow-x-hidden px-5 py-7 md:px-8 lg:px-10">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
     </div>
   );
 }

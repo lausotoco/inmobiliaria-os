@@ -32,7 +32,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     cargar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function contar(tabla: string, filtros?: (q: any) => any) {
@@ -44,16 +43,9 @@ export default function DashboardPage() {
 
   async function cargar() {
     const [
-      clientesActivos,
-      clientesTotal,
-      reqsActivos,
-      propsDisponibles,
-      matchesSugeridos,
-      matchesAceptados,
-      portBorrador,
-      portEnviados,
-      portVistos,
-      visitasProximas,
+      clientesActivos, clientesTotal, reqsActivos, propsDisponibles,
+      matchesSugeridos, matchesAceptados,
+      portBorrador, portEnviados, portVistos, visitasProximas,
     ] = await Promise.all([
       contar("clientes", (q) => q.eq("estado", "activo")),
       contar("clientes"),
@@ -69,58 +61,24 @@ export default function DashboardPage() {
 
     const [tareasRes, urgentesRes, borradoresRes, actividadRes, pipelineRes] =
       await Promise.all([
-        supabase
-          .from("tareas")
-          .select("*, clientes(id, nombre)")
-          .eq("estado", "pendiente")
-          .order("fecha_limite", { ascending: true, nullsFirst: false })
-          .limit(5),
-        supabase
-          .from("clientes")
-          .select("*")
-          .eq("estado", "activo")
-          .eq("urgencia", "inmediata")
-          .order("ultimo_contacto", { ascending: true, nullsFirst: true })
-          .limit(5),
-        supabase
-          .from("portafolios")
-          .select("id, titulo, created_at, clientes(id, nombre)")
-          .eq("estado", "borrador")
-          .order("created_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("conversaciones")
-          .select("id, contenido, direccion, fecha, clientes(id, nombre)")
-          .order("fecha", { ascending: false })
-          .limit(6),
-        supabase
-          .from("clientes")
-          .select("probabilidad_cierre, requerimientos(presupuesto_max)")
-          .eq("estado", "activo"),
+        supabase.from("tareas").select("*, clientes(id, nombre)").eq("estado", "pendiente").order("fecha_limite", { ascending: true, nullsFirst: false }).limit(5),
+        supabase.from("clientes").select("*").eq("estado", "activo").eq("urgencia", "inmediata").order("ultimo_contacto", { ascending: true, nullsFirst: true }).limit(5),
+        supabase.from("portafolios").select("id, titulo, created_at, clientes(id, nombre)").eq("estado", "borrador").order("created_at", { ascending: false }).limit(5),
+        supabase.from("conversaciones").select("id, contenido, direccion, fecha, clientes(id, nombre)").order("fecha", { ascending: false }).limit(6),
+        supabase.from("clientes").select("probabilidad_cierre, requerimientos(presupuesto_max)").eq("estado", "activo"),
       ]);
 
-    // Valor estimado del pipeline: presupuesto máx × probabilidad de cierre
     let valorPipeline = 0;
     (pipelineRes.data ?? []).forEach((c: any) => {
       const prob = (c.probabilidad_cierre ?? 0) / 100;
-      const maxPresupuesto = Math.max(
-        0,
-        ...(c.requerimientos ?? []).map((r: any) => r.presupuesto_max ?? 0)
-      );
+      const maxPresupuesto = Math.max(0, ...(c.requerimientos ?? []).map((r: any) => r.presupuesto_max ?? 0));
       valorPipeline += maxPresupuesto * prob;
     });
 
     setD({
-      clientesActivos,
-      clientesTotal,
-      reqsActivos,
-      propsDisponibles,
-      matchesSugeridos,
-      matchesAceptados,
-      portBorrador,
-      portEnviados,
-      portVistos,
-      visitasProximas,
+      clientesActivos, clientesTotal, reqsActivos, propsDisponibles,
+      matchesSugeridos, matchesAceptados,
+      portBorrador, portEnviados, portVistos, visitasProximas,
       tareasPendientes: tareasRes.data ?? [],
       urgentes: urgentesRes.data ?? [],
       borradores: borradoresRes.data ?? [],
@@ -131,97 +89,111 @@ export default function DashboardPage() {
 
   if (!d) {
     return (
-      <div className="mt-20 flex flex-col items-center gap-3">
-        <div className="size-8 animate-spin rounded-full border-2 border-linea border-t-bosque" />
+      <div className="mt-32 flex flex-col items-center gap-4">
+        <div className="relative size-10">
+          <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
+          <div className="absolute inset-2 animate-spin rounded-full border-2 border-transparent border-t-emerald-500" />
+        </div>
         <p className="text-sm text-neutro">Cargando tu centro de control…</p>
       </div>
     );
   }
 
   const kpis = [
-    { icono: "👤", valor: d.clientesActivos, etiqueta: "Clientes activos", href: "/clientes", detalle: `${d.clientesTotal} en total` },
-    { icono: "◎", valor: d.reqsActivos, etiqueta: "Requerimientos activos", href: "/requerimientos", detalle: "el corazón del negocio" },
-    { icono: "⌂", valor: d.propsDisponibles, etiqueta: "Propiedades disponibles", href: "/propiedades", detalle: "en tu inventario" },
-    { icono: "▤", valor: d.portEnviados, etiqueta: "Portafolios enviados", href: "/portafolios", detalle: `${d.portVistos} ya vistos` },
+    { icono: "◉", valor: d.clientesActivos, etiqueta: "Clientes activos", href: "/clientes", detalle: `${d.clientesTotal} en total`, color: "from-emerald-500 to-teal-600" },
+    { icono: "◎", valor: d.reqsActivos, etiqueta: "Requerimientos", href: "/requerimientos", detalle: "activos buscando", color: "from-sky-500 to-blue-600" },
+    { icono: "⬢", valor: d.propsDisponibles, etiqueta: "Propiedades", href: "/propiedades", detalle: "disponibles", color: "from-violet-500 to-purple-600" },
+    { icono: "▣", valor: d.portEnviados, etiqueta: "Portafolios", href: "/portafolios", detalle: `${d.portVistos} vistos`, color: "from-amber-500 to-orange-600" },
   ];
 
   const embudo = [
-    { etapa: "Clientes activos", valor: d.clientesActivos },
-    { etapa: "Requerimientos", valor: d.reqsActivos },
-    { etapa: "Matches aceptados", valor: d.matchesAceptados },
-    { etapa: "Portafolios enviados", valor: d.portEnviados },
-    { etapa: "Vistos por el cliente", valor: d.portVistos },
-    { etapa: "Visitas programadas", valor: d.visitasProximas },
+    { etapa: "Clientes activos", valor: d.clientesActivos, color: "from-emerald-500 to-emerald-400" },
+    { etapa: "Requerimientos", valor: d.reqsActivos, color: "from-teal-500 to-teal-400" },
+    { etapa: "Matches aceptados", valor: d.matchesAceptados, color: "from-sky-500 to-sky-400" },
+    { etapa: "Portafolios enviados", valor: d.portEnviados, color: "from-blue-500 to-blue-400" },
+    { etapa: "Vistos por cliente", valor: d.portVistos, color: "from-violet-500 to-violet-400" },
+    { etapa: "Visitas programadas", valor: d.visitasProximas, color: "from-purple-500 to-purple-400" },
   ];
   const maxEmbudo = Math.max(1, ...embudo.map((e) => e.valor));
 
   return (
     <div>
-      <div className="anim-entrada flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+      {/* Header */}
+      <div className="anim-entrada flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-laton">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-neutro">
             Centro de control
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="mt-0.5 text-3xl font-bold tracking-tight">Dashboard</h1>
         </div>
         {d.valorPipeline > 0 && (
-          <div className="text-left sm:text-right">
-            <p className="text-xs text-neutro">Pipeline estimado</p>
-            <p className="text-xl font-bold tracking-tight text-bosque">
+          <div className="anim-entrada text-left sm:text-right" style={{ animationDelay: "150ms" }}>
+            <p className="text-[11px] font-medium text-neutro">Pipeline estimado</p>
+            <p className="grad-acento-texto text-2xl font-bold tracking-tight">
               {formatoCOP(Math.round(d.valorPipeline))}
             </p>
           </div>
         )}
       </div>
 
-      {/* ── KPIs ── */}
-      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Alerta de matches */}
+      {d.matchesSugeridos > 0 && (
+        <Link
+          href="/requerimientos"
+          className="anim-entrada mt-5 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-sky-500/5 to-transparent border border-emerald-500/20 px-5 py-3.5 transition hover:border-emerald-500/40"
+          style={{ animationDelay: "80ms" }}
+        >
+          <span className="flex size-8 items-center justify-center rounded-xl grad-acento text-xs font-bold text-white shadow-lg shadow-emerald-500/20">✦</span>
+          <span className="text-sm">
+            <span className="font-semibold text-emerald-700">{d.matchesSugeridos} match{d.matchesSugeridos !== 1 ? "es" : ""}</span>
+            <span className="text-neutro"> por revisar — la IA encontró propiedades compatibles</span>
+          </span>
+        </Link>
+      )}
+
+      {/* KPIs */}
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {kpis.map((k, i) => (
           <Link
             key={k.etiqueta}
             href={k.href}
-            className="tarjeta-viva anim-entrada rounded-2xl border border-linea bg-superficie p-5"
-            style={{ animationDelay: `${i * 60}ms` }}
+            className="tarjeta-viva anim-entrada group rounded-2xl bg-superficie p-5"
+            style={{ animationDelay: `${100 + i * 60}ms` }}
           >
             <div className="flex items-center justify-between">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-bosque-suave text-lg">
+              <span className={`flex size-9 items-center justify-center rounded-xl bg-gradient-to-br ${k.color} text-sm text-white shadow-lg`}>
                 {k.icono}
               </span>
-              <span className="text-4xl font-bold tracking-tight text-tinta">
+              <span className="text-3xl font-bold tracking-tight text-tinta">
                 {k.valor}
               </span>
             </div>
-            <p className="mt-3 text-sm font-medium text-tinta">{k.etiqueta}</p>
-            <p className="text-xs text-neutro">{k.detalle}</p>
+            <p className="mt-3 text-[13px] font-semibold text-tinta">{k.etiqueta}</p>
+            <p className="text-[11px] text-neutro">{k.detalle}</p>
           </Link>
         ))}
       </div>
 
-      {/* ── Embudo ── */}
-      <div className="anim-entrada mt-6 rounded-2xl border border-linea bg-superficie p-6" style={{ animationDelay: "250ms" }}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-tinta">Embudo del negocio</h2>
-          {d.matchesSugeridos > 0 && (
-            <span className="rounded-full bg-bosque-suave px-3 py-1 text-xs font-medium text-bosque">
-              ✦ {d.matchesSugeridos} match{d.matchesSugeridos !== 1 ? "es" : ""} por revisar
-            </span>
-          )}
-        </div>
-        <div className="mt-5 space-y-3">
+      {/* Embudo */}
+      <div className="anim-entrada mt-5 rounded-2xl border border-linea bg-superficie p-6" style={{ animationDelay: "350ms" }}>
+        <h2 className="text-[13px] font-bold text-tinta">Embudo del negocio</h2>
+        <div className="mt-5 space-y-2.5">
           {embudo.map((e, i) => (
             <div key={e.etapa} className="flex items-center gap-3">
-              <p className="w-40 shrink-0 text-xs text-neutro sm:w-48 sm:text-sm">
+              <p className="w-36 shrink-0 text-[12px] font-medium text-neutro sm:w-44">
                 {e.etapa}
               </p>
-              <div className="h-7 flex-1 overflow-hidden rounded-lg bg-fondo">
+              <div className="h-8 flex-1 overflow-hidden rounded-xl bg-fondo">
                 <div
-                  className="anim-barra flex h-full items-center rounded-lg bg-gradient-to-r from-bosque to-emerald-600 px-2.5"
+                  className={`anim-barra flex h-full items-center rounded-xl bg-gradient-to-r ${e.color} px-3`}
                   style={{
-                    width: `${Math.max(6, (e.valor / maxEmbudo) * 100)}%`,
-                    animationDelay: `${300 + i * 90}ms`,
+                    width: `${Math.max(8, (e.valor / maxEmbudo) * 100)}%`,
+                    animationDelay: `${400 + i * 80}ms`,
                   }}
                 >
-                  <span className="text-xs font-bold text-white">{e.valor}</span>
+                  <span className="text-[12px] font-bold text-white drop-shadow-sm">
+                    {e.valor}
+                  </span>
                 </div>
               </div>
             </div>
@@ -229,26 +201,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Paneles de acción ── */}
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {/* Clientes urgentes */}
-        <Panel
-          titulo="🔥 Clientes urgentes"
-          vacio="Sin clientes con urgencia inmediata."
-          delay={350}
-        >
+      {/* Paneles de acción */}
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <Panel titulo="🔥 Clientes urgentes" vacio="Sin clientes con urgencia inmediata." delay={500}>
           {d.urgentes.map((c: any) => (
-            <Link
-              key={c.id}
-              href={`/clientes/${c.id}`}
-              className="flex items-center justify-between rounded-xl px-3 py-2.5 transition hover:bg-fondo"
-            >
+            <Link key={c.id} href={`/clientes/${c.id}`} className="flex items-center justify-between rounded-xl px-3 py-2.5 transition hover:bg-fondo">
               <div>
-                <p className="text-sm font-medium text-tinta">{c.nombre}</p>
-                <p className="text-xs text-neutro">
-                  {c.ultimo_contacto
-                    ? `Último contacto: ${formatoFecha(c.ultimo_contacto)}`
-                    : "Sin contacto registrado"}
+                <p className="text-[13px] font-semibold text-tinta">{c.nombre}</p>
+                <p className="text-[11px] text-neutro">
+                  {c.ultimo_contacto ? `Último contacto: ${formatoFecha(c.ultimo_contacto)}` : "Sin contacto registrado"}
                 </p>
               </div>
               <Badge texto="inmediata" />
@@ -256,45 +217,24 @@ export default function DashboardPage() {
           ))}
         </Panel>
 
-        {/* Portafolios por enviar */}
-        <Panel
-          titulo="📤 Portafolios por enviar"
-          vacio="No tienes borradores pendientes."
-          delay={400}
-        >
+        <Panel titulo="📤 Portafolios por enviar" vacio="No tienes borradores pendientes." delay={560}>
           {d.borradores.map((p: any) => (
-            <Link
-              key={p.id}
-              href="/portafolios"
-              className="flex items-center justify-between rounded-xl px-3 py-2.5 transition hover:bg-fondo"
-            >
+            <Link key={p.id} href="/portafolios" className="flex items-center justify-between rounded-xl px-3 py-2.5 transition hover:bg-fondo">
               <div>
-                <p className="text-sm font-medium text-tinta">
-                  {p.titulo || "Portafolio"}
-                </p>
-                <p className="text-xs text-neutro">
-                  Para {p.clientes?.nombre} · {formatoFecha(p.created_at)}
-                </p>
+                <p className="text-[13px] font-semibold text-tinta">{p.titulo || "Portafolio"}</p>
+                <p className="text-[11px] text-neutro">Para {p.clientes?.nombre} · {formatoFecha(p.created_at)}</p>
               </div>
               <Badge texto="borrador" />
             </Link>
           ))}
         </Panel>
 
-        {/* Tareas pendientes */}
-        <Panel
-          titulo="✓ Tareas pendientes"
-          vacio="Sin tareas pendientes. Las crearás desde el asistente (Módulo 7) o manualmente."
-          delay={450}
-        >
+        <Panel titulo="✓ Tareas pendientes" vacio="Sin tareas pendientes." delay={620}>
           {d.tareasPendientes.map((t: any) => (
-            <div
-              key={t.id}
-              className="flex items-center justify-between rounded-xl px-3 py-2.5"
-            >
+            <div key={t.id} className="flex items-center justify-between rounded-xl px-3 py-2.5">
               <div>
-                <p className="text-sm text-tinta">{t.descripcion}</p>
-                <p className="text-xs text-neutro">
+                <p className="text-[13px] text-tinta">{t.descripcion}</p>
+                <p className="text-[11px] text-neutro">
                   {t.clientes?.nombre ? `${t.clientes.nombre} · ` : ""}
                   {t.fecha_limite ? `vence ${formatoFecha(t.fecha_limite)}` : "sin fecha"}
                 </p>
@@ -303,25 +243,14 @@ export default function DashboardPage() {
           ))}
         </Panel>
 
-        {/* Actividad reciente */}
-        <Panel
-          titulo="⚡ Actividad reciente"
-          vacio="Aquí verás tus últimas notas y envíos."
-          delay={500}
-        >
+        <Panel titulo="⚡ Actividad reciente" vacio="Aquí verás tus últimas notas y envíos." delay={680}>
           {d.actividad.map((a: any) => (
-            <Link
-              key={a.id}
-              href={`/clientes/${a.clientes?.id}`}
-              className="block rounded-xl px-3 py-2.5 transition hover:bg-fondo"
-            >
-              <p className="text-sm text-tinta line-clamp-1">
+            <Link key={a.id} href={`/clientes/${a.clientes?.id}`} className="block rounded-xl px-3 py-2.5 transition hover:bg-fondo">
+              <p className="text-[13px] text-tinta line-clamp-1">
                 {a.direccion === "enviado" ? "→ " : a.direccion === "recibido" ? "← " : "✎ "}
                 {a.contenido}
               </p>
-              <p className="text-xs text-neutro">
-                {a.clientes?.nombre} · {formatoFecha(a.fecha)}
-              </p>
+              <p className="text-[11px] text-neutro">{a.clientes?.nombre} · {formatoFecha(a.fecha)}</p>
             </Link>
           ))}
         </Panel>
@@ -330,34 +259,12 @@ export default function DashboardPage() {
   );
 }
 
-function Panel({
-  titulo,
-  vacio,
-  delay,
-  children,
-}: {
-  titulo: string;
-  vacio: string;
-  delay: number;
-  children: React.ReactNode;
-}) {
-  const tieneContenido = Array.isArray(children)
-    ? children.length > 0
-    : Boolean(children);
-
+function Panel({ titulo, vacio, delay, children }: { titulo: string; vacio: string; delay: number; children: React.ReactNode; }) {
+  const tieneContenido = Array.isArray(children) ? children.length > 0 : Boolean(children);
   return (
-    <div
-      className="anim-entrada rounded-2xl border border-linea bg-superficie p-5"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <h2 className="px-3 text-sm font-semibold text-tinta">{titulo}</h2>
-      <div className="mt-2">
-        {tieneContenido ? (
-          children
-        ) : (
-          <p className="px-3 py-4 text-sm text-neutro">{vacio}</p>
-        )}
-      </div>
+    <div className="anim-entrada rounded-2xl border border-linea bg-superficie p-5" style={{ animationDelay: `${delay}ms` }}>
+      <h2 className="px-3 text-[13px] font-bold text-tinta">{titulo}</h2>
+      <div className="mt-2.5">{tieneContenido ? children : <p className="px-3 py-5 text-[13px] text-neutro">{vacio}</p>}</div>
     </div>
   );
 }
