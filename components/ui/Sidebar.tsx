@@ -12,6 +12,7 @@ const ENLACES = [
   { href: "/requerimientos", etiqueta: "Requerimientos" },
   { href: "/propiedades", etiqueta: "Propiedades" },
   { href: "/portafolios", etiqueta: "Portafolios" },
+  { href: "/agenda", etiqueta: "Agenda" },
   { href: "/tareas", etiqueta: "Tareas" },
 ];
 
