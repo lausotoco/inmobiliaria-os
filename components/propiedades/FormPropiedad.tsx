@@ -45,6 +45,7 @@ export default function FormPropiedad({ propiedad, datosIniciales }: Props) {
       titulo: fd.get("titulo") || null,
       codigo: fd.get("codigo") || null,
       precio: fd.get("precio") ? Number(fd.get("precio")) : null,
+      comision_pct: fd.get("comision_pct") ? Number(fd.get("comision_pct")) : 1.5,
       area: fd.get("area") ? Number(fd.get("area")) : null,
       habitaciones: fd.get("habitaciones") ? Number(fd.get("habitaciones")) : null,
       banos: fd.get("banos") ? Number(fd.get("banos")) : null,
@@ -126,6 +127,10 @@ export default function FormPropiedad({ propiedad, datosIniciales }: Props) {
           <label className={etiqueta}>
             Precio (COP)
             <input name="precio" type="number" defaultValue={base?.precio ?? ""} className={`mt-1.5 ${campo}`} />
+          </label>
+          <label className={etiqueta}>
+            Comisión (%)
+            <input name="comision_pct" type="number" step="0.1" min={0} max={100} defaultValue={base?.comision_pct ?? 1.5} className={`mt-1.5 ${campo}`} placeholder="1.5" />
           </label>
           <label className={etiqueta}>
             Área (m²)

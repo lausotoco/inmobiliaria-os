@@ -95,6 +95,12 @@ export default function PropiedadDetallePage() {
     { k: "Baños", v: propiedad.banos },
     { k: "Parqueaderos", v: propiedad.parqueaderos },
     { k: "Administración", v: formatoCOP(propiedad.administracion) },
+    {
+      k: `Comisión (${propiedad.comision_pct ?? 1.5}%)`,
+      v: propiedad.precio
+        ? formatoCOP((propiedad.precio * (propiedad.comision_pct ?? 1.5)) / 100)
+        : null,
+    },
     { k: "Estrato", v: propiedad.estrato },
     { k: "Ciudad", v: propiedad.ciudad },
     { k: "Barrio", v: propiedad.barrio },
