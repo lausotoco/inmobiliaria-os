@@ -5,6 +5,7 @@ export type Cliente = {
   id: string;
   organization_id: string;
   nombre: string;
+  cedula: string | null;
   whatsapp: string | null;
   email: string | null;
   ciudad: string | null;
@@ -90,6 +91,7 @@ export type Match = {
   requerimiento_id: string;
   propiedad_id: string;
   score: number | null;
+  probabilidad_cierre: number | null;
   explicacion: string | null;
   estado: "sugerido" | "aceptado" | "descartado";
   motivo_descarte: string | null;

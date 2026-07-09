@@ -28,6 +28,7 @@ export default function FormCliente({ cliente }: Props) {
     const fd = new FormData(e.currentTarget);
     const datos: Record<string, unknown> = {
       nombre: fd.get("nombre"),
+      cedula: fd.get("cedula") || null,
       whatsapp: fd.get("whatsapp") || null,
       email: fd.get("email") || null,
       ciudad: fd.get("ciudad") || null,
@@ -94,6 +95,15 @@ export default function FormCliente({ cliente }: Props) {
               defaultValue={cliente?.nombre ?? ""}
               className={`mt-1.5 ${campo}`}
               placeholder="Nombre completo"
+            />
+          </label>
+          <label className={etiqueta}>
+            Cédula (opcional)
+            <input
+              name="cedula"
+              defaultValue={cliente?.cedula ?? ""}
+              className={`mt-1.5 ${campo}`}
+              placeholder="Número de documento"
             />
           </label>
           <label className={etiqueta}>

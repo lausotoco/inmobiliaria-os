@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatoCOP } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import FormRequerimiento from "./FormRequerimiento";
+import AudioRequerimiento from "./AudioRequerimiento";
 import type { Requerimiento } from "@/lib/types";
 
 type Props = {
@@ -17,6 +18,8 @@ type Props = {
 export default function TabRequerimientos({ clienteId, requerimientos }: Props) {
   const router = useRouter();
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [datosAudio, setDatosAudio] = useState<Partial<Requerimiento> | null>(null);
+  const [notaTranscripcion, setNotaTranscripcion] = useState<string | null>(null);
   const [editando, setEditando] = useState<Requerimiento | null>(null);
   const [eliminando, setEliminando] = useState<string | null>(null);
 
@@ -56,15 +59,52 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm font-medium text-tinta">Nuevo requerimiento</p>
           <button
-            onClick={() => setMostrarForm(false)}
+            onClick={() => {
+              setMostrarForm(false);
+              setDatosAudio(null);
+              setNotaTranscripcion(null);
+            }}
             className="text-sm text-neutro hover:text-tinta"
           >
             ← Volver
           </button>
         </div>
+
+        <div className="mb-6">
+          <AudioRequerimiento
+            onExtraido={(datos, transcripcion) => {
+              setDatosAudio(datos);
+              setNotaTranscripcion(transcripcion);
+            }}
+          />
+          {datosAudio && (
+            <p className="mt-3 rounded-xl border border-[rgba(52,211,153,0.25)] bg-emerald-500/10 px-4 py-2.5 text-[13px] text-[#34D399]">
+              ✓ Audio analizado — el formulario se llenó automáticamente. Revisa,
+              ajusta lo que falte y guarda.
+            </p>
+          )}
+        </div>
+
         <FormRequerimiento
+          key={datosAudio ? "con-audio" : "manual"}
           clienteId={clienteId}
-          onGuardado={() => setMostrarForm(false)}
+          datosIniciales={datosAudio ?? undefined}
+          onGuardado={async () => {
+            // Guardar la transcripción como nota del cliente para no perderla
+            if (notaTranscripcion) {
+              const supabase = createClient();
+              await supabase.from("conversaciones").insert({
+                cliente_id: clienteId,
+                canal: "audio",
+                direccion: "recibido",
+                contenido: `🎙 Transcripción del audio: "${notaTranscripcion}"`,
+              });
+            }
+            setMostrarForm(false);
+            setDatosAudio(null);
+            setNotaTranscripcion(null);
+            router.refresh();
+          }}
         />
       </div>
     );

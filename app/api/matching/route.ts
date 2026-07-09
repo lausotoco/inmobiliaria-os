@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // ── 1. Traer el requerimiento con su cliente ──
     const { data: req, error: errReq } = await supabase
       .from("requerimientos")
-      .select("*, clientes(id, nombre)")
+      .select("*, clientes(id, nombre, credito_aprobado, banco, inicial_disponible, urgencia)")
       .eq("id", requerimiento_id)
       .single();
 
@@ -132,6 +132,10 @@ export async function POST(request: NextRequest) {
         requerimiento_id,
         propiedad_id: r.propiedad_id,
         score: Math.max(0, Math.min(100, Math.round(r.score))),
+        probabilidad_cierre:
+          r.probabilidad_cierre !== undefined && r.probabilidad_cierre !== null
+            ? Math.max(0, Math.min(100, Math.round(r.probabilidad_cierre)))
+            : null,
         explicacion: r.explicacion,
         estado: "sugerido",
       }));
@@ -154,7 +158,12 @@ export async function POST(request: NextRequest) {
 
 // ── Claude califica cada candidata contra el requerimiento ──
 
-type Resultado = { propiedad_id: string; score: number; explicacion: string };
+type Resultado = {
+  propiedad_id: string;
+  score: number;
+  probabilidad_cierre?: number | null;
+  explicacion: string;
+};
 
 async function calificarConIA(
   apiKey: string,
@@ -162,6 +171,14 @@ async function calificarConIA(
   candidatas: Record<string, unknown>[],
   descartes: Record<string, unknown>[]
 ): Promise<Resultado[] | null> {
+  const cliente = (req.clientes ?? {}) as Record<string, unknown>;
+  const datosCliente = {
+    credito_aprobado: cliente.credito_aprobado,
+    banco: cliente.banco,
+    inicial_disponible: cliente.inicial_disponible,
+    urgencia_cliente: cliente.urgencia,
+  };
+
   const requerimiento = {
     presupuesto_min: req.presupuesto_min,
     presupuesto_max: req.presupuesto_max,
@@ -205,7 +222,10 @@ async function calificarConIA(
           .join("\n")}`
       : "";
 
-  const prompt = `Eres un experto inmobiliario colombiano. Evalúa la compatibilidad entre lo que busca un cliente y cada propiedad candidata.
+  const prompt = `Eres un experto inmobiliario colombiano. Evalúa la compatibilidad entre lo que busca un cliente y cada propiedad candidata, Y la probabilidad real de cierre.
+
+PERFIL FINANCIERO Y URGENCIA DEL CLIENTE:
+${JSON.stringify(datosCliente, null, 2)}
 
 REQUERIMIENTO DEL CLIENTE:
 ${JSON.stringify(requerimiento, null, 2)}${descartesTexto}
@@ -213,7 +233,14 @@ ${JSON.stringify(requerimiento, null, 2)}${descartesTexto}
 PROPIEDADES CANDIDATAS:
 ${JSON.stringify(propiedades, null, 2)}
 
-Para CADA propiedad devuelve un score de 0 a 100 y una explicación breve (2-3 frases) en español de por qué obtuvo ese porcentaje.
+Para CADA propiedad devuelve DOS métricas de 0 a 100 y una explicación breve (2-3 frases) en español:
+
+1. "score" — COMPATIBILIDAD: qué tanto la propiedad cumple lo que el cliente pide.
+2. "probabilidad_cierre" — PROBABILIDAD DE CIERRE: qué tan probable es que este cliente COMPRE esta propiedad, considerando:
+   - Ajuste financiero: precio vs presupuesto, inicial disponible vs precio (una inicial del 20-30% es lo normal en Colombia), crédito aprobado o no.
+   - Urgencia: "inmediata" sube la probabilidad; "+3 meses" la baja.
+   - Compatibilidad general: si no le encaja, difícilmente compra.
+   La probabilidad de cierre suele ser MENOR que el score de compatibilidad.
 
 Criterios:
 - Presupuesto: dentro del rango = bien; por encima del máximo = penaliza fuerte.
@@ -224,7 +251,7 @@ Criterios:
 - La explicación debe mencionar lo que cumple Y lo que le falta.
 
 Responde SOLO con un JSON válido, sin markdown, con este formato exacto:
-[{"propiedad_id": "uuid", "score": 87, "explicacion": "..."}]`;
+[{"propiedad_id": "uuid", "score": 87, "probabilidad_cierre": 62, "explicacion": "..."}]`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {

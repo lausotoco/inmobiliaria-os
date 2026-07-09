@@ -124,6 +124,7 @@ export default function ClienteDetallePage() {
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {[
           { k: "WhatsApp", v: cliente.whatsapp },
+          { k: "Cédula", v: cliente.cedula },
           { k: "Ciudad", v: cliente.ciudad },
           { k: "Banco", v: cliente.banco },
           {

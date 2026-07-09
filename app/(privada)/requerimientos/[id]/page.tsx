@@ -358,9 +358,18 @@ function SeccionMatches({
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className={`font-display text-3xl font-medium ${colorScore(m.score)}`}>
+                    <p className={`font-display text-3xl font-bold ${colorScore(m.score)}`}>
                       {m.score}%
                     </p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-neutro">
+                      compatibilidad
+                    </p>
+                    {m.probabilidad_cierre !== null &&
+                      m.probabilidad_cierre !== undefined && (
+                        <p className="mt-1.5 rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-semibold text-[#00D4FF]">
+                          cierre: {m.probabilidad_cierre}%
+                        </p>
+                      )}
                   </div>
                 </div>
 

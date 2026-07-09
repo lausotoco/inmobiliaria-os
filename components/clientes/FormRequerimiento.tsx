@@ -7,7 +7,6 @@ import type { Requerimiento } from "@/lib/types";
 
 const TIPOS = ["apartamento", "casa", "lote", "oficina", "local", "bodega", "finca"];
 const URGENCIAS = ["inmediata", "1-3 meses", "+3 meses"];
-const FINANCIACIONES = ["crédito aprobado", "en trámite", "recursos propios"];
 const ESTADOS = ["activo", "pausado", "cumplido", "cancelado"];
 const AMENIDADES_COMUNES = [
   "piscina", "gimnasio", "club house", "jacuzzi", "sauna", "turco",
@@ -19,21 +18,24 @@ const AMENIDADES_COMUNES = [
 type Props = {
   clienteId: string;
   requerimiento?: Requerimiento;
+  datosIniciales?: Partial<Requerimiento>;
   onGuardado?: () => void;
 };
 
 export default function FormRequerimiento({
   clienteId,
   requerimiento,
+  datosIniciales,
   onGuardado,
 }: Props) {
   const router = useRouter();
   const esEdicion = !!requerimiento;
+  const base = requerimiento ?? datosIniciales;
 
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [amenidades, setAmenidades] = useState<string[]>(
-    requerimiento?.amenidades ?? []
+    (base?.amenidades as string[]) ?? []
   );
 
   function toggleAmenidad(a: string) {
@@ -76,7 +78,6 @@ export default function FormRequerimiento({
       tipo_inmueble: fd.get("tipo_inmueble") || null,
       amenidades: amenidades,
       preferencias: fd.get("preferencias") || null,
-      financiacion: fd.get("financiacion") || null,
       urgencia: fd.get("urgencia") || null,
       observaciones: fd.get("observaciones") || null,
       estado: fd.get("estado") ?? "activo",
@@ -126,7 +127,7 @@ export default function FormRequerimiento({
             Título del requerimiento
             <input
               name="titulo"
-              defaultValue={requerimiento?.titulo ?? ""}
+              defaultValue={base?.titulo ?? ""}
               className={`mt-1.5 ${campo}`}
               placeholder='Ej. "Apto para vivir con su familia en Chía"'
             />
@@ -135,7 +136,7 @@ export default function FormRequerimiento({
             Tipo de inmueble
             <select
               name="tipo_inmueble"
-              defaultValue={requerimiento?.tipo_inmueble ?? ""}
+              defaultValue={base?.tipo_inmueble ?? ""}
               className={`mt-1.5 ${campo}`}
             >
               <option value="">Sin definir</option>
@@ -150,7 +151,7 @@ export default function FormRequerimiento({
             Estado
             <select
               name="estado"
-              defaultValue={requerimiento?.estado ?? "activo"}
+              defaultValue={base?.estado ?? "activo"}
               className={`mt-1.5 ${campo}`}
             >
               {ESTADOS.map((e) => (
@@ -166,7 +167,7 @@ export default function FormRequerimiento({
       {/* ── Presupuesto ── */}
       <fieldset>
         <legend className="mb-4 text-xs font-semibold uppercase tracking-widest text-laton">
-          Presupuesto (COP)
+          Rango de presupuesto (COP)
         </legend>
         <div className="grid gap-5 sm:grid-cols-2">
           <label className={etiqueta}>
@@ -174,7 +175,7 @@ export default function FormRequerimiento({
             <input
               name="presupuesto_min"
               type="number"
-              defaultValue={requerimiento?.presupuesto_min ?? ""}
+              defaultValue={base?.presupuesto_min ?? ""}
               className={`mt-1.5 ${campo}`}
               placeholder="200000000"
             />
@@ -184,7 +185,7 @@ export default function FormRequerimiento({
             <input
               name="presupuesto_max"
               type="number"
-              defaultValue={requerimiento?.presupuesto_max ?? ""}
+              defaultValue={base?.presupuesto_max ?? ""}
               className={`mt-1.5 ${campo}`}
               placeholder="450000000"
             />
@@ -202,7 +203,7 @@ export default function FormRequerimiento({
             Ciudad
             <input
               name="ciudad"
-              defaultValue={requerimiento?.ciudad ?? ""}
+              defaultValue={base?.ciudad ?? ""}
               className={`mt-1.5 ${campo}`}
               placeholder="Bogotá, Chía…"
             />
@@ -211,7 +212,7 @@ export default function FormRequerimiento({
             Zonas (separadas por coma)
             <input
               name="zonas"
-              defaultValue={requerimiento?.zonas?.join(", ") ?? ""}
+              defaultValue={base?.zonas?.join(", ") ?? ""}
               className={`mt-1.5 ${campo}`}
               placeholder="Chía, Cajicá, Sopó"
             />
@@ -220,7 +221,7 @@ export default function FormRequerimiento({
             Barrio
             <input
               name="barrio"
-              defaultValue={requerimiento?.barrio ?? ""}
+              defaultValue={base?.barrio ?? ""}
               className={`mt-1.5 ${campo}`}
               placeholder="Barrio preferido"
             />
@@ -239,7 +240,7 @@ export default function FormRequerimiento({
             <input
               name="area_min"
               type="number"
-              defaultValue={requerimiento?.area_min ?? ""}
+              defaultValue={base?.area_min ?? ""}
               className={`mt-1.5 ${campo}`}
             />
           </label>
@@ -248,7 +249,7 @@ export default function FormRequerimiento({
             <input
               name="area_max"
               type="number"
-              defaultValue={requerimiento?.area_max ?? ""}
+              defaultValue={base?.area_max ?? ""}
               className={`mt-1.5 ${campo}`}
             />
           </label>
@@ -258,7 +259,7 @@ export default function FormRequerimiento({
               name="habitaciones"
               type="number"
               min={0}
-              defaultValue={requerimiento?.habitaciones ?? ""}
+              defaultValue={base?.habitaciones ?? ""}
               className={`mt-1.5 ${campo}`}
             />
           </label>
@@ -268,7 +269,7 @@ export default function FormRequerimiento({
               name="banos"
               type="number"
               min={0}
-              defaultValue={requerimiento?.banos ?? ""}
+              defaultValue={base?.banos ?? ""}
               className={`mt-1.5 ${campo}`}
             />
           </label>
@@ -278,7 +279,7 @@ export default function FormRequerimiento({
               name="parqueaderos"
               type="number"
               min={0}
-              defaultValue={requerimiento?.parqueaderos ?? ""}
+              defaultValue={base?.parqueaderos ?? ""}
               className={`mt-1.5 ${campo}`}
             />
           </label>
@@ -317,38 +318,23 @@ export default function FormRequerimiento({
         <textarea
           name="preferencias"
           rows={3}
-          defaultValue={requerimiento?.preferencias ?? ""}
+          defaultValue={base?.preferencias ?? ""}
           className={`mt-1.5 ${campo}`}
           placeholder="Cocina abierta, buena iluminación natural, acepta mascotas, cerca de colegios…"
         />
       </label>
 
-      {/* ── Financiación y urgencia ── */}
+      {/* ── Urgencia ── */}
       <fieldset>
         <legend className="mb-4 text-xs font-semibold uppercase tracking-widest text-laton">
-          Financiación y urgencia
+          Urgencia
         </legend>
         <div className="grid gap-5 sm:grid-cols-2">
-          <label className={etiqueta}>
-            Financiación
-            <select
-              name="financiacion"
-              defaultValue={requerimiento?.financiacion ?? ""}
-              className={`mt-1.5 ${campo}`}
-            >
-              <option value="">Sin definir</option>
-              {FINANCIACIONES.map((f) => (
-                <option key={f} value={f}>
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className={etiqueta}>
             Urgencia
             <select
               name="urgencia"
-              defaultValue={requerimiento?.urgencia ?? ""}
+              defaultValue={base?.urgencia ?? ""}
               className={`mt-1.5 ${campo}`}
             >
               <option value="">Sin definir</option>
@@ -368,7 +354,7 @@ export default function FormRequerimiento({
         <textarea
           name="observaciones"
           rows={2}
-          defaultValue={requerimiento?.observaciones ?? ""}
+          defaultValue={base?.observaciones ?? ""}
           className={`mt-1.5 ${campo}`}
           placeholder="Cualquier detalle adicional…"
         />
