@@ -74,6 +74,7 @@ export type Propiedad = {
   telefono: string | null;
   url_original: string | null;
   estado: string;
+  comision_pct: number | null;
   created_at: string;
   updated_at: string;
 };
