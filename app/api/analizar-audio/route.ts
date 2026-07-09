@@ -29,18 +29,51 @@ Reglas para el presupuesto:
 - Si menciona un solo valor ("hasta 500"), úsalo como presupuesto_max.
 - Si dice "entre X y Y", llena min y max.`;
 
+async function extraerConClaude(
+  anthropicKey: string,
+  contenido: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": anthropicKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1200,
+        system: PROMPT_EXTRACCION,
+        messages: [
+          {
+            role: "user",
+            content: `Mensaje/transcripción del cliente:\n\n"${contenido.slice(0, 8000)}"`,
+          },
+        ],
+      }),
+    });
+
+    if (!claudeRes.ok) {
+      console.error("Error Claude:", claudeRes.status, await claudeRes.text());
+      return null;
+    }
+
+    const data = await claudeRes.json();
+    const texto = data.content?.[0]?.text ?? "";
+    const jsonLimpio = texto.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    return JSON.parse(jsonLimpio);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   // Transcripción: Groq (gratis) o OpenAI — el que esté configurado
   const groqKey = process.env.GROQ_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
-  if (!groqKey && !openaiKey) {
-    return NextResponse.json(
-      { mensaje: "Falta configurar GROQ_API_KEY (gratis, en console.groq.com) para transcribir audios." },
-      { status: 500 }
-    );
-  }
   if (!anthropicKey) {
     return NextResponse.json(
       { mensaje: "Falta configurar ANTHROPIC_API_KEY." },
@@ -51,11 +84,34 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const audio = formData.get("audio") as File | null;
+    const textoPegado = formData.get("texto") as string | null;
+
+    // ── Modo texto: mensaje de WhatsApp pegado, va directo a Claude ──
+    if (textoPegado && textoPegado.trim().length > 5) {
+      const requerimiento = await extraerConClaude(
+        anthropicKey,
+        textoPegado.trim()
+      );
+      if (!requerimiento) {
+        return NextResponse.json(
+          { mensaje: "La IA no pudo extraer los datos del texto. Intenta de nuevo." },
+          { status: 422 }
+        );
+      }
+      return NextResponse.json({ requerimiento, transcripcion: textoPegado.trim() });
+    }
 
     if (!audio) {
       return NextResponse.json(
-        { mensaje: "No se recibió ningún archivo de audio." },
+        { mensaje: "No se recibió audio ni texto para analizar." },
         { status: 400 }
+      );
+    }
+
+    if (!groqKey && !openaiKey) {
+      return NextResponse.json(
+        { mensaje: "Falta configurar GROQ_API_KEY (gratis, en console.groq.com) para transcribir audios. Mientras tanto puedes usar la opción de pegar texto." },
+        { status: 500 }
       );
     }
 
@@ -103,44 +159,11 @@ export async function POST(request: NextRequest) {
     }
 
     // ── 2. Extraer el requerimiento con Claude ──
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": anthropicKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1200,
-        system: PROMPT_EXTRACCION,
-        messages: [
-          {
-            role: "user",
-            content: `Transcripción del audio del cliente:\n\n"${transcripcion.slice(0, 8000)}"`,
-          },
-        ],
-      }),
-    });
+    const requerimiento = await extraerConClaude(anthropicKey, transcripcion);
 
-    if (!claudeRes.ok) {
-      console.error("Error Claude:", claudeRes.status, await claudeRes.text());
+    if (!requerimiento) {
       return NextResponse.json(
         { mensaje: "Se transcribió el audio pero la IA no pudo extraer los datos.", transcripcion },
-        { status: 502 }
-      );
-    }
-
-    const data = await claudeRes.json();
-    const texto = data.content?.[0]?.text ?? "";
-    const jsonLimpio = texto.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-
-    let requerimiento;
-    try {
-      requerimiento = JSON.parse(jsonLimpio);
-    } catch {
-      return NextResponse.json(
-        { mensaje: "La IA no devolvió un formato válido. Intenta de nuevo.", transcripcion },
         { status: 422 }
       );
     }

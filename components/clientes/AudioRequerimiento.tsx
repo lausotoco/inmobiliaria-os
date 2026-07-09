@@ -9,19 +9,27 @@ type Props = {
 
 export default function AudioRequerimiento({ onExtraido }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [modo, setModo] = useState<"audio" | "texto">("audio");
   const [archivo, setArchivo] = useState<File | null>(null);
+  const [textoPegado, setTextoPegado] = useState("");
   const [analizando, setAnalizando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transcripcion, setTranscripcion] = useState<string | null>(null);
 
   async function analizar() {
-    if (!archivo) return;
+    if (modo === "audio" && !archivo) return;
+    if (modo === "texto" && !textoPegado.trim()) return;
+
     setAnalizando(true);
     setError(null);
 
     try {
       const fd = new FormData();
-      fd.append("audio", archivo);
+      if (modo === "audio" && archivo) {
+        fd.append("audio", archivo);
+      } else {
+        fd.append("texto", textoPegado.trim());
+      }
 
       const res = await fetch("/api/analizar-audio", {
         method: "POST",
@@ -30,7 +38,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.mensaje || "No se pudo analizar el audio.");
+        setError(data.mensaje || "No se pudo analizar.");
         if (data.transcripcion) setTranscripcion(data.transcripcion);
         setAnalizando(false);
         return;
@@ -44,55 +52,100 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
     setAnalizando(false);
   }
 
+  const tabActiva =
+    "rounded-lg px-3.5 py-1.5 text-[12px] font-semibold text-[#020617] grad-acento shadow-[0_0_12px_rgba(0,212,255,0.3)]";
+  const tabInactiva =
+    "rounded-lg px-3.5 py-1.5 text-[12px] font-medium text-neutro transition hover:text-tinta";
+
   return (
     <div className="rounded-2xl border border-[rgba(0,212,255,0.2)] bg-[rgba(0,212,255,0.05)] p-5 backdrop-blur">
       <div className="flex items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl grad-acento text-sm text-white shadow-[0_0_16px_rgba(0,212,255,0.3)]">
-          🎙
+          ✦
         </span>
         <div>
           <p className="text-[13px] font-semibold text-tinta">
-            Analizar audio del cliente con IA
+            Crear requerimiento con IA
           </p>
           <p className="mt-0.5 text-[12px] text-neutro">
-            Sube la nota de voz donde te cuenta qué busca (presupuesto, zonas,
-            tiempos…) y la IA llenará el formulario automáticamente.
+            Sube la nota de voz del cliente o pega su mensaje de WhatsApp — la
+            IA extrae presupuesto, zonas, tiempos y preferencias, y llena el
+            formulario por ti.
           </p>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.aac"
-          onChange={(e) => {
-            setArchivo(e.target.files?.[0] ?? null);
-            setError(null);
-            setTranscripcion(null);
-          }}
-          className="hidden"
-        />
+      {/* Tabs audio / texto */}
+      <div className="mt-4 inline-flex gap-1 rounded-xl border border-linea bg-white/[0.03] p-1">
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
-          className="rounded-xl border border-linea bg-white/[0.04] px-4 py-2.5 text-[13px] text-tinta transition hover:border-[#00D4FF]/40"
+          onClick={() => { setModo("audio"); setError(null); }}
+          className={modo === "audio" ? tabActiva : tabInactiva}
         >
-          {archivo ? `🎵 ${archivo.name.slice(0, 32)}` : "Seleccionar audio…"}
+          🎙 Audio
         </button>
         <button
           type="button"
-          onClick={analizar}
-          disabled={!archivo || analizando}
-          className="rounded-xl bg-bosque px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50"
+          onClick={() => { setModo("texto"); setError(null); }}
+          className={modo === "texto" ? tabActiva : tabInactiva}
         >
-          {analizando ? "Transcribiendo y analizando…" : "✦ Analizar con IA"}
+          💬 Texto de WhatsApp
         </button>
       </div>
 
-      <p className="mt-2 text-[11px] text-neutro">
-        Acepta notas de voz de WhatsApp (.opus/.ogg), .m4a, .mp3 y .wav — máx 20 MB.
-      </p>
+      {modo === "audio" ? (
+        <>
+          <div className="mt-3 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.aac"
+              onChange={(e) => {
+                setArchivo(e.target.files?.[0] ?? null);
+                setError(null);
+                setTranscripcion(null);
+              }}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="rounded-xl border border-linea bg-white/[0.04] px-4 py-2.5 text-[13px] text-tinta transition hover:border-[#00D4FF]/40"
+            >
+              {archivo ? `🎵 ${archivo.name.slice(0, 32)}` : "Seleccionar audio…"}
+            </button>
+            <button
+              type="button"
+              onClick={analizar}
+              disabled={!archivo || analizando}
+              className="rounded-xl bg-bosque px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50"
+            >
+              {analizando ? "Transcribiendo y analizando…" : "✦ Analizar con IA"}
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] text-neutro">
+            Acepta notas de voz de WhatsApp (.opus/.ogg), .m4a, .mp3 y .wav — máx 20 MB.
+          </p>
+        </>
+      ) : (
+        <>
+          <textarea
+            value={textoPegado}
+            onChange={(e) => { setTextoPegado(e.target.value); setError(null); }}
+            rows={5}
+            placeholder={'Pega aquí el mensaje del cliente. Ej:\n"Hola Laura, estamos buscando un apto en Chía o Cajicá, de 3 habitaciones, máximo 550 millones. Nos urge porque entregamos el arriendo en 2 meses. Ojalá con terraza y que acepten mascotas…"'}
+            className="mt-3 w-full rounded-xl border border-linea bg-white/[0.03] px-4 py-3 text-[13px] text-tinta outline-none transition placeholder:text-[#3A4560] focus:border-[#00D4FF]/50"
+          />
+          <button
+            type="button"
+            onClick={analizar}
+            disabled={!textoPegado.trim() || analizando}
+            className="mt-2 rounded-xl bg-bosque px-5 py-2.5 text-[13px] font-semibold disabled:opacity-50"
+          >
+            {analizando ? "Analizando…" : "✦ Analizar con IA"}
+          </button>
+        </>
+      )}
 
       {error && (
         <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-[13px] text-red-400">
@@ -100,7 +153,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
         </p>
       )}
 
-      {transcripcion && !error && (
+      {transcripcion && !error && modo === "audio" && (
         <details className="mt-3">
           <summary className="cursor-pointer text-[12px] text-[#00D4FF]">
             Ver transcripción del audio
