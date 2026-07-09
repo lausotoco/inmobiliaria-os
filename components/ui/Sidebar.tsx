@@ -15,6 +15,7 @@ const ENLACES = [
   { href: "/agenda", etiqueta: "Agenda" },
   { href: "/tareas", etiqueta: "Tareas" },
   { href: "/comisiones", etiqueta: "Comisiones" },
+  { href: "/documentos", etiqueta: "Documentos" },
 ];
 
 export default function Sidebar({ email }: { email: string }) {
