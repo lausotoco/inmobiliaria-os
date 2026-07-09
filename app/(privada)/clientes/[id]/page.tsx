@@ -9,9 +9,10 @@ import Badge from "@/components/ui/Badge";
 import FormCliente from "@/components/clientes/FormCliente";
 import TabRequerimientos from "@/components/clientes/TabRequerimientos";
 import TabNotas from "@/components/clientes/TabNotas";
+import TabPropiedadesEnviadas from "@/components/clientes/TabPropiedadesEnviadas";
 import type { Cliente, Requerimiento, Conversacion } from "@/lib/types";
 
-const TABS = ["requerimientos", "notas", "editar"] as const;
+const TABS = ["requerimientos", "enviadas", "notas", "editar"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function ClienteDetallePage() {
@@ -166,9 +167,11 @@ export default function ClienteDetallePage() {
           >
             {t === "requerimientos"
               ? `Requerimientos (${requerimientos.length})`
-              : t === "notas"
-                ? `Notas (${conversaciones.length})`
-                : "Editar"}
+              : t === "enviadas"
+                ? "Propiedades enviadas"
+                : t === "notas"
+                  ? `Notas (${conversaciones.length})`
+                  : "Editar"}
           </button>
         ))}
       </div>
@@ -181,6 +184,8 @@ export default function ClienteDetallePage() {
             requerimientos={requerimientos}
           />
         )}
+
+        {tab === "enviadas" && <TabPropiedadesEnviadas clienteId={id} />}
 
         {tab === "notas" && (
           <TabNotas clienteId={id} conversaciones={conversaciones} />

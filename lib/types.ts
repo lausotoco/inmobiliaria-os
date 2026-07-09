@@ -112,6 +112,13 @@ export type Portafolio = {
   updated_at: string;
 };
 
+export type EstatusEnviada =
+  | "enviada"
+  | "vista"
+  | "le gustó"
+  | "no le gustó"
+  | "descartada";
+
 export type PortafolioItem = {
   id: string;
   organization_id: string;
@@ -119,6 +126,8 @@ export type PortafolioItem = {
   propiedad_id: string;
   orden: number;
   nota: string | null;
+  estatus: EstatusEnviada;
+  estatus_updated_at: string | null;
 };
 
 export type Conversacion = {

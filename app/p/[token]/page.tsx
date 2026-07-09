@@ -49,6 +49,23 @@ export default async function PortafolioPublicoPage({ params }: Props) {
   }
 
   const propiedades: any[] = portafolio.propiedades ?? [];
+
+  // Agrupar: las que le gustaron pasan a "Propiedades con visita agendada"
+  const agendadas = propiedades.filter((p: any) => p.estatus === "le gustó");
+  const resto = propiedades.filter((p: any) => p.estatus !== "le gustó");
+  let numero = 0;
+  const conNumero = (p: any) => ({ ...p, __num: ++numero });
+  const lista: any[] = [
+    ...(agendadas.length > 0
+      ? [{ __seccion: "Propiedades con visita agendada" }]
+      : []),
+    ...agendadas.map((p: any) => ({ ...conNumero(p), __agendada: true })),
+    ...(agendadas.length > 0 && resto.length > 0
+      ? [{ __seccion: "Selección de propiedades" }]
+      : []),
+    ...resto.map(conNumero),
+  ];
+
   const primerNombre =
     (portafolio.cliente_nombre as string | null)?.split(" ")[0] ?? "";
   const waDigits = APP.whatsapp.replace(/\D/g, "");
@@ -113,7 +130,23 @@ export default async function PortafolioPublicoPage({ params }: Props) {
 
         {/* ── Propiedades ── */}
         <div className="space-y-24 pb-24">
-          {propiedades.map((p: any, idx: number) => {
+          {lista.map((p: any) => {
+            if (p.__seccion) {
+              return (
+                <div key={p.__seccion} className="!mt-16 first:!mt-0">
+                  <p
+                    className="border-b pb-4 text-[11px] font-semibold uppercase"
+                    style={{
+                      color: C.negro,
+                      borderColor: C.linea,
+                      letterSpacing: "0.28em",
+                    }}
+                  >
+                    {p.__seccion}
+                  </p>
+                </div>
+              );
+            }
             const imgs: string[] = (p.imagenes ?? []).map((r: string) =>
               urlImagen(r)
             );
@@ -126,7 +159,7 @@ export default async function PortafolioPublicoPage({ params }: Props) {
             );
 
             const waTexto = encodeURIComponent(
-              `Hola, me interesa la propiedad "${p.titulo ?? `nº ${idx + 1}`}" del portafolio que me compartiste.`
+              `Hola, me interesa la propiedad "${p.titulo ?? `nº ${p.__num}`}" del portafolio que me compartiste.`
             );
 
             const datos = [
@@ -145,11 +178,25 @@ export default async function PortafolioPublicoPage({ params }: Props) {
               <article key={p.id}>
                 {/* Número editorial */}
                 <div className="mb-5 flex items-baseline justify-between">
-                  <span
-                    className="text-[11px] font-semibold"
-                    style={{ color: C.grisClaro, letterSpacing: "0.14em" }}
-                  >
-                    {String(idx + 1).padStart(2, "0")}
+                  <span className="flex items-baseline gap-3">
+                    <span
+                      className="text-[11px] font-semibold"
+                      style={{ color: C.grisClaro, letterSpacing: "0.14em" }}
+                    >
+                      {String(p.__num).padStart(2, "0")}
+                    </span>
+                    {p.__agendada && (
+                      <span
+                        className="rounded-full border px-3 py-1 text-[10px] font-semibold uppercase"
+                        style={{
+                          borderColor: C.negro,
+                          color: C.negro,
+                          letterSpacing: "0.14em",
+                        }}
+                      >
+                        Visita agendada
+                      </span>
+                    )}
                   </span>
                   <span
                     className="text-[11px] font-medium uppercase"
