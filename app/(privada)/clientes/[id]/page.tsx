@@ -60,6 +60,16 @@ export default function ClienteDetallePage() {
     if (!cargando) cargar();
   }, [tab]);
 
+  async function cambiarRapido(campo: "estado" | "prioridad", valor: string) {
+    if (!cliente) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("clientes")
+      .update({ [campo]: valor })
+      .eq("id", id);
+    if (!error) setCliente({ ...cliente, [campo]: valor });
+  }
+
   async function eliminarCliente() {
     if (
       !confirm(
@@ -102,10 +112,47 @@ export default function ClienteDetallePage() {
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-medium">{cliente.nombre}</h1>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Badge texto={cliente.estado} />
-            <Badge texto={cliente.urgencia} />
-            {cliente.credito_aprobado && <Badge texto="crédito aprobado" />}
+          <div className="mt-3 space-y-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[10px] font-medium uppercase tracking-widest text-neutro">
+                Estado
+              </span>
+              {["activo", "en pausa", "cerrado", "perdido"].map((e) => (
+                <button
+                  key={e}
+                  onClick={() => cambiarRapido("estado", e)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium capitalize transition ${
+                    cliente.estado === e
+                      ? "border-bosque bg-bosque text-white"
+                      : "border-linea bg-superficie text-neutro hover:border-bosque hover:text-bosque"
+                  }`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[10px] font-medium uppercase tracking-widest text-neutro">
+                Prioridad
+              </span>
+              {["alta", "media", "baja"].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => cambiarRapido("prioridad", p)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium capitalize transition ${
+                    cliente.prioridad === p
+                      ? "border-[#141414] bg-[#141414] text-white"
+                      : "border-linea bg-superficie text-neutro hover:border-[#141414] hover:text-tinta"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <span className="ml-2 flex gap-1.5">
+                <Badge texto={cliente.urgencia} />
+                {cliente.credito_aprobado && <Badge texto="crédito aprobado" />}
+              </span>
+            </div>
           </div>
         </div>
 

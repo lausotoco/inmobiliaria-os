@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Cliente } from "@/lib/types";
 
 const ESTADOS = ["activo", "en pausa", "cerrado", "perdido"];
+const PRIORIDADES = ["alta", "media", "baja"];
 const URGENCIAS = ["inmediata", "1-3 meses", "+3 meses"];
 const FINANCIACIONES = ["crédito aprobado", "en trámite", "recursos propios"];
 
@@ -33,6 +34,7 @@ export default function FormCliente({ cliente }: Props) {
       email: fd.get("email") || null,
       ciudad: fd.get("ciudad") || null,
       estado: fd.get("estado"),
+      prioridad: fd.get("prioridad") || "media",
       urgencia: fd.get("urgencia") || null,
       probabilidad_cierre: fd.get("probabilidad_cierre")
         ? Number(fd.get("probabilidad_cierre"))
@@ -153,6 +155,20 @@ export default function FormCliente({ cliente }: Props) {
               {ESTADOS.map((e) => (
                 <option key={e} value={e}>
                   {e.charAt(0).toUpperCase() + e.slice(1)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={etiqueta}>
+            Prioridad
+            <select
+              name="prioridad"
+              defaultValue={cliente?.prioridad ?? "media"}
+              className={`mt-1.5 ${campo}`}
+            >
+              {PRIORIDADES.map((p) => (
+                <option key={p} value={p}>
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
                 </option>
               ))}
             </select>

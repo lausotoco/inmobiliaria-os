@@ -9,11 +9,20 @@ import { formatoFecha } from "@/lib/utils";
 import type { Cliente } from "@/lib/types";
 
 const ESTADOS = ["todos", "activo", "en pausa", "cerrado", "perdido"];
+const PRIORIDADES = ["todas", "alta", "media", "baja"];
+const ORDEN_PRIORIDAD: Record<string, number> = { alta: 0, media: 1, baja: 2 };
+
+const ESTILO_PRIORIDAD: Record<string, string> = {
+  alta: "border-[#141414] bg-[#141414] text-white",
+  media: "border-linea bg-superficie text-tinta",
+  baja: "border-linea bg-fondo text-neutro",
+};
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [filtroPrioridad, setFiltroPrioridad] = useState("todas");
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -31,16 +40,23 @@ export default function ClientesPage() {
     setCargando(false);
   }
 
-  const filtrados = clientes.filter((c) => {
-    const coincideBusqueda =
-      !busqueda ||
-      c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      c.whatsapp?.includes(busqueda) ||
-      c.ciudad?.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideEstado =
-      filtroEstado === "todos" || c.estado === filtroEstado;
-    return coincideBusqueda && coincideEstado;
-  });
+  const filtrados = clientes
+    .filter((c) => {
+      const coincideBusqueda =
+        !busqueda ||
+        c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+        c.whatsapp?.includes(busqueda) ||
+        c.ciudad?.toLowerCase().includes(busqueda.toLowerCase());
+      const coincideEstado =
+        filtroEstado === "todos" || c.estado === filtroEstado;
+      const coincidePrioridad =
+        filtroPrioridad === "todas" || c.prioridad === filtroPrioridad;
+      return coincideBusqueda && coincideEstado && coincidePrioridad;
+    })
+    .sort(
+      (a, b) =>
+        (ORDEN_PRIORIDAD[a.prioridad] ?? 1) - (ORDEN_PRIORIDAD[b.prioridad] ?? 1)
+    );
 
   return (
     <div>
@@ -83,6 +99,27 @@ export default function ClientesPage() {
         </div>
       </div>
 
+      <div className="mt-3 flex items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-widest text-neutro">
+          Prioridad
+        </span>
+        <div className="flex gap-1.5 overflow-x-auto">
+          {PRIORIDADES.map((p) => (
+            <button
+              key={p}
+              onClick={() => setFiltroPrioridad(p)}
+              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium capitalize transition ${
+                filtroPrioridad === p
+                  ? "border-bosque bg-bosque text-white"
+                  : "border-linea bg-superficie text-neutro hover:border-bosque hover:text-bosque"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {cargando ? (
         <p className="mt-12 text-center text-sm text-neutro">Cargando…</p>
       ) : filtrados.length === 0 ? (
@@ -118,7 +155,16 @@ export default function ClientesPage() {
                 <p className="font-medium text-tinta group-hover:text-bosque transition">
                   {c.nombre}
                 </p>
-                <Badge texto={c.estado} />
+                <span className="flex shrink-0 gap-1.5">
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                      ESTILO_PRIORIDAD[c.prioridad] ?? ESTILO_PRIORIDAD.media
+                    }`}
+                  >
+                    {c.prioridad}
+                  </span>
+                  <Badge texto={c.estado} />
+                </span>
               </div>
               {c.whatsapp && (
                 <p className="mt-1.5 text-sm text-neutro">{c.whatsapp}</p>

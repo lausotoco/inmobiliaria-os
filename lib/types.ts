@@ -10,6 +10,7 @@ export type Cliente = {
   email: string | null;
   ciudad: string | null;
   estado: string;
+  prioridad: string;
   urgencia: string | null;
   probabilidad_cierre: number | null;
   credito_aprobado: boolean;
