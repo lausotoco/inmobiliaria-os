@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { formatoCOP } from "@/lib/utils";
+import { formatoCOP, codigoSabana } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import Vacio from "@/components/ui/Vacio";
 import type { Propiedad, PropiedadImagen } from "@/lib/types";
@@ -73,6 +73,8 @@ export default function PropiedadesPage() {
       p.ciudad?.toLowerCase().includes(txt) ||
       p.barrio?.toLowerCase().includes(txt) ||
       p.codigo?.toLowerCase().includes(txt) ||
+      codigoSabana(p.consecutivo).toLowerCase().includes(txt) ||
+      String(p.consecutivo ?? "").includes(txt) ||
       p.inmobiliaria?.toLowerCase().includes(txt);
     const estadoOk = filtroEstado === "todos" || p.estado === filtroEstado;
     return coincide && estadoOk;
@@ -162,6 +164,11 @@ export default function PropiedadesPage() {
                 </div>
               )}
               <div className="p-4">
+                {p.consecutivo !== null && (
+                  <p className="mb-1 text-[10px] font-medium uppercase tracking-widest text-neutro">
+                    {codigoSabana(p.consecutivo)}
+                  </p>
+                )}
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-tinta group-hover:text-bosque transition line-clamp-1">
                     {p.titulo || p.codigo || "Sin título"}

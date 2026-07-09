@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { formatoCOP } from "@/lib/utils";
+import { formatoCOP, codigoSabana } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
 import FormPropiedad from "@/components/propiedades/FormPropiedad";
 import GaleriaUpload from "@/components/propiedades/GaleriaUpload";
@@ -124,7 +124,12 @@ export default function PropiedadDetallePage() {
         <div className="flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h1 className="font-display text-3xl font-medium">
+              {propiedad.consecutivo !== null && (
+                <p className="text-xs font-medium uppercase tracking-widest text-neutro">
+                  {codigoSabana(propiedad.consecutivo)}
+                </p>
+              )}
+              <h1 className="mt-1 font-display text-3xl font-medium">
                 {propiedad.titulo || propiedad.codigo || "Propiedad"}
               </h1>
               <div className="mt-2 flex flex-wrap gap-2">

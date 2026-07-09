@@ -51,6 +51,7 @@ export type Requerimiento = {
 export type Propiedad = {
   id: string;
   organization_id: string;
+  consecutivo: number | null;
   codigo: string | null;
   titulo: string | null;
   precio: number | null;
