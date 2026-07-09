@@ -18,6 +18,15 @@ export default function PropiedadesPage() {
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [cargando, setCargando] = useState(true);
 
+  // Filtros avanzados
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [precioMin, setPrecioMin] = useState("");
+  const [precioMax, setPrecioMax] = useState("");
+  const [filtroCiudad, setFiltroCiudad] = useState("");
+  const [filtroBarrio, setFiltroBarrio] = useState("");
+  const [habMin, setHabMin] = useState("");
+  const [areaMin, setAreaMin] = useState("");
+
   const supabase = createClient();
 
   useEffect(() => {
@@ -65,6 +74,31 @@ export default function PropiedadesPage() {
     setCargando(false);
   }
 
+  // Opciones únicas derivadas del inventario
+  const ciudades = Array.from(
+    new Set(propiedades.map((p) => p.ciudad).filter(Boolean) as string[])
+  ).sort();
+  const barrios = Array.from(
+    new Set(
+      propiedades
+        .filter((p) => !filtroCiudad || p.ciudad === filtroCiudad)
+        .map((p) => p.barrio)
+        .filter(Boolean) as string[]
+    )
+  ).sort();
+
+  const hayFiltrosActivos =
+    !!precioMin || !!precioMax || !!filtroCiudad || !!filtroBarrio || !!habMin || !!areaMin;
+
+  function limpiarFiltros() {
+    setPrecioMin("");
+    setPrecioMax("");
+    setFiltroCiudad("");
+    setFiltroBarrio("");
+    setHabMin("");
+    setAreaMin("");
+  }
+
   const filtradas = propiedades.filter((p) => {
     const txt = busqueda.toLowerCase();
     const coincide =
@@ -77,7 +111,19 @@ export default function PropiedadesPage() {
       String(p.consecutivo ?? "").includes(txt) ||
       p.inmobiliaria?.toLowerCase().includes(txt);
     const estadoOk = filtroEstado === "todos" || p.estado === filtroEstado;
-    return coincide && estadoOk;
+
+    const min = precioMin ? Number(precioMin) : null;
+    const max = precioMax ? Number(precioMax) : null;
+    const precioOk =
+      (min === null || (p.precio !== null && p.precio >= min)) &&
+      (max === null || (p.precio !== null && p.precio <= max));
+
+    const ciudadOk = !filtroCiudad || p.ciudad === filtroCiudad;
+    const barrioOk = !filtroBarrio || p.barrio === filtroBarrio;
+    const habOk = !habMin || (p.habitaciones !== null && p.habitaciones >= Number(habMin));
+    const areaOk = !areaMin || (p.area !== null && p.area >= Number(areaMin));
+
+    return coincide && estadoOk && precioOk && ciudadOk && barrioOk && habOk && areaOk;
   });
 
   return (
@@ -118,8 +164,117 @@ export default function PropiedadesPage() {
               {e}
             </button>
           ))}
+          <button
+            onClick={() => setMostrarFiltros(!mostrarFiltros)}
+            className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition ${
+              mostrarFiltros || hayFiltrosActivos
+                ? "border-bosque bg-bosque text-white"
+                : "border-linea bg-superficie text-neutro hover:border-bosque hover:text-bosque"
+            }`}
+          >
+            Filtros{hayFiltrosActivos ? " ·" : ""}
+          </button>
         </div>
       </div>
+
+      {mostrarFiltros && (
+        <div className="mt-3 rounded-xl border border-linea bg-superficie p-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div>
+              <label className="text-xs font-medium text-neutro">Precio desde</label>
+              <input
+                type="number"
+                value={precioMin}
+                onChange={(e) => setPrecioMin(e.target.value)}
+                placeholder="Ej: 300000000"
+                className="mt-1 w-full rounded-lg border border-linea bg-fondo px-3 py-2 text-sm text-tinta outline-none transition focus:border-bosque"
+              />
+              {precioMin && (
+                <p className="mt-0.5 text-[10px] text-neutro">{formatoCOP(Number(precioMin))}</p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-neutro">Precio hasta</label>
+              <input
+                type="number"
+                value={precioMax}
+                onChange={(e) => setPrecioMax(e.target.value)}
+                placeholder="Ej: 800000000"
+                className="mt-1 w-full rounded-lg border border-linea bg-fondo px-3 py-2 text-sm text-tinta outline-none transition focus:border-bosque"
+              />
+              {precioMax && (
+                <p className="mt-0.5 text-[10px] text-neutro">{formatoCOP(Number(precioMax))}</p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-neutro">Ciudad</label>
+              <select
+                value={filtroCiudad}
+                onChange={(e) => {
+                  setFiltroCiudad(e.target.value);
+                  setFiltroBarrio("");
+                }}
+                className="mt-1 w-full rounded-lg border border-linea bg-fondo px-3 py-2 text-sm text-tinta outline-none transition focus:border-bosque"
+              >
+                <option value="">Todas</option>
+                {ciudades.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-neutro">Barrio</label>
+              <select
+                value={filtroBarrio}
+                onChange={(e) => setFiltroBarrio(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-linea bg-fondo px-3 py-2 text-sm text-tinta outline-none transition focus:border-bosque"
+              >
+                <option value="">Todos</option>
+                {barrios.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-neutro">Habitaciones mín.</label>
+              <select
+                value={habMin}
+                onChange={(e) => setHabMin(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-linea bg-fondo px-3 py-2 text-sm text-tinta outline-none transition focus:border-bosque"
+              >
+                <option value="">Cualquiera</option>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>{n}+</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-neutro">Área mín. (m²)</label>
+              <input
+                type="number"
+                value={areaMin}
+                onChange={(e) => setAreaMin(e.target.value)}
+                placeholder="Ej: 80"
+                className="mt-1 w-full rounded-lg border border-linea bg-fondo px-3 py-2 text-sm text-tinta outline-none transition focus:border-bosque"
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between border-t border-linea pt-3">
+            <p className="text-xs text-neutro">
+              {filtradas.length} de {propiedades.length}{" "}
+              {propiedades.length === 1 ? "propiedad" : "propiedades"}
+            </p>
+            {hayFiltrosActivos && (
+              <button
+                onClick={limpiarFiltros}
+                className="text-xs font-medium text-neutro underline transition hover:text-tinta"
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {cargando ? (
         <p className="mt-12 text-center text-sm text-neutro">Cargando…</p>
