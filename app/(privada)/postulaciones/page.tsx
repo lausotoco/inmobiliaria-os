@@ -123,15 +123,16 @@ export default function MarketplaceControl() {
   }
 
   function ContactoBroker({ p }: { p: any }) {
-    const wa = linkWhatsApp(p.broker_telefono);
+    const tel = p.contacto_telefono || p.broker_telefono;
+    const wa = linkWhatsApp(tel);
     return (
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <p className="text-[11px] text-[#8C8C86]">
           Broker: <span className="text-[#141414]">{p.broker_nombre ?? '—'}</span>
           {p.broker_empresa ? ` · ${p.broker_empresa}` : ''}
         </p>
-        {p.broker_telefono && (
-          <span className="text-[11px] text-[#8C8C86]">{p.broker_telefono}</span>
+        {tel && (
+          <span className="text-[11px] text-[#8C8C86]">{tel}</span>
         )}
         {wa && (
           <a href={wa} target="_blank" rel="noreferrer"

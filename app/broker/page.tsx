@@ -70,8 +70,9 @@ export default function PortalBroker() {
   const [formP, setFormP] = useState({
     titulo: '', precio: '', area: '', habitaciones: '', banos: '', parqueaderos: '',
     administracion: '', estrato: '', descripcion: '', amenidades: '',
-    barrio: '', ciudad: '', direccion: '',
+    barrio: '', ciudad: '', direccion: '', contacto: '',
   });
+  const [telPerfil, setTelPerfil] = useState('');
   const [fotos, setFotos] = useState<string[]>([]);
   const [tempId, setTempId] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -98,7 +99,13 @@ export default function PortalBroker() {
   }
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setEmail(user?.email ?? ''));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setEmail(user?.email ?? '');
+      if (user) {
+        supabase.from('profiles').select('telefono').eq('id', user.id).maybeSingle()
+          .then(({ data }) => setTelPerfil(data?.telefono ?? ''));
+      }
+    });
     buscar();
     cargarMias();
   }, []); // eslint-disable-line
@@ -112,11 +119,19 @@ export default function PortalBroker() {
   async function postular() {
     if (!formP.titulo) { setMensaje('El título del inmueble es obligatorio.'); return; }
     if (fotos.length === 0) { setMensaje('Sube al menos una foto del inmueble.'); return; }
+    if (!formP.contacto.trim()) { setMensaje('Escribe tu celular o WhatsApp de contacto.'); return; }
     setEnviando(true);
-    const { data: { user } } = await supabase.auth.getUser();
+
+    const { data: { user }, error: errUser } = await supabase.auth.getUser();
+    if (errUser || !user) {
+      setEnviando(false);
+      setMensaje('Tu sesión expiró. Cierra sesión y vuelve a entrar.');
+      return;
+    }
+
     const { error } = await supabase.from('marketplace_postulaciones').insert({
       requerimiento_id: postulando.id,
-      broker_profile_id: user?.id,
+      broker_profile_id: user.id,
       titulo: formP.titulo,
       descripcion: formP.descripcion || null,
       precio: formP.precio ? Number(formP.precio) * 1000000 : null,
@@ -137,11 +152,12 @@ export default function PortalBroker() {
         ciudad: formP.ciudad || null,
         direccion: formP.direccion || null,
       },
+      contacto_telefono: formP.contacto.trim(),
       fotos_rutas: fotos,
       temp_id: tempId,
     });
     setEnviando(false);
-    if (error) { setMensaje(error.message); return; }
+    if (error) { setMensaje('No se pudo postular: ' + error.message); return; }
     setPostulando(null);
     setFotos([]);
     setMensaje('');
@@ -300,7 +316,7 @@ export default function PortalBroker() {
                             : 'Sin postulaciones aún'}
                         </span>
                         <button
-                          onClick={() => { setPostulando(t); setTempId(crypto.randomUUID()); setFotos([]); }}
+                          onClick={() => { setPostulando(t); setTempId(crypto.randomUUID()); setFotos([]); setFormP((f) => ({ ...f, contacto: f.contacto || telPerfil })); }}
                           className="rounded-full bg-[#141414] text-[#FAFAF7] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity"
                         >
                           Tengo un inmueble para este comprador
@@ -344,6 +360,9 @@ export default function PortalBroker() {
               <div className="space-y-4">
                 <div><label className={labelCls}>Título del inmueble *</label>
                   <input className={inputCls} value={formP.titulo} onChange={(e) => setFormP({ ...formP, titulo: e.target.value })} /></div>
+
+                <div><label className={labelCls}>Tu celular / WhatsApp de contacto *</label>
+                  <input className={inputCls} type="tel" placeholder="300 123 4567" value={formP.contacto} onChange={(e) => setFormP({ ...formP, contacto: e.target.value })} /></div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className={labelCls}>Precio (millones COP)</label>
