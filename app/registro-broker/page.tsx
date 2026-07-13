@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 export default function RegistroBroker() {
   const router = useRouter();
   const supabase = createClient();
-  const [form, setForm] = useState({ nombre: '', empresa: '', email: '', password: '' });
+  const [form, setForm] = useState({ nombre: '', empresa: '', telefono: '', email: '', password: '' });
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
@@ -20,8 +20,8 @@ export default function RegistroBroker() {
 
   async function registrar() {
     setError('');
-    if (!form.nombre || !form.email || form.password.length < 8) {
-      setError('Completa tu nombre, correo y una contraseña de mínimo 8 caracteres.');
+    if (!form.nombre || !form.telefono || !form.email || form.password.length < 8) {
+      setError('Completa tu nombre, celular, correo y una contraseña de mínimo 8 caracteres.');
       return;
     }
     setCargando(true);
@@ -41,6 +41,7 @@ export default function RegistroBroker() {
     const { error: errRpc } = await supabase.rpc('registrar_broker', {
       p_nombre: form.nombre,
       p_empresa: form.empresa,
+      p_telefono: form.telefono,
     });
     if (errRpc) {
       setError('Tu cuenta se creó pero falta el perfil: ' + errRpc.message);
@@ -48,7 +49,7 @@ export default function RegistroBroker() {
       return;
     }
 
-    router.push('/marketplace');
+    router.push('/broker');
   }
 
   return (
@@ -68,6 +69,7 @@ export default function RegistroBroker() {
           {[
             { k: 'nombre', label: 'Nombre completo', type: 'text' },
             { k: 'empresa', label: 'Inmobiliaria o marca (opcional)', type: 'text' },
+            { k: 'telefono', label: 'Celular / WhatsApp', type: 'tel' },
             { k: 'email', label: 'Correo', type: 'email' },
             { k: 'password', label: 'Contraseña', type: 'password' },
           ].map((c) => (

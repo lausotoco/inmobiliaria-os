@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { APP } from '@/lib/config';
+import SubirFotosPostulacion from '@/components/broker/SubirFotosPostulacion';
 
 const ESTADOS: Record<string, string> = {
   postulado: 'Postulado',
@@ -66,7 +67,13 @@ export default function PortalBroker() {
   const [mias, setMias] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
   const [postulando, setPostulando] = useState<any | null>(null);
-  const [formP, setFormP] = useState({ titulo: '', descripcion: '', precio: '', ubicacion: '', alcobas: '', banos: '', area: '', fotos_url: '' });
+  const [formP, setFormP] = useState({
+    titulo: '', precio: '', area: '', habitaciones: '', banos: '', parqueaderos: '',
+    administracion: '', estrato: '', descripcion: '', amenidades: '',
+    barrio: '', ciudad: '', direccion: '',
+  });
+  const [fotos, setFotos] = useState<string[]>([]);
+  const [tempId, setTempId] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
@@ -104,6 +111,7 @@ export default function PortalBroker() {
 
   async function postular() {
     if (!formP.titulo) { setMensaje('El título del inmueble es obligatorio.'); return; }
+    if (fotos.length === 0) { setMensaje('Sube al menos una foto del inmueble.'); return; }
     setEnviando(true);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from('marketplace_postulaciones').insert({
@@ -112,16 +120,30 @@ export default function PortalBroker() {
       titulo: formP.titulo,
       descripcion: formP.descripcion || null,
       precio: formP.precio ? Number(formP.precio) * 1000000 : null,
-      ubicacion: formP.ubicacion || null,
-      alcobas: formP.alcobas ? Number(formP.alcobas) : null,
+      ubicacion: [formP.direccion, formP.barrio, formP.ciudad].filter(Boolean).join(', ') || null,
+      alcobas: formP.habitaciones ? Number(formP.habitaciones) : null,
       banos: formP.banos ? Number(formP.banos) : null,
       area: formP.area ? Number(formP.area) : null,
-      fotos_url: formP.fotos_url || null,
+      fotos_url: null,
+      datos_inmueble: {
+        area: formP.area ? Number(formP.area) : null,
+        habitaciones: formP.habitaciones ? Number(formP.habitaciones) : null,
+        banos: formP.banos ? Number(formP.banos) : null,
+        parqueaderos: formP.parqueaderos ? Number(formP.parqueaderos) : null,
+        administracion: formP.administracion ? Number(formP.administracion) : null,
+        estrato: formP.estrato ? Number(formP.estrato) : null,
+        amenidades: formP.amenidades || null,
+        barrio: formP.barrio || null,
+        ciudad: formP.ciudad || null,
+        direccion: formP.direccion || null,
+      },
+      fotos_rutas: fotos,
+      temp_id: tempId,
     });
     setEnviando(false);
     if (error) { setMensaje(error.message); return; }
     setPostulando(null);
-    setFormP({ titulo: '', descripcion: '', precio: '', ubicacion: '', alcobas: '', banos: '', area: '', fotos_url: '' });
+    setFotos([]);
     setMensaje('');
     cargarMias();
     setTab('mias');
@@ -278,7 +300,7 @@ export default function PortalBroker() {
                             : 'Sin postulaciones aún'}
                         </span>
                         <button
-                          onClick={() => setPostulando(t)}
+                          onClick={() => { setPostulando(t); setTempId(crypto.randomUUID()); setFotos([]); }}
                           className="rounded-full bg-[#141414] text-[#FAFAF7] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity"
                         >
                           Tengo un inmueble para este comprador
@@ -320,22 +342,49 @@ export default function PortalBroker() {
               <h2 className="text-lg tracking-tight text-[#141414] mb-6">Postular inmueble</h2>
 
               <div className="space-y-4">
-                <div><label className={labelCls}>Título *</label>
+                <div><label className={labelCls}>Título del inmueble *</label>
                   <input className={inputCls} value={formP.titulo} onChange={(e) => setFormP({ ...formP, titulo: e.target.value })} /></div>
-                <div><label className={labelCls}>Descripción</label>
-                  <input className={inputCls} value={formP.descripcion} onChange={(e) => setFormP({ ...formP, descripcion: e.target.value })} /></div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div><label className={labelCls}>Precio (M)</label>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className={labelCls}>Precio (millones COP)</label>
                     <input className={inputCls} inputMode="numeric" value={formP.precio} onChange={(e) => setFormP({ ...formP, precio: e.target.value })} /></div>
-                  <div><label className={labelCls}>Alcobas</label>
-                    <input className={inputCls} inputMode="numeric" value={formP.alcobas} onChange={(e) => setFormP({ ...formP, alcobas: e.target.value })} /></div>
+                  <div><label className={labelCls}>Área (m²)</label>
+                    <input className={inputCls} inputMode="numeric" value={formP.area} onChange={(e) => setFormP({ ...formP, area: e.target.value })} /></div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div><label className={labelCls}>Habitaciones</label>
+                    <input className={inputCls} inputMode="numeric" value={formP.habitaciones} onChange={(e) => setFormP({ ...formP, habitaciones: e.target.value })} /></div>
                   <div><label className={labelCls}>Baños</label>
                     <input className={inputCls} inputMode="numeric" value={formP.banos} onChange={(e) => setFormP({ ...formP, banos: e.target.value })} /></div>
+                  <div><label className={labelCls}>Parqueaderos</label>
+                    <input className={inputCls} inputMode="numeric" value={formP.parqueaderos} onChange={(e) => setFormP({ ...formP, parqueaderos: e.target.value })} /></div>
                 </div>
-                <div><label className={labelCls}>Ubicación</label>
-                  <input className={inputCls} value={formP.ubicacion} onChange={(e) => setFormP({ ...formP, ubicacion: e.target.value })} /></div>
-                <div><label className={labelCls}>Link a fotos</label>
-                  <input className={inputCls} value={formP.fotos_url} onChange={(e) => setFormP({ ...formP, fotos_url: e.target.value })} /></div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className={labelCls}>Administración (COP)</label>
+                    <input className={inputCls} inputMode="numeric" value={formP.administracion} onChange={(e) => setFormP({ ...formP, administracion: e.target.value })} /></div>
+                  <div><label className={labelCls}>Estrato</label>
+                    <input className={inputCls} inputMode="numeric" value={formP.estrato} onChange={(e) => setFormP({ ...formP, estrato: e.target.value })} /></div>
+                </div>
+
+                <div><label className={labelCls}>Ciudad</label>
+                  <input className={inputCls} value={formP.ciudad} onChange={(e) => setFormP({ ...formP, ciudad: e.target.value })} /></div>
+                <div><label className={labelCls}>Barrio</label>
+                  <input className={inputCls} value={formP.barrio} onChange={(e) => setFormP({ ...formP, barrio: e.target.value })} /></div>
+                <div><label className={labelCls}>Dirección</label>
+                  <input className={inputCls} value={formP.direccion} onChange={(e) => setFormP({ ...formP, direccion: e.target.value })} /></div>
+
+                <div><label className={labelCls}>Amenidades (separadas por coma)</label>
+                  <input className={inputCls} placeholder="Piscina, gimnasio, portería 24h" value={formP.amenidades} onChange={(e) => setFormP({ ...formP, amenidades: e.target.value })} /></div>
+
+                <div><label className={labelCls}>Descripción</label>
+                  <textarea className={inputCls + ' resize-none'} rows={3} value={formP.descripcion} onChange={(e) => setFormP({ ...formP, descripcion: e.target.value })} /></div>
+
+                <div>
+                  <label className={labelCls}>Fotos del inmueble *</label>
+                  <SubirFotosPostulacion tempId={tempId} rutas={fotos} onChange={setFotos} />
+                </div>
               </div>
 
               {mensaje && <p className="text-xs text-[#141414] mt-4 border-l border-[#141414] pl-3">{mensaje}</p>}
