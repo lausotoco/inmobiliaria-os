@@ -1,8 +1,9 @@
 'use client';
 
-// app/broker/page.tsx
-// Portal INDEPENDIENTE del broker. No usa tu layout privado ni tu sidebar.
-// Solo ve tarjetas anonimizadas y sus propias postulaciones.
+// app/broker/page.tsx — v2
+// Portal independiente del broker con fichas editoriales organizadas
+// por secciones (estilo portafolio): especificaciones, zonas de
+// preferencia, amenidades y comentarios del cliente.
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,13 +23,38 @@ const ESTADOS: Record<string, string> = {
 
 function haceCuanto(fecha: string) {
   const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
-  if (dias === 0) return 'actualizado hoy';
-  if (dias === 1) return 'actualizado hace 1 día';
-  return `actualizado hace ${dias} días`;
+  if (dias === 0) return 'Actualizado hoy';
+  if (dias === 1) return 'Actualizado hace 1 día';
+  return `Actualizado hace ${dias} días`;
 }
 
 const formatoCOP = (n?: number | null) =>
-  n == null ? '—' : '$' + Math.round(n / 1000000) + 'M';
+  n == null ? null : '$' + Math.round(Number(n) / 1000000) + 'M';
+
+// Convierte arrays o texto separado por comas en lista de chips
+function aLista(v: any): string[] {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.filter(Boolean).map(String);
+  return String(v).split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function rango(min?: number | null, max?: number | null, sufijo = '') {
+  const a = min != null ? Math.round(Number(min)) : null;
+  const b = max != null ? Math.round(Number(max)) : null;
+  if (a != null && b != null) return `${a} – ${b}${sufijo}`;
+  if (b != null) return `hasta ${b}${sufijo}`;
+  if (a != null) return `desde ${a}${sufijo}`;
+  return null;
+}
+
+function rangoPresupuesto(min?: number | null, max?: number | null) {
+  const a = formatoCOP(min);
+  const b = formatoCOP(max);
+  if (a && b) return `${a} – ${b}`;
+  if (b) return `Hasta ${b}`;
+  if (a) return `Desde ${a}`;
+  return '—';
+}
 
 export default function PortalBroker() {
   const supabase = createClient();
@@ -103,10 +129,36 @@ export default function PortalBroker() {
 
   const inputCls = 'w-full bg-transparent border-b border-[#E6E6E1] pb-1.5 text-sm text-[#141414] outline-none focus:border-[#141414] transition-colors';
   const labelCls = 'block text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-1';
+  const badgeCls = 'text-[9px] uppercase tracking-[0.15em] border border-[#E6E6E1] rounded-full px-2.5 py-0.5';
+
+  function Spec({ etiqueta, valor }: { etiqueta: string; valor: any }) {
+    if (valor == null || valor === '' ) return null;
+    return (
+      <div>
+        <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-1">{etiqueta}</p>
+        <p className="text-[15px] text-[#141414] tracking-tight">{valor}</p>
+      </div>
+    );
+  }
+
+  function Chips({ etiqueta, items }: { etiqueta: string; items: string[] }) {
+    if (items.length === 0) return null;
+    return (
+      <div className="mt-6">
+        <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-2">{etiqueta}</p>
+        <div className="flex flex-wrap gap-2">
+          {items.map((z) => (
+            <span key={z} className="text-[11px] text-[#141414] border border-[#E6E6E1] rounded-full px-3 py-1">
+              {z}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAF7]">
-      {/* Encabezado propio del portal broker */}
       <header className="border-b border-[#E6E6E1] px-8 py-5 flex items-center justify-between">
         <div>
           <p className="text-[15px] font-bold tracking-tight text-[#141414]">{APP.nombre}</p>
@@ -123,7 +175,7 @@ export default function PortalBroker() {
         </div>
       </header>
 
-      <div className="px-8 py-10 max-w-5xl mx-auto">
+      <div className="px-8 py-10 max-w-3xl mx-auto">
         <h1 className="text-2xl tracking-tight text-[#141414] mb-8">Compradores activos</h1>
 
         <div className="flex gap-6 border-b border-[#E6E6E1] mb-8">
@@ -143,7 +195,7 @@ export default function PortalBroker() {
 
         {tab === 'buscar' && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10 items-end">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12 items-end">
               <div><label className={labelCls}>Alcobas mín.</label>
                 <input className={inputCls} inputMode="numeric" value={filtros.alcobas} onChange={(e) => setFiltros({ ...filtros, alcobas: e.target.value })} /></div>
               <div><label className={labelCls}>Baños mín.</label>
@@ -162,34 +214,79 @@ export default function PortalBroker() {
             ) : tarjetas.length === 0 ? (
               <p className="text-sm text-[#8C8C86]">No hay compradores publicados con esos filtros.</p>
             ) : (
-              <div className="divide-y divide-[#E6E6E1] border-t border-b border-[#E6E6E1]">
-                {tarjetas.map((t) => (
-                  <div key={t.id} className="py-6 flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1.5 flex-wrap">
-                        <span className="text-sm text-[#141414] tracking-tight">Comprador #{t.codigo}</span>
-                        <span className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] border border-[#E6E6E1] rounded-full px-2.5 py-0.5">
-                          {haceCuanto(t.updated_at)}
-                        </span>
-                        {t.postulaciones > 0 && (
-                          <span className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86]">
-                            {t.postulaciones} postulacion{t.postulaciones === 1 ? '' : 'es'}
-                          </span>
+              <div className="space-y-10">
+                {tarjetas.map((t) => {
+                  const zonas = aLista(t.zonas);
+                  const amenidades = aLista(t.amenidades);
+                  const area = rango(t.area_min, t.area_max, ' m²');
+                  return (
+                    <article key={t.id} className="border border-[#E6E6E1] bg-white">
+                      {/* Encabezado de la ficha */}
+                      <div className="px-8 pt-7 pb-5 border-b border-[#E6E6E1] flex flex-wrap items-center gap-3">
+                        <h2 className="text-lg tracking-tight text-[#141414] mr-auto">
+                          Comprador #{t.codigo}
+                        </h2>
+                        <span className={`${badgeCls} text-[#8C8C86]`}>{haceCuanto(t.updated_at)}</span>
+                        {t.urgencia && <span className={`${badgeCls} text-[#141414]`}>{t.urgencia}</span>}
+                        {t.financiacion && <span className={`${badgeCls} text-[#141414]`}>{t.financiacion}</span>}
+                      </div>
+
+                      <div className="px-8 py-7">
+                        {/* Especificaciones en retícula */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6">
+                          <Spec etiqueta="Tipo de inmueble" valor={t.tipo} />
+                          <Spec etiqueta="Presupuesto" valor={rangoPresupuesto(t.presupuesto_min, t.presupuesto_max)} />
+                          <Spec etiqueta="Ciudad" valor={t.ciudad} />
+                          <Spec etiqueta="Alcobas" valor={t.alcobas} />
+                          <Spec etiqueta="Baños" valor={t.banos} />
+                          <Spec etiqueta="Parqueaderos" valor={t.parqueaderos} />
+                          <Spec etiqueta="Área" valor={area} />
+                          <Spec etiqueta="Barrio" valor={t.barrio} />
+                        </div>
+
+                        {/* Zonas de preferencia */}
+                        <Chips etiqueta="Zonas de preferencia" items={zonas} />
+
+                        {/* Amenidades deseadas */}
+                        <Chips etiqueta="Amenidades deseadas" items={amenidades} />
+
+                        {/* Comentarios del cliente */}
+                        {(t.preferencias || t.observaciones) && (
+                          <div className="mt-8 border-t border-[#E6E6E1] pt-6">
+                            <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-3">
+                              Comentarios del cliente
+                            </p>
+                            {t.preferencias && (
+                              <p className="text-[14px] leading-relaxed text-[#141414] border-l border-[#E6E6E1] pl-4 mb-3">
+                                {t.preferencias}
+                              </p>
+                            )}
+                            {t.observaciones && (
+                              <p className="text-[14px] leading-relaxed text-[#141414] border-l border-[#E6E6E1] pl-4">
+                                {t.observaciones}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
-                      <p className="text-sm text-[#8C8C86]">
-                        {[t.tipo, t.alcobas && `${t.alcobas} alcobas`, t.banos && `${t.banos} baños`, t.zona, `hasta ${formatoCOP(t.presupuesto_max)}`, t.financiacion, t.urgencia]
-                          .filter(Boolean).join(' · ')}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setPostulando(t)}
-                      className="rounded-full border border-[#141414] text-[#141414] text-sm px-5 py-2 hover:bg-[#141414] hover:text-[#FAFAF7] transition-colors self-start md:self-auto"
-                    >
-                      Tengo un inmueble para este comprador
-                    </button>
-                  </div>
-                ))}
+
+                      {/* Pie de la ficha */}
+                      <div className="px-8 py-5 border-t border-[#E6E6E1] flex items-center justify-between">
+                        <span className="text-[11px] text-[#B9B9B3]">
+                          {t.postulaciones > 0
+                            ? `${t.postulaciones} postulacion${t.postulaciones === 1 ? '' : 'es'} recibida${t.postulaciones === 1 ? '' : 's'}`
+                            : 'Sin postulaciones aún'}
+                        </span>
+                        <button
+                          onClick={() => setPostulando(t)}
+                          className="rounded-full bg-[#141414] text-[#FAFAF7] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity"
+                        >
+                          Tengo un inmueble para este comprador
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </>
@@ -203,7 +300,7 @@ export default function PortalBroker() {
                 <div className="flex-1">
                   <p className="text-sm text-[#141414] tracking-tight mb-1">{p.titulo}</p>
                   <p className="text-sm text-[#8C8C86]">
-                    {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, p.precio && formatoCOP(p.precio)].filter(Boolean).join(' · ')}
+                    {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, formatoCOP(p.precio)].filter(Boolean).join(' · ')}
                   </p>
                 </div>
                 <span className="text-[9px] uppercase tracking-[0.15em] text-[#141414] border border-[#E6E6E1] rounded-full px-3 py-1">
