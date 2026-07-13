@@ -2,26 +2,49 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { APP } from "@/lib/config";
 
-const ENLACES = [
+const ENLACES_AGENTE = [
   { href: "/dashboard", etiqueta: "Dashboard" },
   { href: "/clientes", etiqueta: "Clientes" },
   { href: "/requerimientos", etiqueta: "Requerimientos" },
   { href: "/propiedades", etiqueta: "Propiedades" },
   { href: "/portafolios", etiqueta: "Portafolios" },
+  { href: "/postulaciones", etiqueta: "Marketplace" },
   { href: "/agenda", etiqueta: "Agenda" },
   { href: "/tareas", etiqueta: "Tareas" },
   { href: "/comisiones", etiqueta: "Comisiones" },
   { href: "/documentos", etiqueta: "Documentos" },
 ];
 
+const ENLACES_BROKER = [
+  { href: "/marketplace", etiqueta: "Marketplace" },
+];
+
 export default function Sidebar({ email }: { email: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
+  const [rol, setRol] = useState<"agente" | "broker">("agente");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("rol")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.rol === "broker") setRol("broker");
+        });
+    });
+  }, []);
+
+  const ENLACES = rol === "broker" ? ENLACES_BROKER : ENLACES_AGENTE;
 
   async function cerrarSesion() {
     const supabase = createClient();
@@ -54,6 +77,11 @@ export default function Sidebar({ email }: { email: string }) {
 
   const pie = (
     <div className="border-t border-[#E6E6E1] px-6 py-5">
+      {rol === "broker" && (
+        <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#B9B9B3]">
+          Cuenta broker
+        </p>
+      )}
       <p className="truncate text-[10px] uppercase tracking-[0.14em] text-[#B9B9B3]">
         {email}
       </p>

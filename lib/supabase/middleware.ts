@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Refresca la sesión en cada petición y protege las rutas privadas.
- * Rutas públicas: /login y los portafolios privados /p/[token].
+ * Rutas públicas: /login, /registro-broker y los portafolios /p/[token].
+ * Los brokers solo pueden navegar dentro de /marketplace.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -36,7 +37,10 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const esPublica = path === "/login" || path.startsWith("/p/");
+  const esPublica =
+    path === "/login" ||
+    path === "/registro-broker" ||
+    path.startsWith("/p/");
 
   if (!user && !esPublica) {
     const url = request.nextUrl.clone();
@@ -44,10 +48,28 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && path === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+  if (user) {
+    // Averigua el rol del usuario (agente o broker)
+    const { data: perfil } = await supabase
+      .from("profiles")
+      .select("rol")
+      .eq("id", user.id)
+      .maybeSingle();
+    const esBroker = perfil?.rol === "broker";
+
+    // Si ya inició sesión y está en login/registro, mándalo a su casa
+    if (path === "/login" || path === "/registro-broker") {
+      const url = request.nextUrl.clone();
+      url.pathname = esBroker ? "/marketplace" : "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    // Un broker solo puede estar en /marketplace
+    if (esBroker && !path.startsWith("/marketplace") && !esPublica) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/marketplace";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;
