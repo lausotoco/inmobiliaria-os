@@ -29,6 +29,7 @@ export default function LoginPage() {
       return;
     }
 
+    // El middleware decide a dónde va cada rol (dashboard u /broker)
     router.push("/dashboard");
     router.refresh();
   }
@@ -96,14 +97,31 @@ export default function LoginPage() {
           >
             {cargando ? "Entrando…" : "Entrar"}
           </button>
+
+          <div className="mt-6 text-center">
+            <a
+              href="/recuperar"
+              className="text-[12px] text-[#8C8C86] underline underline-offset-4 transition hover:text-[#141414]"
+            >
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
         </form>
 
-        <p
-          className="anim-entrada mt-12 text-center text-[10px] uppercase tracking-[0.18em] text-[#C9C9C3]"
+        <div
+          className="anim-entrada mt-12 border-t border-[#E6E6E1] pt-6 text-center"
           style={{ animationDelay: "240ms" }}
         >
-          El registro de nuevas cuentas está deshabilitado
-        </p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[#C9C9C3]">
+            ¿Eres broker o inmobiliaria aliada?
+          </p>
+          <a
+            href="/registro-broker"
+            className="mt-2 inline-block text-[13px] font-medium text-[#141414] underline underline-offset-4 transition hover:opacity-70"
+          >
+            Crea tu cuenta de broker
+          </a>
+        </div>
       </div>
     </main>
   );

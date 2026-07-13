@@ -3,8 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Refresca la sesión en cada petición y protege las rutas privadas.
- * Rutas públicas: /login, /registro-broker y los portafolios /p/[token].
- * Los brokers solo pueden navegar dentro de /marketplace.
+ * Rutas públicas: /login, /registro-broker, /recuperar, /nueva-clave
+ * y los portafolios /p/[token].
+ * Regla de roles:
+ *  - rol 'broker' (o sin perfil) → SOLO puede estar en /broker
+ *  - cualquier otro rol (owner, agente, etc.) → zona privada normal
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -40,6 +43,8 @@ export async function updateSession(request: NextRequest) {
   const esPublica =
     path === "/login" ||
     path === "/registro-broker" ||
+    path === "/recuperar" ||
+    path === "/nueva-clave" ||
     path.startsWith("/p/");
 
   if (!user && !esPublica) {
@@ -49,25 +54,31 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    // Averigua el rol del usuario (agente o broker)
+    // Lee el rol. Si no hay perfil legible, por seguridad se trata
+    // como broker (acceso mínimo, nunca entra a la zona privada).
     const { data: perfil } = await supabase
       .from("profiles")
       .select("rol")
       .eq("id", user.id)
       .maybeSingle();
-    const esBroker = perfil?.rol === "broker";
+    const esInterno = !!perfil && perfil.rol !== "broker";
 
-    // Si ya inició sesión y está en login/registro, mándalo a su casa
-    if (path === "/login" || path === "/registro-broker") {
+    // Deja pasar /nueva-clave aunque haya sesión (viene del enlace de reset)
+    if (path === "/nueva-clave") {
+      return supabaseResponse;
+    }
+
+    // Con sesión iniciada, login/registro/recuperar redirigen a su casa
+    if (path === "/login" || path === "/registro-broker" || path === "/recuperar") {
       const url = request.nextUrl.clone();
-      url.pathname = esBroker ? "/marketplace" : "/dashboard";
+      url.pathname = esInterno ? "/dashboard" : "/broker";
       return NextResponse.redirect(url);
     }
 
-    // Un broker solo puede estar en /marketplace
-    if (esBroker && !path.startsWith("/marketplace") && !esPublica) {
+    // Quien NO es interno solo puede estar en /broker
+    if (!esInterno && !path.startsWith("/broker") && !esPublica) {
       const url = request.nextUrl.clone();
-      url.pathname = "/marketplace";
+      url.pathname = "/broker";
       return NextResponse.redirect(url);
     }
   }
