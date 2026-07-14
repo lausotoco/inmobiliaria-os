@@ -8,5 +8,5 @@ export const APP = {
 
   // Tu número de WhatsApp con indicativo, solo dígitos (para el botón
   // de contacto en los portafolios). Ej: "573001234567"
-  whatsapp: "",
+  whatsapp: "573118018295",
 };

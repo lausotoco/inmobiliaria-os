@@ -75,6 +75,11 @@ export type Propiedad = {
   url_original: string | null;
   estado: string;
   comision_pct: number | null;
+  es_captacion: boolean;
+  publicada_web: boolean;
+  destacada: boolean;
+  slug: string | null;
+  descripcion_publica: string | null;
   created_at: string;
   updated_at: string;
 };

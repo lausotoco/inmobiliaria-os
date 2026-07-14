@@ -45,7 +45,11 @@ export async function updateSession(request: NextRequest) {
     path === "/registro-broker" ||
     path === "/recuperar" ||
     path === "/nueva-clave" ||
-    path.startsWith("/p/");
+    path.startsWith("/p/") ||
+    path === "/inmuebles" ||
+    path.startsWith("/inmuebles/") ||
+    path === "/sitemap.xml" ||
+    path === "/robots.txt";
 
   if (!user && !esPublica) {
     const url = request.nextUrl.clone();
