@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   title: `Inmuebles disponibles — ${APP.marca}`,
   description:
     "Selección de inmuebles en venta, presentados con el detalle que merecen. Agenda tu visita.",
+  robots: { index: true, follow: true },
   openGraph: {
     title: `Inmuebles disponibles — ${APP.marca}`,
     description:
