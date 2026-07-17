@@ -16,6 +16,17 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Todos ven la página pública; el header lleva al panel si ya inició sesión
-  return <LandingKyrelo loggedIn={!!user} />;
+  // Según el rol, el botón "Ir a mi panel" lleva al lugar correcto
+  let panelHref = "/dashboard";
+  if (user) {
+    const { data: perfil } = await supabase
+      .from("profiles")
+      .select("rol")
+      .eq("id", user.id)
+      .maybeSingle();
+    const esBroker = !perfil || perfil.rol === "broker";
+    panelHref = esBroker ? "/broker" : "/dashboard";
+  }
+
+  return <LandingKyrelo loggedIn={!!user} panelHref={panelHref} />;
 }

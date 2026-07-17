@@ -41,6 +41,8 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const esPublica =
+    path === "/" ||
+    path === "/brokers" ||
     path === "/login" ||
     path === "/registro-broker" ||
     path === "/recuperar" ||

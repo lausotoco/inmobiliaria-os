@@ -1,44 +1,34 @@
 ================================================================
-  KYRELO — Rebranding + Página pública (todo en un paquete)
+  KYRELO — Rebranding + Página pública + Página de Brokers
 ================================================================
-
-Este paquete incluye:
-  • El rebranding completo a KYRELO (logo, colores, tipografías, eslogan)
-  • La nueva PÁGINA PÚBLICA de la empresa en la raíz del sitio
-    (Hero con red de nodos animada, Qué es KYRELO, Servicios,
-     Cómo funciona, Cobertura con contador, Equipo y CTA final)
+Incluye:
+  • Rebranding completo a KYRELO (logo, colores, tipografías, eslogan)
+  • Página pública en la raíz "/"  (Hero animado, servicios, etc.)
+  • Nueva página pública "/brokers" (explica el negocio + login del broker)
+  • Botón "Inicio" en tu panel y en el panel de brokers para ir/volver a la home
+  • Arreglo del middleware para que la home y /brokers sean públicas
 
 --------------------------------------------------------
 CÓMO APLICARLO (Terminal de Mac) — un solo push
 --------------------------------------------------------
-1) Descomprime este paquete (doble clic).
-2) Cópialo COMPLETO sobre tu proyecto:
-
+1) Descomprime (doble clic).
+2) Copia sobre tu proyecto:
    cp -R ~/Downloads/kyrelo-web/. ~/Downloads/inmobiliaria-os/
-
-3) Borra el archivo basura de respaldo (si existe):
-
+3) Borra el respaldo viejo (si sale error, ignóralo):
    rm -f ~/Downloads/inmobiliaria-os/components/ui/Sidebar.tsx.save
-
-4) Sube a producción:
-
+4) Sube:
    cd ~/Downloads/inmobiliaria-os
    git add .
-   git commit -m "Rebranding KYRELO + pagina publica"
+   git commit -m "Pagina de brokers y navegacion inicio"
    git push
 
-Netlify se actualiza solo en 2-3 minutos.
-
 --------------------------------------------------------
-QUÉ SE AGREGÓ PARA LA PÁGINA PÚBLICA
+FLUJO NUEVO
 --------------------------------------------------------
-• components/landing/LandingKyrelo.tsx  -> toda la página, por bloques comentados
-• app/page.tsx                          -> ahora muestra la página pública en "/"
-                                           (y manda al panel a quien ya inició sesión)
+• Home "/" -> botón "Únete como broker" -> /brokers
+• /brokers -> explica el negocio + login. Registro -> /registro-broker.
+              Al iniciar sesión el broker entra a sus requerimientos (/broker).
+• Desde tu panel o el del broker -> botón "Inicio" vuelve a "/".
+• Desde "/" (con sesión) -> "Ir a mi panel" lleva a cada quien a su lugar.
 
-Los botones:
-• "Únete como broker"  -> /registro-broker (tu registro existente)
-• "Quiero vender/arrendar" y "Habla con nosotros" -> WhatsApp con mensaje pre-armado
-• "Entrar" (arriba)    -> /login
-
-Puedes borrar este LEEME.txt después:  rm -f ~/Downloads/inmobiliaria-os/LEEME.txt
+Puedes borrar este LEEME.txt luego:  rm -f ~/Downloads/inmobiliaria-os/LEEME.txt

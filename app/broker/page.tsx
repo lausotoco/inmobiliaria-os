@@ -112,7 +112,7 @@ export default function PortalBroker() {
 
   async function cerrarSesion() {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push('/brokers');
     router.refresh();
   }
 
@@ -204,12 +204,17 @@ export default function PortalBroker() {
             Red de brokers
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[#A8A69E] truncate max-w-[180px]">{email}</p>
-          <button onClick={cerrarSesion}
-            className="text-[12px] font-medium text-[#5F5E5A] hover:text-[#1A1A18] transition">
-            Cerrar sesión
-          </button>
+        <div className="flex items-center gap-6 text-right">
+          <a href="/" className="text-[12px] font-medium text-[#5F5E5A] hover:text-[#1A1A18] transition">
+            Inicio
+          </a>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-[#A8A69E] truncate max-w-[180px]">{email}</p>
+            <button onClick={cerrarSesion}
+              className="text-[12px] font-medium text-[#5F5E5A] hover:text-[#1A1A18] transition">
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </header>
 

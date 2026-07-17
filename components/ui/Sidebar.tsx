@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { APP } from "@/lib/config";
 
 const ENLACES_AGENTE = [
+  { href: "/", etiqueta: "Inicio" },
   { href: "/dashboard", etiqueta: "Dashboard" },
   { href: "/clientes", etiqueta: "Clientes" },
   { href: "/requerimientos", etiqueta: "Requerimientos" },
@@ -58,7 +59,7 @@ export default function Sidebar({ email }: { email: string }) {
   const nav = (
     <nav className="flex flex-1 flex-col gap-0.5 px-6">
       {ENLACES.map((e) => {
-        const activo = pathname.startsWith(e.href);
+        const activo = e.href === "/" ? pathname === "/" : pathname.startsWith(e.href);
         return (
           <Link
             key={e.href}

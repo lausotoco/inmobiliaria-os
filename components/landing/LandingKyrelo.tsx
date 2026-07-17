@@ -304,7 +304,13 @@ function Revelar({
   );
 }
 
-export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean }) {
+export default function LandingKyrelo({
+  loggedIn = false,
+  panelHref = "/dashboard",
+}: {
+  loggedIn?: boolean;
+  panelHref?: string;
+}) {
   // Animación del titular (entra al montar) y fade+zoom del hero al hacer scroll
   const [montado, setMontado] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
@@ -389,7 +395,7 @@ export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean
           </span>
         </div>
         <a
-          href={loggedIn ? "/dashboard" : "/login"}
+          href={loggedIn ? panelHref : "/login"}
           className="text-[13px] font-medium"
           style={{ color: C.piedra }}
         >
@@ -455,7 +461,7 @@ export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean
             style={{ transitionDelay: "560ms" }}
           >
             <a
-              href="/registro-broker"
+              href="/brokers"
               className="ky-btn inline-flex items-center justify-center rounded-full px-8 py-3.5 text-[14px] font-semibold text-white"
               style={{ background: C.cobre }}
             >
