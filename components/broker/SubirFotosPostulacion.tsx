@@ -62,7 +62,7 @@ export default function SubirFotosPostulacion({
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); subir(e.dataTransfer.files); }}
         onClick={() => inputRef.current?.click()}
-        className="cursor-pointer rounded-xl border-2 border-dashed border-[#E6E6E1] bg-[#FAFAF7] p-6 text-center transition hover:border-[#141414]/30"
+        className="cursor-pointer rounded-xl border-2 border-dashed border-[#E0DDD2] bg-[#F1EFE8] p-6 text-center transition hover:border-[#1A1A18]/30"
       >
         <input
           ref={inputRef}
@@ -73,14 +73,14 @@ export default function SubirFotosPostulacion({
           onChange={(e) => subir(e.target.files)}
         />
         {subiendo ? (
-          <p className="text-sm text-[#141414]">{progreso}</p>
+          <p className="text-sm text-[#1A1A18]">{progreso}</p>
         ) : (
           <>
             <p className="text-xl">📷</p>
-            <p className="mt-2 text-sm font-medium text-[#141414]">
+            <p className="mt-2 text-sm font-medium text-[#1A1A18]">
               Arrastra fotos aquí o toca para seleccionar
             </p>
-            <p className="mt-1 text-xs text-[#8C8C86]">
+            <p className="mt-1 text-xs text-[#5F5E5A]">
               JPG, PNG o WebP. Sube varias a la vez.
             </p>
           </>
@@ -97,7 +97,7 @@ export default function SubirFotosPostulacion({
                 className="aspect-[4/3] w-full rounded-lg object-cover"
               />
               {idx === 0 && (
-                <span className="absolute left-1.5 top-1.5 rounded bg-[#141414] px-1.5 py-0.5 text-[9px] font-medium text-white">
+                <span className="absolute left-1.5 top-1.5 rounded bg-[#1A1A18] px-1.5 py-0.5 text-[9px] font-medium text-white">
                   Principal
                 </span>
               )}
@@ -113,7 +113,7 @@ export default function SubirFotosPostulacion({
         </div>
       )}
       {rutas.length > 0 && (
-        <p className="mt-2 text-xs text-[#8C8C86]">
+        <p className="mt-2 text-xs text-[#5F5E5A]">
           {rutas.length} foto{rutas.length !== 1 ? 's' : ''}. La primera será la principal.
         </p>
       )}

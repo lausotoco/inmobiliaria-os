@@ -78,7 +78,7 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
             }}
           />
           {datosAudio && (
-            <p className="mt-3 rounded-xl border border-[#E6E6E1] bg-[#F5F5F0] px-4 py-2.5 text-[13px] text-[#141414]">
+            <p className="mt-3 rounded-xl border border-[#E0DDD2] bg-[#F5F5F0] px-4 py-2.5 text-[13px] text-[#1A1A18]">
               ✓ Audio analizado — el formulario se llenó automáticamente. Revisa,
               ajusta lo que falte y guarda.
             </p>

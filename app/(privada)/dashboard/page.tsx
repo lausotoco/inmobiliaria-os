@@ -90,7 +90,7 @@ export default function DashboardPage() {
   if (!d) {
     return (
       <div className="mt-40 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#B9B9B3]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#A8A69E]">
           Cargando
         </p>
       </div>
@@ -119,7 +119,7 @@ export default function DashboardPage() {
       {/* ── Cabecera editorial ── */}
       <div className="anim-entrada flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#B9B9B3]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#A8A69E]">
             Centro de control
           </p>
           <h1 className="mt-2 text-[40px] font-bold leading-none tracking-tight">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         </div>
         {d.valorPipeline > 0 && (
           <div className="text-left sm:text-right">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#B9B9B3]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#A8A69E]">
               Pipeline estimado
             </p>
             <p className="mt-1 text-[26px] font-bold tracking-tight">
@@ -142,7 +142,7 @@ export default function DashboardPage() {
       {d.matchesSugeridos > 0 && (
         <Link
           href="/requerimientos"
-          className="anim-entrada mt-10 flex items-baseline justify-between border-b border-t border-[#141414] py-4 transition-opacity hover:opacity-70"
+          className="anim-entrada mt-10 flex items-baseline justify-between border-b border-t border-[#1A1A18] py-4 transition-opacity hover:opacity-70"
           style={{ animationDelay: "80ms" }}
         >
           <span className="text-[14px] font-medium">
@@ -159,16 +159,16 @@ export default function DashboardPage() {
           <Link
             key={k.etiqueta}
             href={k.href}
-            className="anim-entrada group border-t border-[#E6E6E1] pb-8 pt-5 transition-colors hover:border-[#141414]"
+            className="anim-entrada group border-t border-[#E0DDD2] pb-8 pt-5 transition-colors hover:border-[#1A1A18]"
             style={{ animationDelay: `${120 + i * 60}ms` }}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8C86]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5F5E5A]">
               {k.etiqueta}
             </p>
             <p className="mt-3 text-[52px] font-bold leading-none tracking-tight">
               {k.valor}
             </p>
-            <p className="mt-2 text-[12px] font-light text-[#B9B9B3]">
+            <p className="mt-2 text-[12px] font-light text-[#A8A69E]">
               {k.detalle}
             </p>
           </Link>
@@ -177,21 +177,21 @@ export default function DashboardPage() {
 
       {/* ── Embudo monocromo ── */}
       <div
-        className="anim-entrada border-t border-[#E6E6E1] pt-8"
+        className="anim-entrada border-t border-[#E0DDD2] pt-8"
         style={{ animationDelay: "380ms" }}
       >
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8C86]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5F5E5A]">
           Embudo del negocio
         </p>
         <div className="mt-6 space-y-3">
           {embudo.map((e, i) => (
             <div key={e.etapa} className="flex items-center gap-5">
-              <p className="w-40 shrink-0 text-[12px] font-light text-[#8C8C86] sm:w-48">
+              <p className="w-40 shrink-0 text-[12px] font-light text-[#5F5E5A] sm:w-48">
                 {e.etapa}
               </p>
-              <div className="h-7 flex-1 overflow-hidden rounded-[3px] bg-[#F0F0EB]">
+              <div className="h-7 flex-1 overflow-hidden rounded-[3px] bg-[#E8E5DB]">
                 <div
-                  className="anim-barra flex h-full items-center bg-[#141414] px-3"
+                  className="anim-barra flex h-full items-center bg-[#1A1A18] px-3"
                   style={{
                     width: `${Math.max(7, (e.valor / maxEmbudo) * 100)}%`,
                     animationDelay: `${450 + i * 80}ms`,
@@ -218,7 +218,7 @@ export default function DashboardPage() {
             >
               <div>
                 <p className="text-[13px] font-medium">{c.nombre}</p>
-                <p className="mt-0.5 text-[11px] font-light text-[#B9B9B3]">
+                <p className="mt-0.5 text-[11px] font-light text-[#A8A69E]">
                   {c.ultimo_contacto
                     ? `Último contacto: ${formatoFecha(c.ultimo_contacto)}`
                     : "Sin contacto registrado"}
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             >
               <div>
                 <p className="text-[13px] font-medium">{p.titulo || "Portafolio"}</p>
-                <p className="mt-0.5 text-[11px] font-light text-[#B9B9B3]">
+                <p className="mt-0.5 text-[11px] font-light text-[#A8A69E]">
                   Para {p.clientes?.nombre} · {formatoFecha(p.created_at)}
                 </p>
               </div>
@@ -282,14 +282,14 @@ export default function DashboardPage() {
                       <p className="text-[13px]">
                         {t.descripcion}
                         {t.origen === "automatica" && (
-                          <span className="ml-1.5 text-[9px] font-semibold uppercase tracking-wider text-[#B9B9B3]">
+                          <span className="ml-1.5 text-[9px] font-semibold uppercase tracking-wider text-[#A8A69E]">
                             auto
                           </span>
                         )}
                       </p>
                       <p
                         className={`mt-0.5 text-[11px] font-light ${
-                          vencida ? "font-medium text-[#8E3B31]" : "text-[#B9B9B3]"
+                          vencida ? "font-medium text-[#8E3B31]" : "text-[#A8A69E]"
                         }`}
                       >
                         {t.clientes?.nombre ? `${t.clientes.nombre} · ` : ""}
@@ -319,7 +319,7 @@ export default function DashboardPage() {
               className="block py-3.5 transition-opacity hover:opacity-60"
             >
               <p className="text-[13px] line-clamp-1">{a.contenido}</p>
-              <p className="mt-0.5 text-[11px] font-light text-[#B9B9B3]">
+              <p className="mt-0.5 text-[11px] font-light text-[#A8A69E]">
                 {a.clientes?.nombre} · {formatoFecha(a.fecha)}
               </p>
             </Link>
@@ -346,14 +346,14 @@ function Panel({
     : Boolean(children);
   return (
     <div className="anim-entrada" style={{ animationDelay: `${delay}ms` }}>
-      <p className="border-b border-[#E6E6E1] pb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8C86]">
+      <p className="border-b border-[#E0DDD2] pb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5F5E5A]">
         {titulo}
       </p>
       <div className="divide-y divide-[#EDEDE8]">
         {tieneContenido ? (
           children
         ) : (
-          <p className="py-5 text-[13px] font-light text-[#B9B9B3]">{vacio}</p>
+          <p className="py-5 text-[13px] font-light text-[#A8A69E]">{vacio}</p>
         )}
       </div>
     </div>

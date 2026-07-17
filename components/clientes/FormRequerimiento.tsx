@@ -478,10 +478,10 @@ export default function FormRequerimiento({
 
       {/* ── Alerta de matching automático ── */}
       {buscandoMatches && (
-        <div className="mt-6 rounded-xl border border-[#E6E6E1] bg-[#FAFAF7] p-5">
+        <div className="mt-6 rounded-xl border border-[#E0DDD2] bg-[#F1EFE8] p-5">
           <div className="flex items-center gap-3">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#141414] border-t-transparent" />
-            <p className="text-sm text-[#8C8C86]">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#1A1A18] border-t-transparent" />
+            <p className="text-sm text-[#5F5E5A]">
               Buscando propiedades compatibles en tu banco…
             </p>
           </div>
@@ -489,19 +489,19 @@ export default function FormRequerimiento({
       )}
 
       {matchError && !buscandoMatches && (
-        <div className="mt-6 rounded-xl border border-[#E6E6E1] bg-[#FAFAF7] p-5">
-          <p className="text-sm text-[#8C8C86]">{matchError}</p>
+        <div className="mt-6 rounded-xl border border-[#E0DDD2] bg-[#F1EFE8] p-5">
+          <p className="text-sm text-[#5F5E5A]">{matchError}</p>
         </div>
       )}
 
       {matchesAlerta.length > 0 && !buscandoMatches && (
-        <div className="mt-6 rounded-xl border border-[#E6E6E1] bg-[#FAFAF7] p-6">
+        <div className="mt-6 rounded-xl border border-[#E0DDD2] bg-[#F1EFE8] p-6">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#8C8C86]">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#5F5E5A]">
                 Matches encontrados
               </p>
-              <p className="mt-1 text-sm text-[#141414]">
+              <p className="mt-1 text-sm text-[#1A1A18]">
                 {matchesAlerta.length} propiedad{matchesAlerta.length > 1 ? "es" : ""} de
                 tu banco podrían servirle a este cliente
               </p>
@@ -509,7 +509,7 @@ export default function FormRequerimiento({
             {nuevoReqId && (
               <a
                 href={`/requerimientos/${nuevoReqId}`}
-                className="rounded-full bg-[#141414] px-4 py-2 text-xs font-medium text-white transition hover:opacity-80"
+                className="rounded-full bg-[#1A1A18] px-4 py-2 text-xs font-medium text-white transition hover:opacity-80"
               >
                 Ver matching completo
               </a>
@@ -520,31 +520,31 @@ export default function FormRequerimiento({
             {matchesAlerta.map((m) => (
               <div
                 key={m.propiedad_id}
-                className="flex items-start gap-4 rounded-lg border border-[#E6E6E1] bg-white p-4"
+                className="flex items-start gap-4 rounded-lg border border-[#E0DDD2] bg-white p-4"
               >
                 {/* Score visual */}
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg font-semibold tracking-tight text-[#141414]">
+                  <span className="text-lg font-semibold tracking-tight text-[#1A1A18]">
                     {m.score}%
                   </span>
-                  <span className="text-[9px] font-medium uppercase tracking-widest text-[#8C8C86]">
+                  <span className="text-[9px] font-medium uppercase tracking-widest text-[#5F5E5A]">
                     Match
                   </span>
                 </div>
 
                 {/* Separador */}
-                <div className="hidden h-14 w-px bg-[#E6E6E1] sm:block" />
+                <div className="hidden h-14 w-px bg-[#E0DDD2] sm:block" />
 
                 {/* Info propiedad */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#141414]">
+                  <p className="truncate text-sm font-medium text-[#1A1A18]">
                     {m.titulo}
                   </p>
-                  <p className="mt-0.5 text-xs text-[#8C8C86]">
+                  <p className="mt-0.5 text-xs text-[#5F5E5A]">
                     {[m.barrio, m.ciudad].filter(Boolean).join(", ")}
                     {m.precio ? ` · ${formatoCOP(m.precio)}` : ""}
                   </p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[#B9B9B3]">
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#A8A69E]">
                     {m.explicacion}
                   </p>
                 </div>
@@ -552,10 +552,10 @@ export default function FormRequerimiento({
                 {/* Probabilidad de cierre */}
                 {m.probabilidad_cierre != null && (
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg font-semibold tracking-tight text-[#8C8C86]">
+                    <span className="text-lg font-semibold tracking-tight text-[#5F5E5A]">
                       {m.probabilidad_cierre}%
                     </span>
-                    <span className="text-[9px] font-medium uppercase tracking-widest text-[#B9B9B3]">
+                    <span className="text-[9px] font-medium uppercase tracking-widest text-[#A8A69E]">
                       Cierre
                     </span>
                   </div>

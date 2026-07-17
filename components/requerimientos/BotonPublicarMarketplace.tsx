@@ -48,8 +48,8 @@ export default function BotonPublicarMarketplace({
       onClick={alternar}
       className={`rounded-full text-sm px-5 py-2 transition-all ${
         publicado
-          ? 'border border-[#E6E6E1] text-[#8C8C86] hover:text-[#141414]'
-          : 'bg-[#141414] text-[#FAFAF7] hover:opacity-80'
+          ? 'border border-[#E0DDD2] text-[#5F5E5A] hover:text-[#1A1A18]'
+          : 'bg-[#1A1A18] text-[#F1EFE8] hover:opacity-80'
       }`}
     >
       {publicado ? 'Retirar del marketplace' : 'Publicar en marketplace'}

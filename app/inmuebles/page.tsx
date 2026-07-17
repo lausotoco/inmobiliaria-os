@@ -10,11 +10,11 @@ export const dynamic = "force-dynamic";
 
 // ── Portal público de captaciones · quiet luxury editorial ──
 const C = {
-  fondo: "#FAFAF7",
-  negro: "#141414",
-  gris: "#8C8C86",
-  grisClaro: "#B9B9B3",
-  linea: "#E6E6E1",
+  fondo: "#F1EFE8",
+  negro: "#1A1A18",
+  gris: "#5F5E5A",
+  grisClaro: "#A8A69E",
+  linea: "#E0DDD2",
 };
 
 export const metadata: Metadata = {
@@ -130,7 +130,7 @@ export default async function InmueblesPage() {
                   ) : (
                     <div
                       className="flex aspect-[4/3] w-full items-center justify-center text-5xl"
-                      style={{ backgroundColor: "#F0F0EB", color: C.grisClaro }}
+                      style={{ backgroundColor: "#E8E5DB", color: C.grisClaro }}
                     >
                       ⌂
                     </div>

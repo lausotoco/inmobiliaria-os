@@ -15,11 +15,11 @@ type Props = { params: { slug: string } };
 // Diseñada como página de destino para campañas de Google Ads:
 // jerarquía clara, información completa y llamados a la acción.
 const C = {
-  fondo: "#FAFAF7",
-  negro: "#141414",
-  gris: "#8C8C86",
-  grisClaro: "#B9B9B3",
-  linea: "#E6E6E1",
+  fondo: "#F1EFE8",
+  negro: "#1A1A18",
+  gris: "#5F5E5A",
+  grisClaro: "#A8A69E",
+  linea: "#E0DDD2",
 };
 
 function urlImagen(ruta: string) {

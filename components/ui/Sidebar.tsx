@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -65,8 +66,8 @@ export default function Sidebar({ email }: { email: string }) {
             onClick={() => setAbierto(false)}
             className={`border-l-2 py-2.5 pl-4 text-[13px] transition-all duration-300 ${
               activo
-                ? "border-[#141414] font-semibold text-[#141414]"
-                : "border-transparent font-medium text-[#8C8C86] hover:text-[#141414]"
+                ? "border-[#B87333] font-semibold text-[#1A1A18]"
+                : "border-transparent font-medium text-[#5F5E5A] hover:text-[#1A1A18]"
             }`}
           >
             {e.etiqueta}
@@ -77,18 +78,18 @@ export default function Sidebar({ email }: { email: string }) {
   );
 
   const pie = (
-    <div className="border-t border-[#E6E6E1] px-6 py-5">
+    <div className="border-t border-[#E0DDD2] px-6 py-5">
       {rol === "broker" && (
-        <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#B9B9B3]">
+        <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E]">
           Cuenta broker
         </p>
       )}
-      <p className="truncate text-[10px] uppercase tracking-[0.14em] text-[#B9B9B3]">
+      <p className="truncate text-[10px] uppercase tracking-[0.14em] text-[#A8A69E]">
         {email}
       </p>
       <button
         onClick={cerrarSesion}
-        className="mt-2.5 text-[12px] font-medium text-[#8C8C86] transition hover:text-[#141414]"
+        className="mt-2.5 text-[12px] font-medium text-[#5F5E5A] transition hover:text-[#1A1A18]"
       >
         Cerrar sesión
       </button>
@@ -98,36 +99,44 @@ export default function Sidebar({ email }: { email: string }) {
   return (
     <>
       {/* Barra superior — solo móvil */}
-      <header className="flex items-center justify-between border-b border-[#E6E6E1] bg-[#FAFAF7] px-5 py-4 md:hidden">
-        <div>
-          <span className="text-[15px] font-bold tracking-tight text-[#141414]">
-            {APP.nombre}
-          </span>
-        </div>
+      <header className="flex items-center justify-between border-b border-[#E0DDD2] bg-[#F1EFE8] px-5 py-4 md:hidden">
+        <Image
+          src="/kyrelo-logo.png"
+          alt={APP.nombre}
+          width={497}
+          height={441}
+          priority
+          className="h-8 w-auto"
+        />
         <button
           onClick={() => setAbierto(!abierto)}
           aria-label="Abrir menú"
-          className="text-[#8C8C86] transition hover:text-[#141414]"
+          className="text-[#5F5E5A] transition hover:text-[#1A1A18]"
         >
           {abierto ? "✕" : "☰"}
         </button>
       </header>
 
       {abierto && (
-        <div className="anim-fade flex flex-col border-b border-[#E6E6E1] bg-[#FAFAF7] pb-2 pt-3 md:hidden">
+        <div className="anim-fade flex flex-col border-b border-[#E0DDD2] bg-[#F1EFE8] pb-2 pt-3 md:hidden">
           {nav}
           {pie}
         </div>
       )}
 
       {/* Sidebar — escritorio */}
-      <aside className="hidden w-[230px] shrink-0 flex-col border-r border-[#E6E6E1] bg-[#FAFAF7] md:flex">
+      <aside className="hidden w-[230px] shrink-0 flex-col border-r border-[#E0DDD2] bg-[#F1EFE8] md:flex">
         <div className="px-6 pb-10 pt-8">
-          <p className="text-[17px] font-bold tracking-tight text-[#141414]">
-            {APP.nombre}
-          </p>
-          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-[#B9B9B3]">
-            Real Estate
+          <Image
+            src="/kyrelo-logo.png"
+            alt={APP.nombre}
+            width={497}
+            height={441}
+            priority
+            className="h-14 w-auto"
+          />
+          <p className="mt-3 text-[9px] font-medium uppercase tracking-[0.22em] text-[#B87333]">
+            {APP.eslogan}
           </p>
         </div>
         {nav}

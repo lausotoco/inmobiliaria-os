@@ -141,8 +141,8 @@ export default function ClienteDetallePage() {
                   onClick={() => cambiarRapido("prioridad", p)}
                   className={`rounded-full border px-3 py-1 text-[11px] font-medium capitalize transition ${
                     cliente.prioridad === p
-                      ? "border-[#141414] bg-[#141414] text-white"
-                      : "border-linea bg-superficie text-neutro hover:border-[#141414] hover:text-tinta"
+                      ? "border-[#1A1A18] bg-[#1A1A18] text-white"
+                      : "border-linea bg-superficie text-neutro hover:border-[#1A1A18] hover:text-tinta"
                   }`}
                 >
                   {p}
@@ -161,7 +161,7 @@ export default function ClienteDetallePage() {
             href={`https://wa.me/${cliente.whatsapp.replace(/\D/g, "")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 rounded-lg bg-[#141414] rounded-full px-5 py-2.5 text-center text-sm font-medium text-white transition hover:opacity-80"
+            className="shrink-0 rounded-lg bg-[#1A1A18] rounded-full px-5 py-2.5 text-center text-sm font-medium text-white transition hover:opacity-80"
           >
             WhatsApp →
           </a>

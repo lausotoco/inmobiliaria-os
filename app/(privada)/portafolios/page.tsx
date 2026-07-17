@@ -177,7 +177,7 @@ export default function PortafoliosPage() {
                   </button>
                   <button
                     onClick={() => enviarWhatsApp(p)}
-                    className="rounded-lg bg-[#141414] rounded-full px-3.5 py-2 text-xs font-medium text-white transition hover:opacity-80"
+                    className="rounded-lg bg-[#1A1A18] rounded-full px-3.5 py-2 text-xs font-medium text-white transition hover:opacity-80"
                   >
                     Enviar por WhatsApp
                   </button>

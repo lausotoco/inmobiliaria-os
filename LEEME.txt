@@ -1,0 +1,71 @@
+================================================================
+  KYRELO — Paquete de rebranding para Sabana OS / inmobiliaria-os
+================================================================
+
+Este paquete contiene TODOS los archivos que cambian para
+convertir la app a la marca KYRELO:
+  • Logo (sidebar, login y portafolios públicos)
+  • Favicon e íconos de app
+  • Paleta grafito + cobre sobre fondo hueso
+  • Tipografías: Fraunces (titulares) + Inter (cuerpo)
+  • Eslogan "Menos búsqueda. Más cierre."
+  • Nombre de marca KYRELO en toda la app
+
+--------------------------------------------------------
+CÓMO APLICARLO (Terminal de Mac)
+--------------------------------------------------------
+
+1) Descomprime este paquete. Quedará una carpeta llamada
+   "kyrelo-rebranding".
+
+2) Cópialo COMPLETO encima de tu proyecto. Reemplaza el
+   ~/Downloads por donde tengas la carpeta si es distinto:
+
+   cp -R ~/Downloads/kyrelo-rebranding/. ~/Downloads/inmobiliaria-os/
+
+   (El punto después de la barra es importante: copia también
+    los archivos que empiezan con punto y respeta las subcarpetas.)
+
+3) Borra un archivo basura de respaldo que ya no se usa:
+
+   rm -f ~/Downloads/inmobiliaria-os/components/ui/Sidebar.tsx.save
+
+4) Sube a producción (Netlify se actualiza solo en 2-3 min):
+
+   cd ~/Downloads/inmobiliaria-os
+   git add .
+   git commit -m "Rebranding completo a KYRELO"
+   git push
+
+5) (Opcional) Probar antes en local:
+   cd ~/Downloads/inmobiliaria-os
+   npm install
+   npm run dev
+   # abre http://localhost:3000
+
+--------------------------------------------------------
+NOTA SOBRE EL LEEME.txt
+--------------------------------------------------------
+Este archivo LEEME.txt NO afecta la app. Si se copió a tu
+proyecto puedes borrarlo:
+   rm -f ~/Downloads/inmobiliaria-os/LEEME.txt
+
+--------------------------------------------------------
+QUÉ SE CAMBIÓ (por si necesitas ajustar algo después)
+--------------------------------------------------------
+• lib/config.ts ......... nombre, marca y eslogan KYRELO
+• app/layout.tsx ........ carga Fraunces + Inter
+• app/globals.css ....... paleta grafito/cobre/hueso, titulares serif
+• tailwind.config.ts .... colores grafito/cobre y fuente display
+• components/ui/Sidebar.tsx  logo + borde activo cobre + eslogan
+• app/login/page.tsx .... logo centrado + eslogan
+• app/p/[token]/page.tsx  logo + acento cobre en portafolios públicos
+• app/icon.png, apple-icon.png, favicon.ico  íconos KYRELO
+• public/kyrelo-*.png ... logos (color, blanco, isotipo)
+• Resto de archivos ..... solo cambió la paleta de color
+
+Paleta oficial:
+  Grafito   #1A1A18   (base / autoridad, texto)
+  Cobre     #B87333   (acento premium)
+  Hueso     #F1EFE8   (fondo)
+  Gris piedra #5F5E5A  (texto secundario)

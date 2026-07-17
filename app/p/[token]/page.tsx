@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { formatoCOP } from "@/lib/utils";
 import { APP } from "@/lib/config";
@@ -12,11 +13,12 @@ type Props = { params: { token: string } };
 // ── Estética: minimalismo editorial · quiet luxury · diseño suizo ──
 // Paleta reducida: blanco cálido, negro profundo, grises suaves.
 const C = {
-  fondo: "#FAFAF7",
-  negro: "#141414",
-  gris: "#8C8C86",
-  grisClaro: "#B9B9B3",
-  linea: "#E6E6E1",
+  fondo: "#F1EFE8",
+  negro: "#1A1A18",
+  gris: "#5F5E5A",
+  grisClaro: "#A8A69E",
+  linea: "#E0DDD2",
+  cobre: "#B87333",
 };
 
 export default async function PortafolioPublicoPage({ params }: Props) {
@@ -86,9 +88,17 @@ export default async function PortafolioPublicoPage({ params }: Props) {
       <div className="mx-auto max-w-2xl px-6 sm:px-8">
         {/* ── Cabecera editorial ── */}
         <header className="pb-16 pt-20 sm:pt-28">
+          <Image
+            src="/kyrelo-logo.png"
+            alt={APP.marca}
+            width={497}
+            height={441}
+            priority
+            className="mb-10 h-16 w-auto"
+          />
           <p
             className="text-[11px] font-semibold uppercase"
-            style={{ color: C.gris, letterSpacing: "0.28em" }}
+            style={{ color: C.cobre, letterSpacing: "0.28em" }}
           >
             Portafolio privado
           </p>

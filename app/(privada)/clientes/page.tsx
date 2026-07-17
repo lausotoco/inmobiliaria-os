@@ -13,7 +13,7 @@ const PRIORIDADES = ["todas", "alta", "media", "baja"];
 const ORDEN_PRIORIDAD: Record<string, number> = { alta: 0, media: 1, baja: 2 };
 
 const ESTILO_PRIORIDAD: Record<string, string> = {
-  alta: "border-[#141414] bg-[#141414] text-white",
+  alta: "border-[#1A1A18] bg-[#1A1A18] text-white",
   media: "border-linea bg-superficie text-tinta",
   baja: "border-linea bg-fondo text-neutro",
 };

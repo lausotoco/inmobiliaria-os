@@ -58,7 +58,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
     "rounded-lg px-3.5 py-1.5 text-[12px] font-medium text-neutro transition hover:text-tinta";
 
   return (
-    <div className="rounded-2xl border border-[#E6E6E1] bg-[#F7F7F2] p-5 backdrop-blur">
+    <div className="rounded-2xl border border-[#E0DDD2] bg-[#F7F7F2] p-5 backdrop-blur">
       <div className="flex items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl grad-acento text-sm text-white">
           ✦
@@ -110,7 +110,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="rounded-xl border border-linea bg-[#F5F5F0] px-4 py-2.5 text-[13px] text-tinta transition hover:border-[#141414]/30"
+              className="rounded-xl border border-linea bg-[#F5F5F0] px-4 py-2.5 text-[13px] text-tinta transition hover:border-[#1A1A18]/30"
             >
               {archivo ? `🎵 ${archivo.name.slice(0, 32)}` : "Seleccionar audio…"}
             </button>
@@ -134,7 +134,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
             onChange={(e) => { setTextoPegado(e.target.value); setError(null); }}
             rows={5}
             placeholder={'Pega aquí el mensaje del cliente. Ej:\n"Hola Laura, estamos buscando un apto en Chía o Cajicá, de 3 habitaciones, máximo 550 millones. Nos urge porque entregamos el arriendo en 2 meses. Ojalá con terraza y que acepten mascotas…"'}
-            className="mt-3 w-full rounded-xl border border-linea bg-[#F5F5F0] px-4 py-3 text-[13px] text-tinta outline-none transition placeholder:text-[#B9B9B3] focus:border-[#141414]/40"
+            className="mt-3 w-full rounded-xl border border-linea bg-[#F5F5F0] px-4 py-3 text-[13px] text-tinta outline-none transition placeholder:text-[#A8A69E] focus:border-[#1A1A18]/40"
           />
           <button
             type="button"
@@ -155,7 +155,7 @@ export default function AudioRequerimiento({ onExtraido }: Props) {
 
       {transcripcion && !error && modo === "audio" && (
         <details className="mt-3">
-          <summary className="cursor-pointer text-[12px] text-[#141414]">
+          <summary className="cursor-pointer text-[12px] text-[#1A1A18]">
             Ver transcripción del audio
           </summary>
           <p className="mt-2 rounded-xl bg-[#F5F5F0] px-4 py-3 text-[12px] leading-relaxed text-neutro">

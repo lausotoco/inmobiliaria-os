@@ -28,7 +28,7 @@ function Interruptor({
       onClick={onClick}
       aria-pressed={activo}
       className={`relative h-5 w-9 shrink-0 rounded-full transition-colors duration-300 ${
-        activo ? "bg-[#141414]" : "bg-[#D9D9D3]"
+        activo ? "bg-[#1A1A18]" : "bg-[#D9D9D3]"
       }`}
     >
       <span
@@ -125,7 +125,7 @@ export default function CaptacionesPage() {
             onClick={() =>
               copiar(`${window.location.origin}/inmuebles`, "catalogo")
             }
-            className="rounded-full border border-linea px-5 py-2.5 text-sm font-medium text-tinta transition hover:border-[#141414]"
+            className="rounded-full border border-linea px-5 py-2.5 text-sm font-medium text-tinta transition hover:border-[#1A1A18]"
           >
             {copiado === "catalogo" ? "Copiado ✓" : "Copiar link del catálogo"}
           </button>
@@ -133,7 +133,7 @@ export default function CaptacionesPage() {
             href="/inmuebles"
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-[#141414] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-80"
+            className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-80"
           >
             Ver portal público →
           </a>
@@ -198,7 +198,7 @@ export default function CaptacionesPage() {
                   </span>
                   <Badge texto={p.estado} />
                   {p.destacada && (
-                    <span className="rounded-full border border-[#141414] px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#141414]">
+                    <span className="rounded-full border border-[#1A1A18] px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#1A1A18]">
                       Destacada
                     </span>
                   )}
@@ -239,7 +239,7 @@ export default function CaptacionesPage() {
                         p.id
                       )
                     }
-                    className="rounded-full border border-linea px-4 py-1.5 text-xs font-medium text-tinta transition hover:border-[#141414]"
+                    className="rounded-full border border-linea px-4 py-1.5 text-xs font-medium text-tinta transition hover:border-[#1A1A18]"
                   >
                     {copiado === p.id ? "Copiado ✓" : "Copiar link"}
                   </button>

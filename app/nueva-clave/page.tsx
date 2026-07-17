@@ -43,20 +43,20 @@ export default function NuevaClavePage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#FAFAF7] px-6">
+    <main className="flex min-h-screen items-center justify-center bg-[#F1EFE8] px-6">
       <div className="w-full max-w-sm">
         <div className="anim-entrada text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#B9B9B3]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#A8A69E]">
             Nueva contraseña
           </p>
-          <h1 className="mt-4 text-[28px] font-bold tracking-tight text-[#141414]">
+          <h1 className="mt-4 text-[28px] font-bold tracking-tight text-[#1A1A18]">
             {APP.nombre}
           </h1>
         </div>
 
         {ok ? (
           <p
-            className="anim-entrada mt-12 border-t border-[#E6E6E1] pt-10 text-center text-[14px] text-[#141414]"
+            className="anim-entrada mt-12 border-t border-[#E0DDD2] pt-10 text-center text-[14px] text-[#1A1A18]"
             style={{ animationDelay: "120ms" }}
           >
             Contraseña actualizada. Redirigiéndote al inicio de sesión…
@@ -64,11 +64,11 @@ export default function NuevaClavePage() {
         ) : (
           <form
             onSubmit={guardar}
-            className="anim-entrada mt-12 border-t border-[#E6E6E1] pt-10"
+            className="anim-entrada mt-12 border-t border-[#E0DDD2] pt-10"
             style={{ animationDelay: "120ms" }}
           >
             <label className="block">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8C86]">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5F5E5A]">
                 Nueva contraseña
               </span>
               <input
@@ -77,13 +77,13 @@ export default function NuevaClavePage() {
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-[#E6E6E1] bg-white px-4 py-3 text-sm text-[#141414] outline-none transition placeholder:text-[#C9C9C3] focus:border-[#141414]"
+                className="mt-2 w-full rounded-lg border border-[#E0DDD2] bg-white px-4 py-3 text-sm text-[#1A1A18] outline-none transition placeholder:text-[#C9C9C3] focus:border-[#1A1A18]"
                 placeholder="••••••••"
               />
             </label>
 
             <label className="mt-6 block">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8C8C86]">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#5F5E5A]">
                 Repite la contraseña
               </span>
               <input
@@ -92,7 +92,7 @@ export default function NuevaClavePage() {
                 autoComplete="new-password"
                 value={password2}
                 onChange={(e) => setPassword2(e.target.value)}
-                className="mt-2 w-full rounded-lg border border-[#E6E6E1] bg-white px-4 py-3 text-sm text-[#141414] outline-none transition placeholder:text-[#C9C9C3] focus:border-[#141414]"
+                className="mt-2 w-full rounded-lg border border-[#E0DDD2] bg-white px-4 py-3 text-sm text-[#1A1A18] outline-none transition placeholder:text-[#C9C9C3] focus:border-[#1A1A18]"
                 placeholder="••••••••"
               />
             </label>
@@ -106,7 +106,7 @@ export default function NuevaClavePage() {
             <button
               type="submit"
               disabled={cargando}
-              className="mt-8 w-full rounded-full bg-[#141414] py-3.5 text-[13px] font-semibold tracking-[0.02em] text-white transition-all duration-300 hover:opacity-80 disabled:opacity-50"
+              className="mt-8 w-full rounded-full bg-[#1A1A18] py-3.5 text-[13px] font-semibold tracking-[0.02em] text-white transition-all duration-300 hover:opacity-80 disabled:opacity-50"
             >
               {cargando ? "Guardando…" : "Guardar contraseña"}
             </button>

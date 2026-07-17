@@ -402,7 +402,7 @@ export default function AgendaPage() {
                       {!verPasadas && (
                         <button
                           onClick={() => enviarRecordatorio(grupo)}
-                          className="rounded-full bg-[#141414] px-4 py-1.5 text-[11px] font-semibold text-white transition hover:opacity-80"
+                          className="rounded-full bg-[#1A1A18] px-4 py-1.5 text-[11px] font-semibold text-white transition hover:opacity-80"
                         >
                           Enviar recordatorio →
                         </button>

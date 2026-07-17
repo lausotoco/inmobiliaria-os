@@ -165,16 +165,16 @@ export default function PortalBroker() {
     setTab('mias');
   }
 
-  const inputCls = 'w-full bg-transparent border-b border-[#E6E6E1] pb-1.5 text-sm text-[#141414] outline-none focus:border-[#141414] transition-colors';
-  const labelCls = 'block text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-1';
-  const badgeCls = 'text-[9px] uppercase tracking-[0.15em] border border-[#E6E6E1] rounded-full px-2.5 py-0.5';
+  const inputCls = 'w-full bg-transparent border-b border-[#E0DDD2] pb-1.5 text-sm text-[#1A1A18] outline-none focus:border-[#1A1A18] transition-colors';
+  const labelCls = 'block text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1';
+  const badgeCls = 'text-[9px] uppercase tracking-[0.15em] border border-[#E0DDD2] rounded-full px-2.5 py-0.5';
 
   function Spec({ etiqueta, valor }: { etiqueta: string; valor: any }) {
     if (valor == null || valor === '' ) return null;
     return (
       <div>
-        <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-1">{etiqueta}</p>
-        <p className="text-[15px] text-[#141414] tracking-tight">{valor}</p>
+        <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1">{etiqueta}</p>
+        <p className="text-[15px] text-[#1A1A18] tracking-tight">{valor}</p>
       </div>
     );
   }
@@ -183,10 +183,10 @@ export default function PortalBroker() {
     if (items.length === 0) return null;
     return (
       <div className="mt-6">
-        <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-2">{etiqueta}</p>
+        <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-2">{etiqueta}</p>
         <div className="flex flex-wrap gap-2">
           {items.map((z) => (
-            <span key={z} className="text-[11px] text-[#141414] border border-[#E6E6E1] rounded-full px-3 py-1">
+            <span key={z} className="text-[11px] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1">
               {z}
             </span>
           ))}
@@ -196,27 +196,27 @@ export default function PortalBroker() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF7]">
-      <header className="border-b border-[#E6E6E1] px-8 py-5 flex items-center justify-between">
+    <div className="min-h-screen bg-[#F1EFE8]">
+      <header className="border-b border-[#E0DDD2] px-8 py-5 flex items-center justify-between">
         <div>
-          <p className="text-[15px] font-bold tracking-tight text-[#141414]">{APP.nombre}</p>
-          <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-[#B9B9B3] mt-0.5">
+          <p className="text-[15px] font-bold tracking-tight text-[#1A1A18]">{APP.nombre}</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E] mt-0.5">
             Red de brokers
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-[#B9B9B3] truncate max-w-[180px]">{email}</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#A8A69E] truncate max-w-[180px]">{email}</p>
           <button onClick={cerrarSesion}
-            className="text-[12px] font-medium text-[#8C8C86] hover:text-[#141414] transition">
+            className="text-[12px] font-medium text-[#5F5E5A] hover:text-[#1A1A18] transition">
             Cerrar sesión
           </button>
         </div>
       </header>
 
       <div className="px-8 py-10 max-w-3xl mx-auto">
-        <h1 className="text-2xl tracking-tight text-[#141414] mb-8">Compradores activos</h1>
+        <h1 className="text-2xl tracking-tight text-[#1A1A18] mb-8">Compradores activos</h1>
 
-        <div className="flex gap-6 border-b border-[#E6E6E1] mb-8">
+        <div className="flex gap-6 border-b border-[#E0DDD2] mb-8">
           {[
             { k: 'buscar', l: 'Buscar compradores' },
             { k: 'mias', l: `Mis postulaciones (${mias.length})` },
@@ -224,7 +224,7 @@ export default function PortalBroker() {
             <button
               key={t.k}
               onClick={() => setTab(t.k as any)}
-              className={`pb-3 text-sm transition-colors ${tab === t.k ? 'text-[#141414] border-b border-[#141414] -mb-px' : 'text-[#8C8C86]'}`}
+              className={`pb-3 text-sm transition-colors ${tab === t.k ? 'text-[#1A1A18] border-b border-[#1A1A18] -mb-px' : 'text-[#5F5E5A]'}`}
             >
               {t.l}
             </button>
@@ -242,15 +242,15 @@ export default function PortalBroker() {
                 <input className={inputCls} placeholder="Cedritos" value={filtros.zona} onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })} /></div>
               <div><label className={labelCls}>Presupuesto hasta (M)</label>
                 <input className={inputCls} inputMode="numeric" placeholder="520" value={filtros.precioMax} onChange={(e) => setFiltros({ ...filtros, precioMax: e.target.value })} /></div>
-              <button onClick={buscar} className="rounded-full bg-[#141414] text-[#FAFAF7] text-sm py-2.5 hover:opacity-80 transition-opacity">
+              <button onClick={buscar} className="rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity">
                 Filtrar
               </button>
             </div>
 
             {cargando ? (
-              <p className="text-sm text-[#8C8C86]">Buscando compradores…</p>
+              <p className="text-sm text-[#5F5E5A]">Buscando compradores…</p>
             ) : tarjetas.length === 0 ? (
-              <p className="text-sm text-[#8C8C86]">No hay compradores publicados con esos filtros.</p>
+              <p className="text-sm text-[#5F5E5A]">No hay compradores publicados con esos filtros.</p>
             ) : (
               <div className="space-y-10">
                 {tarjetas.map((t) => {
@@ -258,15 +258,15 @@ export default function PortalBroker() {
                   const amenidades = aLista(t.amenidades);
                   const area = rango(t.area_min, t.area_max, ' m²');
                   return (
-                    <article key={t.id} className="border border-[#E6E6E1] bg-white">
+                    <article key={t.id} className="border border-[#E0DDD2] bg-white">
                       {/* Encabezado de la ficha */}
-                      <div className="px-8 pt-7 pb-5 border-b border-[#E6E6E1] flex flex-wrap items-center gap-3">
-                        <h2 className="text-lg tracking-tight text-[#141414] mr-auto">
+                      <div className="px-8 pt-7 pb-5 border-b border-[#E0DDD2] flex flex-wrap items-center gap-3">
+                        <h2 className="text-lg tracking-tight text-[#1A1A18] mr-auto">
                           Comprador #{t.codigo}
                         </h2>
-                        <span className={`${badgeCls} text-[#8C8C86]`}>{haceCuanto(t.updated_at)}</span>
-                        {t.urgencia && <span className={`${badgeCls} text-[#141414]`}>{t.urgencia}</span>}
-                        {t.financiacion && <span className={`${badgeCls} text-[#141414]`}>{t.financiacion}</span>}
+                        <span className={`${badgeCls} text-[#5F5E5A]`}>{haceCuanto(t.updated_at)}</span>
+                        {t.urgencia && <span className={`${badgeCls} text-[#1A1A18]`}>{t.urgencia}</span>}
+                        {t.financiacion && <span className={`${badgeCls} text-[#1A1A18]`}>{t.financiacion}</span>}
                       </div>
 
                       <div className="px-8 py-7">
@@ -290,17 +290,17 @@ export default function PortalBroker() {
 
                         {/* Comentarios del cliente */}
                         {(t.preferencias || t.observaciones) && (
-                          <div className="mt-8 border-t border-[#E6E6E1] pt-6">
-                            <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-3">
+                          <div className="mt-8 border-t border-[#E0DDD2] pt-6">
+                            <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-3">
                               Comentarios del cliente
                             </p>
                             {t.preferencias && (
-                              <p className="text-[14px] leading-relaxed text-[#141414] border-l border-[#E6E6E1] pl-4 mb-3">
+                              <p className="text-[14px] leading-relaxed text-[#1A1A18] border-l border-[#E0DDD2] pl-4 mb-3">
                                 {t.preferencias}
                               </p>
                             )}
                             {t.observaciones && (
-                              <p className="text-[14px] leading-relaxed text-[#141414] border-l border-[#E6E6E1] pl-4">
+                              <p className="text-[14px] leading-relaxed text-[#1A1A18] border-l border-[#E0DDD2] pl-4">
                                 {t.observaciones}
                               </p>
                             )}
@@ -309,15 +309,15 @@ export default function PortalBroker() {
                       </div>
 
                       {/* Pie de la ficha */}
-                      <div className="px-8 py-5 border-t border-[#E6E6E1] flex items-center justify-between">
-                        <span className="text-[11px] text-[#B9B9B3]">
+                      <div className="px-8 py-5 border-t border-[#E0DDD2] flex items-center justify-between">
+                        <span className="text-[11px] text-[#A8A69E]">
                           {t.postulaciones > 0
                             ? `${t.postulaciones} postulacion${t.postulaciones === 1 ? '' : 'es'} recibida${t.postulaciones === 1 ? '' : 's'}`
                             : 'Sin postulaciones aún'}
                         </span>
                         <button
                           onClick={() => { setPostulando(t); setTempId(crypto.randomUUID()); setFotos([]); setFormP((f) => ({ ...f, contacto: f.contacto || telPerfil })); }}
-                          className="rounded-full bg-[#141414] text-[#FAFAF7] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity"
+                          className="rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity"
                         >
                           Tengo un inmueble para este comprador
                         </button>
@@ -331,17 +331,17 @@ export default function PortalBroker() {
         )}
 
         {tab === 'mias' && (
-          <div className="divide-y divide-[#E6E6E1] border-t border-b border-[#E6E6E1]">
-            {mias.length === 0 && <p className="py-6 text-sm text-[#8C8C86]">Aún no has postulado inmuebles.</p>}
+          <div className="divide-y divide-[#E0DDD2] border-t border-b border-[#E0DDD2]">
+            {mias.length === 0 && <p className="py-6 text-sm text-[#5F5E5A]">Aún no has postulado inmuebles.</p>}
             {mias.map((p) => (
               <div key={p.id} className="py-6 flex items-center gap-4">
                 <div className="flex-1">
-                  <p className="text-sm text-[#141414] tracking-tight mb-1">{p.titulo}</p>
-                  <p className="text-sm text-[#8C8C86]">
+                  <p className="text-sm text-[#1A1A18] tracking-tight mb-1">{p.titulo}</p>
+                  <p className="text-sm text-[#5F5E5A]">
                     {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, formatoCOP(p.precio)].filter(Boolean).join(' · ')}
                   </p>
                 </div>
-                <span className="text-[9px] uppercase tracking-[0.15em] text-[#141414] border border-[#E6E6E1] rounded-full px-3 py-1">
+                <span className="text-[9px] uppercase tracking-[0.15em] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1">
                   {ESTADOS[p.estado]}
                 </span>
               </div>
@@ -350,12 +350,12 @@ export default function PortalBroker() {
         )}
 
         {postulando && (
-          <div className="fixed inset-0 bg-[#141414]/30 flex items-center justify-center px-6 z-50">
-            <div className="bg-[#FAFAF7] w-full max-w-md p-8 max-h-[85vh] overflow-y-auto">
-              <p className="text-[9px] uppercase tracking-[0.2em] text-[#8C8C86] mb-1">
+          <div className="fixed inset-0 bg-[#1A1A18]/30 flex items-center justify-center px-6 z-50">
+            <div className="bg-[#F1EFE8] w-full max-w-md p-8 max-h-[85vh] overflow-y-auto">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-1">
                 Comprador #{postulando.codigo}
               </p>
-              <h2 className="text-lg tracking-tight text-[#141414] mb-6">Postular inmueble</h2>
+              <h2 className="text-lg tracking-tight text-[#1A1A18] mb-6">Postular inmueble</h2>
 
               <div className="space-y-4">
                 <div><label className={labelCls}>Título del inmueble *</label>
@@ -406,15 +406,15 @@ export default function PortalBroker() {
                 </div>
               </div>
 
-              {mensaje && <p className="text-xs text-[#141414] mt-4 border-l border-[#141414] pl-3">{mensaje}</p>}
+              {mensaje && <p className="text-xs text-[#1A1A18] mt-4 border-l border-[#1A1A18] pl-3">{mensaje}</p>}
 
               <div className="flex gap-3 mt-8">
                 <button onClick={postular} disabled={enviando}
-                  className="flex-1 rounded-full bg-[#141414] text-[#FAFAF7] text-sm py-2.5 hover:opacity-80 transition-opacity disabled:opacity-40">
+                  className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity disabled:opacity-40">
                   {enviando ? 'Enviando…' : 'Postular'}
                 </button>
                 <button onClick={() => { setPostulando(null); setMensaje(''); }}
-                  className="rounded-full border border-[#E6E6E1] text-[#8C8C86] text-sm px-5 py-2.5">
+                  className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2.5">
                   Cancelar
                 </button>
               </div>

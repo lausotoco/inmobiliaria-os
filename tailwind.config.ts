@@ -13,15 +13,23 @@ const config: Config = {
         tinta: "var(--tinta)",
         neutro: "var(--neutro)",
         linea: "var(--linea)",
-        bosque: {
-          DEFAULT: "var(--bosque)",
-          oscuro: "var(--bosque-oscuro)",
-          suave: "var(--bosque-suave)",
+        // Grafito = base / autoridad · Cobre = acento premium
+        grafito: {
+          DEFAULT: "var(--grafito)",
+          oscuro: "var(--grafito-oscuro)",
+          suave: "var(--grafito-suave)",
         },
-        laton: "var(--laton)",
+        cobre: "var(--cobre)",
+        // Alias heredado para no romper clases existentes
+        bosque: {
+          DEFAULT: "var(--grafito)",
+          oscuro: "var(--grafito-oscuro)",
+          suave: "var(--grafito-suave)",
+        },
+        laton: "var(--cobre)",
       },
       fontFamily: {
-        display: ["'Space Grotesk'", "Inter", "sans-serif"],
+        display: ["'Fraunces'", "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
       },
     },

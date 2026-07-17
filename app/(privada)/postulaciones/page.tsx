@@ -115,8 +115,8 @@ export default function MarketplaceControl() {
 
   function ParaCliente({ p, claro = false }: { p: any; claro?: boolean }) {
     return (
-      <p className={`text-[11px] ${claro ? 'text-[#B9B9B3]' : 'text-[#8C8C86]'}`}>
-        Para: <span className="text-[#141414]">{p.cliente_nombre ?? 'Cliente'}</span>
+      <p className={`text-[11px] ${claro ? 'text-[#A8A69E]' : 'text-[#5F5E5A]'}`}>
+        Para: <span className="text-[#1A1A18]">{p.cliente_nombre ?? 'Cliente'}</span>
         {' '}· #{p.codigo}
       </p>
     );
@@ -127,22 +127,22 @@ export default function MarketplaceControl() {
     const wa = linkWhatsApp(tel);
     return (
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p className="text-[11px] text-[#8C8C86]">
-          Broker: <span className="text-[#141414]">{p.broker_nombre ?? '—'}</span>
+        <p className="text-[11px] text-[#5F5E5A]">
+          Broker: <span className="text-[#1A1A18]">{p.broker_nombre ?? '—'}</span>
           {p.broker_empresa ? ` · ${p.broker_empresa}` : ''}
         </p>
         {tel && (
-          <span className="text-[11px] text-[#8C8C86]">{tel}</span>
+          <span className="text-[11px] text-[#5F5E5A]">{tel}</span>
         )}
         {wa && (
           <a href={wa} target="_blank" rel="noreferrer"
-            className="text-[10px] uppercase tracking-[0.12em] text-[#141414] border border-[#141414] rounded-full px-2.5 py-0.5 hover:bg-[#141414] hover:text-[#FAFAF7] transition-colors">
+            className="text-[10px] uppercase tracking-[0.12em] text-[#1A1A18] border border-[#1A1A18] rounded-full px-2.5 py-0.5 hover:bg-[#1A1A18] hover:text-[#F1EFE8] transition-colors">
             WhatsApp
           </a>
         )}
         {p.broker_email && (
           <a href={`mailto:${p.broker_email}`}
-            className="text-[11px] text-[#8C8C86] underline underline-offset-4 hover:text-[#141414]">
+            className="text-[11px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">
             {p.broker_email}
           </a>
         )}
@@ -154,18 +154,18 @@ export default function MarketplaceControl() {
     if (valor == null || valor === '') return null;
     return (
       <div>
-        <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-0.5">{etiqueta}</p>
-        <p className="text-[13px] text-[#141414] tracking-tight">{valor}</p>
+        <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-0.5">{etiqueta}</p>
+        <p className="text-[13px] text-[#1A1A18] tracking-tight">{valor}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF7] px-8 py-10">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-[#8C8C86] mb-2">Marketplace</p>
-      <h1 className="text-2xl tracking-tight text-[#141414] mb-8">Centro de control</h1>
+    <div className="min-h-screen bg-[#F1EFE8] px-8 py-10">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-2">Marketplace</p>
+      <h1 className="text-2xl tracking-tight text-[#1A1A18] mb-8">Centro de control</h1>
 
-      <div className="flex gap-6 border-b border-[#E6E6E1] mb-10 overflow-x-auto">
+      <div className="flex gap-6 border-b border-[#E0DDD2] mb-10 overflow-x-auto">
         {[
           { k: 'resumen', l: 'Resumen' },
           { k: 'pendientes', l: `Pendientes${pendientes.length ? ` (${pendientes.length})` : ''}` },
@@ -175,7 +175,7 @@ export default function MarketplaceControl() {
           <button
             key={t.k}
             onClick={() => setTab(t.k as any)}
-            className={`pb-3 text-sm whitespace-nowrap transition-colors ${tab === t.k ? 'text-[#141414] border-b border-[#141414] -mb-px' : 'text-[#8C8C86]'}`}
+            className={`pb-3 text-sm whitespace-nowrap transition-colors ${tab === t.k ? 'text-[#1A1A18] border-b border-[#1A1A18] -mb-px' : 'text-[#5F5E5A]'}`}
           >
             {t.l}
           </button>
@@ -183,19 +183,19 @@ export default function MarketplaceControl() {
       </div>
 
       {cargando ? (
-        <p className="text-sm text-[#8C8C86]">Cargando…</p>
+        <p className="text-sm text-[#5F5E5A]">Cargando…</p>
       ) : (
         <>
           {/* ============ RESUMEN ============ */}
           {tab === 'resumen' && (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#E6E6E1]">
+              <div className="grid grid-cols-2 md:grid-cols-4 border-t border-l border-[#E0DDD2]">
                 {KPIS.map((k) => (
-                  <div key={k.etiqueta} className="border-b border-r border-[#E6E6E1] px-6 py-7 bg-white">
-                    <p className="text-[28px] tracking-tight text-[#141414] leading-none">
+                  <div key={k.etiqueta} className="border-b border-r border-[#E0DDD2] px-6 py-7 bg-white">
+                    <p className="text-[28px] tracking-tight text-[#1A1A18] leading-none">
                       {k.valor ?? 0}
                     </p>
-                    <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mt-3">
+                    <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mt-3">
                       {k.etiqueta}
                     </p>
                   </div>
@@ -203,26 +203,26 @@ export default function MarketplaceControl() {
               </div>
 
               <div className="mt-12">
-                <p className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-4">
+                <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-4">
                   Últimas postulaciones
                 </p>
-                <div className="divide-y divide-[#E6E6E1] border-t border-b border-[#E6E6E1]">
+                <div className="divide-y divide-[#E0DDD2] border-t border-b border-[#E0DDD2]">
                   {items.slice(0, 6).map((p) => (
                     <div key={p.id} className="py-4 flex items-center gap-4">
-                      <span className="text-[11px] text-[#B9B9B3] w-14 shrink-0">
+                      <span className="text-[11px] text-[#A8A69E] w-14 shrink-0">
                         {formatoFechaCorta(p.created_at)}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[#141414] tracking-tight truncate">{p.titulo}</p>
+                        <p className="text-sm text-[#1A1A18] tracking-tight truncate">{p.titulo}</p>
                         <ParaCliente p={p} />
                       </div>
-                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#141414] border border-[#E6E6E1] rounded-full px-3 py-1 shrink-0">
+                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1 shrink-0">
                         {NOMBRES[p.estado]}
                       </span>
                     </div>
                   ))}
                   {items.length === 0 && (
-                    <p className="py-6 text-sm text-[#8C8C86]">Aún no hay postulaciones.</p>
+                    <p className="py-6 text-sm text-[#5F5E5A]">Aún no hay postulaciones.</p>
                   )}
                 </div>
               </div>
@@ -233,18 +233,18 @@ export default function MarketplaceControl() {
           {tab === 'pendientes' && (
             <div className="space-y-8 max-w-3xl">
               {pendientes.length === 0 && (
-                <p className="text-sm text-[#8C8C86]">No hay postulaciones pendientes por aprobar.</p>
+                <p className="text-sm text-[#5F5E5A]">No hay postulaciones pendientes por aprobar.</p>
               )}
               {pendientes.map((p) => {
                 const d = p.datos_inmueble ?? {};
                 const fotos: string[] = p.fotos_rutas ?? [];
                 return (
-                  <article key={p.id} className="border border-[#E6E6E1] bg-white">
+                  <article key={p.id} className="border border-[#E0DDD2] bg-white">
                     {/* Encabezado */}
-                    <div className="px-7 pt-6 pb-4 border-b border-[#E6E6E1]">
+                    <div className="px-7 pt-6 pb-4 border-b border-[#E0DDD2]">
                       <div className="flex items-start justify-between gap-3 mb-1.5">
-                        <h2 className="text-[16px] tracking-tight text-[#141414]">{p.titulo}</h2>
-                        <span className="text-[15px] tracking-tight text-[#141414] shrink-0">
+                        <h2 className="text-[16px] tracking-tight text-[#1A1A18]">{p.titulo}</h2>
+                        <span className="text-[15px] tracking-tight text-[#1A1A18] shrink-0">
                           {formatoCOP(p.precio)}
                         </span>
                       </div>
@@ -280,39 +280,39 @@ export default function MarketplaceControl() {
                     {(d.direccion || d.amenidades) && (
                       <div className="px-7 pb-5 space-y-2">
                         {d.direccion && (
-                          <p className="text-[12px] text-[#8C8C86]">
+                          <p className="text-[12px] text-[#5F5E5A]">
                             <span className="uppercase tracking-[0.12em] text-[9px] mr-2">Dirección</span>
-                            <span className="text-[#141414]">{d.direccion}</span>
+                            <span className="text-[#1A1A18]">{d.direccion}</span>
                           </p>
                         )}
                         {d.amenidades && (
-                          <p className="text-[12px] text-[#8C8C86]">
+                          <p className="text-[12px] text-[#5F5E5A]">
                             <span className="uppercase tracking-[0.12em] text-[9px] mr-2">Amenidades</span>
-                            <span className="text-[#141414]">{d.amenidades}</span>
+                            <span className="text-[#1A1A18]">{d.amenidades}</span>
                           </p>
                         )}
                       </div>
                     )}
                     {p.descripcion && (
-                      <p className="mx-7 mb-5 text-[13px] leading-relaxed text-[#141414] border-l border-[#E6E6E1] pl-4">
+                      <p className="mx-7 mb-5 text-[13px] leading-relaxed text-[#1A1A18] border-l border-[#E0DDD2] pl-4">
                         {p.descripcion}
                       </p>
                     )}
 
                     {/* Broker + acciones */}
-                    <div className="px-7 py-4 border-t border-[#E6E6E1] flex flex-wrap items-center gap-3 justify-between">
+                    <div className="px-7 py-4 border-t border-[#E0DDD2] flex flex-wrap items-center gap-3 justify-between">
                       <ContactoBroker p={p} />
                       <div className="flex gap-3">
                         <button
                           onClick={() => cambiarEstado(p, 'rechazado')}
-                          className="rounded-full border border-[#E6E6E1] text-[#8C8C86] text-sm px-5 py-2 hover:text-[#141414] hover:border-[#141414] transition-colors"
+                          className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2 hover:text-[#1A1A18] hover:border-[#1A1A18] transition-colors"
                         >
                           Rechazar
                         </button>
                         <button
                           onClick={() => aprobar(p)}
                           disabled={aprobando === p.id}
-                          className="rounded-full bg-[#141414] text-[#FAFAF7] text-sm px-6 py-2 hover:opacity-80 transition-opacity disabled:opacity-40"
+                          className="rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm px-6 py-2 hover:opacity-80 transition-opacity disabled:opacity-40"
                         >
                           {aprobando === p.id ? 'Aprobando…' : 'Aprobar'}
                         </button>
@@ -326,42 +326,42 @@ export default function MarketplaceControl() {
 
           {/* ============ EN PROCESO ============ */}
           {tab === 'proceso' && (
-            <div className="flex gap-px overflow-x-auto pb-4 border-t border-[#E6E6E1] pt-6">
+            <div className="flex gap-px overflow-x-auto pb-4 border-t border-[#E0DDD2] pt-6">
               {PIPELINE.map((estado, idx) => {
                 const cols = enProceso.filter((p) => p.estado === estado);
                 return (
                   <div key={estado} className="min-w-[230px] flex-1">
                     <div className="flex items-baseline gap-2 mb-4 px-3">
-                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86]">
+                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">
                         {String(idx + 1).padStart(2, '0')}
                       </span>
-                      <span className="text-[11px] uppercase tracking-[0.12em] text-[#141414]">
+                      <span className="text-[11px] uppercase tracking-[0.12em] text-[#1A1A18]">
                         {NOMBRES[estado]}
                       </span>
-                      <span className="text-[11px] text-[#B9B9B3]">{cols.length}</span>
+                      <span className="text-[11px] text-[#A8A69E]">{cols.length}</span>
                     </div>
                     <div className="space-y-px">
                       {cols.map((p) => (
-                        <div key={p.id} className="bg-white border border-[#E6E6E1] p-4 mx-1">
-                          <p className="text-sm text-[#141414] tracking-tight mb-1 leading-snug">{p.titulo}</p>
+                        <div key={p.id} className="bg-white border border-[#E0DDD2] p-4 mx-1">
+                          <p className="text-sm text-[#1A1A18] tracking-tight mb-1 leading-snug">{p.titulo}</p>
                           <ParaCliente p={p} />
-                          <p className="text-xs text-[#8C8C86] my-1">
+                          <p className="text-xs text-[#5F5E5A] my-1">
                             {[p.ubicacion, formatoCOP(p.precio)].filter(Boolean).join(' · ')}
                           </p>
                           <ContactoBroker p={p} />
-                          <div className="flex justify-between border-t border-[#E6E6E1] pt-2 mt-3">
+                          <div className="flex justify-between border-t border-[#E0DDD2] pt-2 mt-3">
                             <button onClick={() => mover(p, -1)} disabled={estado === PIPELINE[0]}
-                              className="text-xs text-[#8C8C86] disabled:opacity-20 hover:text-[#141414] transition-colors">
+                              className="text-xs text-[#5F5E5A] disabled:opacity-20 hover:text-[#1A1A18] transition-colors">
                               ← Atrás
                             </button>
                             <button onClick={() => mover(p, 1)} disabled={estado === PIPELINE[PIPELINE.length - 1]}
-                              className="text-xs text-[#141414] disabled:opacity-20 hover:opacity-70 transition-opacity">
+                              className="text-xs text-[#1A1A18] disabled:opacity-20 hover:opacity-70 transition-opacity">
                               Avanzar →
                             </button>
                           </div>
                         </div>
                       ))}
-                      {cols.length === 0 && <p className="text-xs text-[#B9B9B3] px-3">—</p>}
+                      {cols.length === 0 && <p className="text-xs text-[#A8A69E] px-3">—</p>}
                     </div>
                   </div>
                 );
@@ -371,19 +371,19 @@ export default function MarketplaceControl() {
 
           {/* ============ RECHAZADAS ============ */}
           {tab === 'rechazadas' && (
-            <div className="divide-y divide-[#E6E6E1] border-t border-b border-[#E6E6E1] max-w-3xl">
+            <div className="divide-y divide-[#E0DDD2] border-t border-b border-[#E0DDD2] max-w-3xl">
               {rechazadas.length === 0 && (
-                <p className="py-6 text-sm text-[#8C8C86]">No has rechazado ninguna postulación.</p>
+                <p className="py-6 text-sm text-[#5F5E5A]">No has rechazado ninguna postulación.</p>
               )}
               {rechazadas.map((p) => (
                 <div key={p.id} className="py-5 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#141414] tracking-tight truncate">{p.titulo}</p>
+                    <p className="text-sm text-[#1A1A18] tracking-tight truncate">{p.titulo}</p>
                     <ParaCliente p={p} />
                   </div>
                   <button
                     onClick={() => cambiarEstado(p, 'postulado', 'Reabierta')}
-                    className="text-xs text-[#8C8C86] underline underline-offset-4 hover:text-[#141414] transition-colors shrink-0"
+                    className="text-xs text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] transition-colors shrink-0"
                   >
                     Reabrir
                   </button>

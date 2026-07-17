@@ -3,17 +3,19 @@
 @tailwind utilities;
 
 :root {
-  /* ── Minimalismo editorial · Quiet Luxury ── */
-  --fondo: #FAFAF7;        /* blanco cálido */
-  --superficie: #FFFFFF;
-  --tinta: #141414;        /* negro profundo */
-  --neutro: #8C8C86;       /* gris suave */
-  --linea: #E6E6E1;        /* línea divisoria finísima */
+  /* ── KYRELO · Editorial premium · Grafito + Cobre ── */
+  --fondo: #F1EFE8;        /* hueso — fondo / neutro */
+  --superficie: #FFFFFF;   /* tarjetas */
+  --tinta: #1A1A18;        /* grafito — base / autoridad */
+  --neutro: #5F5E5A;       /* gris piedra — texto secundario */
+  --linea: #E0DDD2;        /* línea divisoria finísima, tono hueso */
 
-  --bosque: #141414;       /* acción primaria = negro */
-  --bosque-oscuro: #000000;
-  --bosque-suave: #F0F0EB; /* gris cálido de apoyo */
-  --laton: #8C8C86;        /* etiquetas de sección */
+  --grafito: #1A1A18;      /* acción primaria = grafito */
+  --grafito-oscuro: #0F0F0E;
+  --grafito-suave: #E8E5DB;/* gris cálido de apoyo */
+
+  --cobre: #B87333;        /* acento premium */
+  --cobre-suave: #EBDBC8;  /* cobre muy diluido para fondos sutiles */
 }
 
 html {
@@ -27,14 +29,16 @@ body {
   letter-spacing: -0.011em;
 }
 
+/* ── Titulares: serif editorial (Fraunces) ── */
 h1, h2, h3, .font-display {
-  font-family: "Inter", system-ui, sans-serif;
-  letter-spacing: -0.03em;
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.02em;
+  font-optical-sizing: auto;
 }
 
 ::selection {
-  background: #EDEDE8;
-  color: #141414;
+  background: var(--cobre-suave);
+  color: #1A1A18;
 }
 
 /* ── Animaciones (sutiles, refinadas) ── */
@@ -75,22 +79,33 @@ h1, h2, h3, .font-display {
 }
 .tarjeta-viva:hover {
   transform: translateY(-2px);
-  border-color: #CFCFC8;
-  box-shadow: 0 12px 32px -20px rgba(20, 20, 20, 0.18);
+  border-color: #CFC9BB;
+  box-shadow: 0 12px 32px -20px rgba(26, 26, 24, 0.18);
 }
 
-/* ── Acentos: monocromo ── */
+/* ── Acentos ── */
 .grad-acento {
-  background: #141414;
+  background: #1A1A18;
 }
 
 .grad-acento-texto {
-  color: #141414;
+  color: #1A1A18;
 }
 
-/* ── Botón primario global: pill negro, elegante ── */
+/* Acento de marca en cobre (para detalles premium) */
+.acento-cobre {
+  color: var(--cobre);
+}
+.bg-cobre {
+  background: var(--cobre);
+}
+.border-cobre {
+  border-color: var(--cobre) !important;
+}
+
+/* ── Botón primario global: pill grafito, elegante ── */
 .bg-bosque {
-  background: #141414 !important;
+  background: #1A1A18 !important;
   color: #FFFFFF !important;
   border-radius: 999px !important;
   font-weight: 600;
@@ -100,25 +115,25 @@ h1, h2, h3, .font-display {
   transition: opacity 0.3s ease, transform 0.3s ease !important;
 }
 .bg-bosque:hover {
-  background: #141414 !important;
+  background: #1A1A18 !important;
   opacity: 0.82;
   transform: translateY(-1px);
   box-shadow: none;
 }
 
 .border-bosque {
-  border-color: #141414 !important;
+  border-color: #1A1A18 !important;
 }
 
 /* ── Scrollbar discreto ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D8D8D2; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #B9B9B3; }
+::-webkit-scrollbar-thumb { background: #D4CFC2; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #A8A69E; }
 
 /* ── Foco ── */
 *:focus-visible {
-  outline: 1.5px solid #141414;
+  outline: 1.5px solid #1A1A18;
   outline-offset: 2px;
   border-radius: 6px;
 }

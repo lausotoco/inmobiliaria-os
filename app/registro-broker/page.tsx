@@ -53,15 +53,15 @@ export default function RegistroBroker() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#F1EFE8] flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <p className="text-[9px] uppercase tracking-[0.2em] text-[#8C8C86] mb-3">
+        <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-3">
           Sabana OS · Red de brokers
         </p>
-        <h1 className="text-2xl tracking-tight text-[#141414] mb-1">
+        <h1 className="text-2xl tracking-tight text-[#1A1A18] mb-1">
           Crea tu cuenta de broker
         </h1>
-        <p className="text-sm text-[#8C8C86] mb-8 leading-relaxed">
+        <p className="text-sm text-[#5F5E5A] mb-8 leading-relaxed">
           Accede a compradores verificados de forma anónima y postula tus inmuebles.
         </p>
 
@@ -74,32 +74,32 @@ export default function RegistroBroker() {
             { k: 'password', label: 'Contraseña', type: 'password' },
           ].map((c) => (
             <div key={c.k}>
-              <label className="block text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-1.5">
+              <label className="block text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1.5">
                 {c.label}
               </label>
               <input
                 type={c.type}
                 value={(form as any)[c.k]}
                 onChange={set(c.k)}
-                className="w-full bg-transparent border-b border-[#E6E6E1] pb-2 text-sm text-[#141414] outline-none focus:border-[#141414] transition-colors"
+                className="w-full bg-transparent border-b border-[#E0DDD2] pb-2 text-sm text-[#1A1A18] outline-none focus:border-[#1A1A18] transition-colors"
               />
             </div>
           ))}
         </div>
 
-        {error && <p className="text-xs text-[#141414] mt-4 border-l border-[#141414] pl-3">{error}</p>}
+        {error && <p className="text-xs text-[#1A1A18] mt-4 border-l border-[#1A1A18] pl-3">{error}</p>}
 
         <button
           onClick={registrar}
           disabled={cargando}
-          className="mt-8 w-full rounded-full bg-[#141414] text-[#FAFAF7] text-sm py-3 hover:opacity-80 transition-opacity disabled:opacity-40"
+          className="mt-8 w-full rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-3 hover:opacity-80 transition-opacity disabled:opacity-40"
         >
           {cargando ? 'Creando cuenta…' : 'Crear cuenta'}
         </button>
 
-        <p className="text-xs text-[#B9B9B3] mt-6 text-center">
+        <p className="text-xs text-[#A8A69E] mt-6 text-center">
           ¿Ya tienes cuenta?{' '}
-          <a href="/login" className="text-[#8C8C86] underline underline-offset-4">Inicia sesión</a>
+          <a href="/login" className="text-[#5F5E5A] underline underline-offset-4">Inicia sesión</a>
         </p>
       </div>
     </div>
