@@ -700,22 +700,50 @@ export default function LandingKyrelo({
 
       {/* ════════ FOOTER (mínimo, opcional) ════════ */}
       <footer
-        className="flex flex-col items-center justify-between gap-4 px-6 py-8 sm:flex-row sm:px-10"
+        className="flex flex-col gap-6 px-6 py-10 sm:px-10"
         style={{ background: C.grafito, borderTop: `1px solid rgba(255,255,255,0.08)` }}
       >
-        <div className="flex items-center gap-2.5">
-          <Image
-            src="/kyrelo-isotipo.png"
-            alt="KYRELO"
-            width={64}
-            height={64}
-            className="h-7 w-7 rounded-[6px]"
-          />
-          <span className="ky-display text-[15px] text-white" style={{ letterSpacing: "0.04em" }}>
-            KYRELO
-          </span>
+        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/kyrelo-isotipo.png"
+              alt="KYRELO"
+              width={64}
+              height={64}
+              className="h-7 w-7 rounded-[6px]"
+            />
+            <span className="ky-display text-[15px] text-white" style={{ letterSpacing: "0.04em" }}>
+              KYRELO
+            </span>
+          </div>
+
+          {/* Contacto: Instagram + WhatsApp/teléfono */}
+          <div className="flex flex-wrap items-center gap-x-7 gap-y-3">
+            <a
+              href="https://www.instagram.com/kyrelocorp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] transition-opacity hover:opacity-70"
+              style={{ color: "rgba(255,255,255,0.72)" }}
+            >
+              Instagram · @kyrelocorp
+            </a>
+            <a
+              href={wa("Hola KYRELO, quiero más información.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] transition-opacity hover:opacity-70"
+              style={{ color: "rgba(255,255,255,0.72)" }}
+            >
+              WhatsApp · +57 311 801 8295
+            </a>
+          </div>
         </div>
-        <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.5)" }}>
+
+        <p
+          className="border-t pt-6 text-[12px]"
+          style={{ color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.08)" }}
+        >
           Menos búsqueda. Más cierre. · © {new Date().getFullYear()} KYRELO
         </p>
       </footer>

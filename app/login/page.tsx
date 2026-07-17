@@ -122,7 +122,7 @@ export default function LoginPage() {
             ¿Eres broker o inmobiliaria aliada?
           </p>
           <a
-            href="/registro-broker"
+            href="/brokers"
             className="mt-2 inline-block text-[13px] font-medium text-[#1A1A18] underline underline-offset-4 transition hover:opacity-70"
           >
             Crea tu cuenta de broker
