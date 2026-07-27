@@ -1,15 +1,16 @@
 'use client';
 
 // app/oportunidades/page.tsx
-// Página PÚBLICA (sin login): muestra los requerimientos publicados para
-// atraer brokers desde la pauta. Ver es libre; postular exige registrarse.
-// Lee de la función security-definer marketplace_publico() para no depender
-// de permisos de lectura anónima sobre las tablas.
+// Página PÚBLICA (sin login): mismo buscador con imagen que /broker, pero
+// en modo ver. Postular / crear cuenta / iniciar sesión llevan a /brokers.
+// Lee de la función security-definer marketplace_publico().
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { APP } from '@/lib/config';
+
+const ENTRADA = '/brokers'; // punto único de entrada (login + registro)
 
 const formatoCOPfull = (n?: number | null) =>
   n == null ? null : '$' + Math.round(Number(n)).toLocaleString('es-CO');
@@ -34,14 +35,6 @@ function rango(min?: number | null, max?: number | null, sufijo = '') {
 
 const norm = (x: any) =>
   String(x ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-
-function haceCuanto(fecha?: string) {
-  if (!fecha) return '';
-  const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
-  if (dias <= 0) return 'Actualizado hoy';
-  if (dias === 1) return 'Actualizado hace 1 día';
-  return `Actualizado hace ${dias} días`;
-}
 
 const FOTOS_TARJETAS = 5;
 function imagenPara(codigo: string) {
@@ -74,6 +67,7 @@ export default function Oportunidades() {
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [zonaFiltro, setZonaFiltro] = useState('');
   const [detalle, setDetalle] = useState<any | null>(null);
+  const listaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     supabase.rpc('marketplace_publico').then(({ data }) => {
@@ -82,7 +76,7 @@ export default function Oportunidades() {
     });
   }, []); // eslint-disable-line
 
-  const zonas = useMemo(() => {
+  const zonasDisponibles = useMemo(() => {
     const m = new Map<string, string>();
     items.forEach((t) => {
       [t.ciudad, ...(Array.isArray(t.zonas) ? t.zonas : [])].forEach((z: any) => {
@@ -97,13 +91,21 @@ export default function Oportunidades() {
     return items.filter((t) => {
       if (tipoFiltro && norm(t.tipo) !== norm(tipoFiltro)) return false;
       if (zonaFiltro) {
-        const z = zonaFiltro;
-        const enZonas = Array.isArray(t.zonas) && t.zonas.some((x: any) => norm(x) === norm(z));
-        if (norm(t.ciudad) !== norm(z) && !enZonas) return false;
+        const enZonas = Array.isArray(t.zonas) && t.zonas.some((x: any) => norm(x) === norm(zonaFiltro));
+        if (norm(t.ciudad) !== norm(zonaFiltro) && !enZonas) return false;
       }
       return true;
     });
   }, [items, tipoFiltro, zonaFiltro]);
+
+  function irAResultados() {
+    listaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function verTodo() {
+    setTipoFiltro('');
+    setZonaFiltro('');
+    irAResultados();
+  }
 
   return (
     <div className="min-h-screen bg-[#F1EFE8]">
@@ -112,97 +114,124 @@ export default function Oportunidades() {
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Link href="/" className="leading-tight">
             <p className="text-[15px] font-bold tracking-tight text-[#1A1A18]">{APP.nombre}</p>
-            <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E]">Compradores activos</p>
+            <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E]">Red de brokers</p>
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/brokers" className="text-[12px] text-[#5F5E5A] hover:text-[#1A1A18] transition">
+            <Link href={ENTRADA} className="text-[12px] text-[#5F5E5A] hover:text-[#1A1A18] transition">
               Iniciar sesión
             </Link>
-            <Link href="/registro-broker" className="rounded-full bg-[#1A1A18] px-4 py-2 text-[12px] font-semibold text-[#F1EFE8] hover:opacity-85 transition">
+            <Link href={ENTRADA} className="rounded-full bg-[#1A1A18] px-4 py-2 text-[12px] font-semibold text-[#F1EFE8] hover:opacity-85 transition">
               Únete como broker
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10 sm:px-8">
-        {/* Intro */}
-        <div className="max-w-2xl">
-          <h1 className="text-[28px] leading-tight tracking-tight text-[#1A1A18] sm:text-[34px]" style={{ fontFamily: 'Fraunces, serif' }}>
-            Compradores verificados buscando en la Sabana
-          </h1>
-          <p className="mt-3 text-[14px] leading-relaxed text-[#5F5E5A]">
-            Estos son requerimientos reales de compradores. Míralos libremente. Para postular tu
-            inmueble a un comprador, crea tu cuenta de broker — es gratis.
+      {/* Hero con imagen + buscador (mismo look que /broker) */}
+      <section className="relative bg-[#1A1A18] overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: "url('/broker-hero.jpg')" }} />
+        <div className="absolute inset-0 bg-[#1A1A18]/45" />
+        <div className="relative mx-auto max-w-3xl px-8 py-14 text-center sm:py-20">
+          <p className="mb-3 text-[10px] uppercase tracking-[0.24em] text-[#EBDBC8]">
+            {APP.nombre} · Compradores activos
           </p>
-        </div>
+          <h1 className="mb-2 text-3xl tracking-tight text-[#F1EFE8] sm:text-4xl">
+            ¿Qué inmueble tienes?
+          </h1>
+          <p className="mb-8 text-sm text-[#F1EFE8]/80">
+            Encuentra al comprador que ya lo está buscando
+          </p>
 
-        {/* Filtros */}
-        <div className="mt-7 flex flex-wrap gap-3">
-          <select
-            value={tipoFiltro}
-            onChange={(e) => setTipoFiltro(e.target.value)}
-            className="rounded-full border border-[#E0DDD2] bg-white px-4 py-2 text-[13px] text-[#1A1A18] outline-none"
-          >
-            <option value="">Todos los tipos</option>
-            {TIPOS.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
-          </select>
-          <select
-            value={zonaFiltro}
-            onChange={(e) => setZonaFiltro(e.target.value)}
-            className="rounded-full border border-[#E0DDD2] bg-white px-4 py-2 text-[13px] text-[#1A1A18] outline-none"
-          >
-            <option value="">Todas las zonas</option>
-            {zonas.map((z) => <option key={z} value={z}>{z}</option>)}
-          </select>
-        </div>
+          <div className="mb-4 flex flex-wrap justify-center gap-2">
+            {TIPOS.map((t) => (
+              <button
+                key={t.v}
+                onClick={() => setTipoFiltro(tipoFiltro === t.v ? '' : t.v)}
+                className={`rounded-full border px-5 py-2 text-[13px] transition-colors ${
+                  tipoFiltro === t.v
+                    ? 'border-[#F1EFE8] bg-[#F1EFE8] text-[#1A1A18]'
+                    : 'border-[#F1EFE8]/40 bg-transparent text-[#F1EFE8] hover:border-[#F1EFE8]'
+                }`}
+              >
+                {t.l}
+              </button>
+            ))}
+          </div>
 
-        {/* Resultados */}
-        <div className="mt-8">
-          {cargando ? (
-            <p className="py-10 text-center text-sm text-[#5F5E5A]">Cargando compradores…</p>
-          ) : resultados.length === 0 ? (
-            <VacioAlerta zona={zonaFiltro} />
-          ) : (
-            <>
-              <p className="mb-5 text-[12px] text-[#5F5E5A]">
-                {resultados.length} {resultados.length === 1 ? 'comprador' : 'compradores'}
-                {zonaFiltro ? ` en ${zonaFiltro}` : ' activos'}
-              </p>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {resultados.map((t) => (
-                  <article key={t.id} className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]">
-                    <div className="relative aspect-[4/3] bg-[#F1EFE8]">
-                      <div className="absolute inset-0 flex items-center justify-center opacity-60"><IconoTipo tipo={t.tipo} /></div>
-                      <img src={imagenPara(t.codigo)} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                      <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-                        {t.urgencia && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">{t.urgencia}</span>}
-                        {t.tipo && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">{t.tipo}</span>}
-                      </div>
-                      <span className="absolute right-3 top-3 rounded-full bg-[#1A1A18]/75 px-2.5 py-1 text-[10px] text-[#F1EFE8]">#{t.codigo}</span>
-                    </div>
-                    <div className="p-5">
-                      <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">Presupuesto del cliente</p>
-                      <p className="mt-0.5 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">{rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}</p>
-                      <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">{[t.tipo, t.ciudad].filter(Boolean).join(' · ') || 'Comprador verificado'}</p>
-                      <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
-                        <div className="flex-1">{rango(t.area_min, t.area_max, ' m²') ?? '—'}</div>
-                        <div className="flex-1 border-x border-[#E0DDD2]">{t.alcobas != null ? `${t.alcobas} alc.` : '—'}</div>
-                        <div className="flex-1">{t.banos != null ? `${t.banos} baños` : '—'}</div>
-                      </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <button onClick={() => setDetalle(t)} className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">Ver detalles</button>
-                        <Link href="/registro-broker" className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] transition-opacity hover:opacity-85">
-                          Postular →
-                        </Link>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
+          <div className="mx-auto flex max-w-xl items-center gap-2 rounded-full bg-white p-1.5 pl-5">
+            <svg className="h-4 w-4 shrink-0 text-[#5F5E5A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+            <select
+              className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-sm text-[#1A1A18] outline-none"
+              value={zonaFiltro}
+              onChange={(e) => setZonaFiltro(e.target.value)}
+            >
+              <option value="">¿En qué zona está? Todas las zonas</option>
+              {zonasDisponibles.map((z) => <option key={z} value={z}>{z}</option>)}
+            </select>
+            <button
+              onClick={irAResultados}
+              className="shrink-0 rounded-full bg-[#1A1A18] px-6 py-2.5 text-sm text-[#F1EFE8] transition-opacity hover:opacity-80"
+            >
+              Buscar
+            </button>
+          </div>
+
+          <button
+            onClick={verTodo}
+            className="mt-4 text-[12px] text-[#F1EFE8]/80 underline underline-offset-4 transition-colors hover:text-[#F1EFE8]"
+          >
+            o ver todos los requerimientos disponibles
+          </button>
         </div>
+      </section>
+
+      <main ref={listaRef} className="mx-auto max-w-5xl px-6 py-10 sm:px-8">
+        {cargando ? (
+          <p className="py-10 text-center text-sm text-[#5F5E5A]">Cargando compradores…</p>
+        ) : resultados.length === 0 ? (
+          <VacioAlerta zona={zonaFiltro} />
+        ) : (
+          <>
+            <p className="mb-5 text-[12px] text-[#5F5E5A]">
+              {resultados.length} {resultados.length === 1 ? 'comprador' : 'compradores'}
+              {zonaFiltro ? ` en ${zonaFiltro}` : ' activos'}
+            </p>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {resultados.map((t) => (
+                <article key={t.id} className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]">
+                  <div className="relative aspect-[4/3] bg-[#F1EFE8]">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-60"><IconoTipo tipo={t.tipo} /></div>
+                    <img src={imagenPara(t.codigo)} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                    <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                      {t.urgencia && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">{t.urgencia}</span>}
+                      {t.tipo && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">{t.tipo}</span>}
+                    </div>
+                    <span className="absolute right-3 top-3 rounded-full bg-[#1A1A18]/75 px-2.5 py-1 text-[10px] text-[#F1EFE8]">#{t.codigo}</span>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">Presupuesto del cliente</p>
+                    <p className="mt-0.5 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">{rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}</p>
+                    <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">{[t.tipo, t.ciudad].filter(Boolean).join(' · ') || 'Comprador verificado'}</p>
+                    <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
+                      <div className="flex-1">{rango(t.area_min, t.area_max, ' m²') ?? '—'}</div>
+                      <div className="flex-1 border-x border-[#E0DDD2]">{t.alcobas != null ? `${t.alcobas} alc.` : '—'}</div>
+                      <div className="flex-1">{t.banos != null ? `${t.banos} baños` : '—'}</div>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between">
+                      <button onClick={() => setDetalle(t)} className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">Ver detalles</button>
+                      <Link href={ENTRADA} className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] transition-opacity hover:opacity-85">
+                        Postular →
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Banner registro */}
         <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#EBDBC8] bg-[#F6EFE4] px-6 py-5 sm:flex-row sm:items-center">
@@ -210,7 +239,7 @@ export default function Oportunidades() {
             <p className="text-[14px] font-semibold text-[#1A1A18]">Regístrate gratis para postular</p>
             <p className="mt-0.5 text-[12px] text-[#5F5E5A]">Ver es libre. Para enviar tu inmueble a un comprador, crea tu cuenta.</p>
           </div>
-          <Link href="/registro-broker" className="shrink-0 rounded-full bg-[#B87333] px-6 py-2.5 text-[13px] font-semibold text-[#F1EFE8] hover:opacity-90 transition">
+          <Link href={ENTRADA} className="shrink-0 rounded-full bg-[#B87333] px-6 py-2.5 text-[13px] font-semibold text-[#F1EFE8] hover:opacity-90 transition">
             Crear cuenta
           </Link>
         </div>
@@ -248,7 +277,7 @@ export default function Oportunidades() {
                 <p className="mt-1 text-[13px] leading-relaxed text-[#1A1A18]">{detalle.preferencias}</p>
               </div>
             )}
-            <Link href="/registro-broker" className="mt-6 block rounded-full bg-[#1A1A18] py-3 text-center text-[14px] font-medium text-[#F1EFE8] hover:opacity-85 transition">
+            <Link href={ENTRADA} className="mt-6 block rounded-full bg-[#1A1A18] py-3 text-center text-[14px] font-medium text-[#F1EFE8] hover:opacity-85 transition">
               Tengo un inmueble para este comprador
             </Link>
             <p className="mt-2 text-center text-[11px] text-[#A8A69E]">Regístrate gratis para postular</p>
@@ -292,7 +321,7 @@ function VacioAlerta({ zona }: { zona: string }) {
       <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-[#5F5E5A]">
         Llegan nuevos cada semana. Regístrate como broker y guarda esta búsqueda: te avisamos cuando entre un comprador que encaje.
       </p>
-      <Link href="/registro-broker" className="mt-6 inline-block rounded-full bg-[#1A1A18] px-6 py-3 text-[13px] font-medium text-[#F1EFE8] hover:opacity-85 transition">
+      <Link href="/brokers" className="mt-6 inline-block rounded-full bg-[#1A1A18] px-6 py-3 text-[13px] font-medium text-[#F1EFE8] hover:opacity-85 transition">
         Crear cuenta y guardar alerta
       </Link>
     </div>

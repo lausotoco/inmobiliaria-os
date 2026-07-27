@@ -463,11 +463,11 @@ export default function LandingKyrelo({
             style={{ transitionDelay: "560ms" }}
           >
             <a
-              href="/brokers"
+              href="/oportunidades"
               className="ky-btn inline-flex items-center justify-center rounded-full px-8 py-3.5 text-[14px] font-semibold text-white"
               style={{ background: C.cobre }}
             >
-              Únete como broker
+              Ver requerimientos activos
             </a>
             <a
               href={wa("Hola KYRELO, quiero vender o arrendar mi inmueble.")}
@@ -529,11 +529,11 @@ export default function LandingKyrelo({
                 </ul>
                 <div className="mt-auto pt-7">
                   <a
-                    href="/registro-broker"
+                    href="/oportunidades"
                     className="ky-btn inline-flex items-center justify-center rounded-full px-7 py-3 text-[14px] font-semibold text-white"
                     style={{ background: C.grafito }}
                   >
-                    Únete como broker
+                    Ver requerimientos activos
                   </a>
                 </div>
               </div>
