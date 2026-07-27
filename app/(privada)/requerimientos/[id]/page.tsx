@@ -27,6 +27,8 @@ export default function RequerimientoDetallePage() {
   const [buscando, setBuscando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [accionando, setAccionando] = useState<string | null>(null);
+  const [publicado, setPublicado] = useState<boolean | null>(null);
+  const [guardandoPub, setGuardandoPub] = useState(false);
 
   const supabase = createClient();
 
@@ -51,6 +53,13 @@ export default function RequerimientoDetallePage() {
     ]);
 
     setReq(reqRes.data as ReqConCliente);
+
+    const { data: share } = await supabase
+      .from("requerimiento_shares")
+      .select("publicado")
+      .eq("requerimiento_id", id)
+      .maybeSingle();
+    setPublicado(share?.publicado ?? false);
 
     // Portadas
     const lista = (matchRes.data ?? []) as MatchConPropiedad[];
@@ -83,6 +92,30 @@ export default function RequerimientoDetallePage() {
 
     setMatches(lista);
     setCargando(false);
+  }
+
+  async function alternarPublicado() {
+    if (!req) return;
+    const nuevo = !publicado;
+    setGuardandoPub(true);
+    setPublicado(nuevo);
+    let error;
+    if (nuevo) {
+      ({ error } = await supabase.from("requerimiento_shares").upsert(
+        { requerimiento_id: req.id, organization_id: req.organization_id, publicado: true },
+        { onConflict: "requerimiento_id" },
+      ));
+    } else {
+      ({ error } = await supabase
+        .from("requerimiento_shares")
+        .update({ publicado: false })
+        .eq("requerimiento_id", req.id));
+    }
+    setGuardandoPub(false);
+    if (error) {
+      setPublicado(!nuevo);
+      setMensaje("No se pudo cambiar la visibilidad: " + error.message);
+    }
   }
 
   async function buscarMatches() {
@@ -198,6 +231,35 @@ export default function RequerimientoDetallePage() {
         >
           {buscando ? "La IA está evaluando…" : "✦ Buscar coincidencias con IA"}
         </button>
+      </div>
+
+      {/* Interruptor: visible para brokers */}
+      <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-linea bg-superficie px-5 py-4">
+        <div>
+          <p className="text-sm font-medium text-tinta">Visible para brokers</p>
+          <p className="mt-0.5 text-xs text-neutro">
+            {publicado
+              ? "Aparece en la plataforma pública de brokers."
+              : "Oculto. Actívalo solo cuando el requerimiento esté verificado y completo."}
+          </p>
+        </div>
+        {publicado !== null && (
+          <button
+            role="switch"
+            aria-checked={publicado}
+            onClick={alternarPublicado}
+            disabled={guardandoPub}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+              publicado ? "bg-bosque" : "bg-linea"
+            }`}
+          >
+            <span
+              className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
+                publicado ? "left-6" : "left-1"
+              }`}
+            />
+          </button>
+        )}
       </div>
 
       {/* Resumen del requerimiento */}
