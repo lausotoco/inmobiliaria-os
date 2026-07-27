@@ -263,22 +263,31 @@ export default function PortalBroker() {
                   const amenidades = aLista(t.amenidades);
                   const area = rango(t.area_min, t.area_max, ' m²');
                   return (
-                    <article key={t.id} className="border border-[#E0DDD2] bg-white">
-                      {/* Encabezado de la ficha */}
-                      <div className="px-8 pt-7 pb-5 border-b border-[#E0DDD2] flex flex-wrap items-center gap-3">
-                        <h2 className="text-lg tracking-tight text-[#1A1A18] mr-auto">
-                          Comprador #{t.codigo}
-                        </h2>
-                        <span className={`${badgeCls} text-[#5F5E5A]`}>{haceCuanto(t.updated_at)}</span>
-                        {t.urgencia && <span className={`${badgeCls} text-[#1A1A18]`}>{t.urgencia}</span>}
-                        {t.financiacion && <span className={`${badgeCls} text-[#1A1A18]`}>{t.financiacion}</span>}
+                    <article key={t.id} className="border border-[#E0DDD2] bg-white transition-colors duration-300 hover:border-[#CFC9BB]">
+                      {/* Encabezado de la ficha: presupuesto y zona protagonizan */}
+                      <div className="px-8 pt-7 pb-6 border-b border-[#E0DDD2]">
+                        <div className="flex flex-wrap items-center gap-2 mb-4">
+                          <h2 className="text-[13px] uppercase tracking-[0.14em] text-[#5F5E5A] mr-auto">
+                            Comprador #{t.codigo}
+                          </h2>
+                          <span className={`${badgeCls} text-[#5F5E5A]`}>{haceCuanto(t.updated_at)}</span>
+                          {t.urgencia && <span className={`${badgeCls} text-[#1A1A18]`}>{t.urgencia}</span>}
+                          {t.financiacion && <span className={`${badgeCls} text-[#1A1A18]`}>{t.financiacion}</span>}
+                        </div>
+                        <p className="font-display text-3xl tracking-tight text-[#1A1A18] leading-none">
+                          {rangoPresupuesto(t.presupuesto_min, t.presupuesto_max)}
+                        </p>
+                        {(aLista(t.zonas).length > 0 || t.ciudad) && (
+                          <p className="mt-2 text-[14px] text-[#5F5E5A]">
+                            {[aLista(t.zonas).slice(0, 3).join(' · '), t.ciudad].filter(Boolean).join(' — ')}
+                          </p>
+                        )}
                       </div>
 
                       <div className="px-8 py-7">
                         {/* Especificaciones en retícula */}
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6">
                           <Spec etiqueta="Tipo de inmueble" valor={t.tipo} />
-                          <Spec etiqueta="Presupuesto" valor={rangoPresupuesto(t.presupuesto_min, t.presupuesto_max)} />
                           <Spec etiqueta="Ciudad" valor={t.ciudad} />
                           <Spec etiqueta="Alcobas" valor={t.alcobas} />
                           <Spec etiqueta="Baños" valor={t.banos} />
@@ -314,17 +323,22 @@ export default function PortalBroker() {
                       </div>
 
                       {/* Pie de la ficha */}
-                      <div className="px-8 py-5 border-t border-[#E0DDD2] flex items-center justify-between">
-                        <span className="text-[11px] text-[#A8A69E]">
+                      <div className="px-8 py-5 border-t border-[#E0DDD2] flex flex-wrap items-center justify-between gap-3">
+                        <span className="flex items-center gap-2 text-[11px] text-[#A8A69E]">
+                          {t.postulaciones > 0 && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#B87333]" aria-hidden />
+                          )}
                           {t.postulaciones > 0
                             ? `${t.postulaciones} postulacion${t.postulaciones === 1 ? '' : 'es'} recibida${t.postulaciones === 1 ? '' : 's'}`
-                            : 'Sin postulaciones aún'}
+                            : 'Sé el primero en postular'}
                         </span>
                         <button
                           onClick={() => { setPostulando(t); setTempId(crypto.randomUUID()); setFotos([]); setFormP((f) => ({ ...f, contacto: f.contacto || telPerfil })); }}
-                          className="rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity"
+                          className="group/btn rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm px-6 py-2.5 transition-all hover:opacity-90 hover:shadow-[inset_0_0_0_1.5px_#B87333]"
                         >
-                          Tengo un inmueble para este comprador
+                          Tengo un inmueble
+                          <span className="hidden sm:inline"> para este comprador</span>
+                          <span className="ml-1.5 inline-block transition-transform group-hover/btn:translate-x-0.5">→</span>
                         </button>
                       </div>
                     </article>
