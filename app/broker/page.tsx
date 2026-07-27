@@ -330,6 +330,8 @@ export default function PortalBroker() {
         </div>
       </header>
 
+      <HablaBroker />
+
       {tab === 'buscar' && (
         <section className="relative bg-[#1A1A18] overflow-hidden">
           <div
@@ -603,61 +605,82 @@ export default function PortalBroker() {
             {mias.map((p) => {
               const idx = Math.max(0, SEGUIMIENTO.findIndex((e) => e.clave === p.estado));
               const rechazada = p.estado === 'rechazado';
+              const foto = Array.isArray(p.fotos_rutas) && p.fotos_rutas.length > 0
+                ? supabase.storage.from('propiedades').getPublicUrl(p.fotos_rutas[0]).data.publicUrl
+                : null;
               return (
-                <div key={p.id} className="py-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-[#1A1A18] tracking-tight mb-1">{p.titulo}</p>
-                      <p className="text-sm text-[#5F5E5A]">
+                <article
+                  key={p.id}
+                  className="mb-4 overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white"
+                >
+                  <div className="flex items-center gap-4 p-5">
+                    <div className="relative h-[64px] w-[84px] shrink-0 overflow-hidden rounded-xl bg-[#F1EFE8]">
+                      <div className="absolute inset-0 flex items-center justify-center opacity-60">
+                        <IconoTipo tipo={p.titulo} />
+                      </div>
+                      {foto && (
+                        <img
+                          src={foto}
+                          alt=""
+                          className="absolute inset-0 h-full w-full object-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-medium tracking-tight text-[#1A1A18]">{p.titulo}</p>
+                      <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
                         {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, formatoCOPfull(p.precio)].filter(Boolean).join(' · ')}
                       </p>
                     </div>
                     {rechazada ? (
-                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#8E3B31] border border-[#D5BBB5] rounded-full px-3 py-1 shrink-0">
+                      <span className="shrink-0 rounded-full border border-[#D5BBB5] px-3 py-1 text-[9px] uppercase tracking-[0.15em] text-[#8E3B31]">
                         No seleccionada
                       </span>
                     ) : (
-                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1 shrink-0">
+                      <span className="shrink-0 rounded-full bg-[#F1EFE8] px-3 py-1 text-[9px] uppercase tracking-[0.15em] text-[#1A1A18]">
                         {SEGUIMIENTO[idx]?.label ?? ESTADOS[p.estado] ?? p.estado}
                       </span>
                     )}
                   </div>
 
-                  {rechazada ? (
-                    <p className="text-[11px] text-[#5F5E5A]">
-                      Esta postulación no fue seleccionada para este comprador. Puedes postular tu inmueble a otros compradores activos.
-                    </p>
-                  ) : (
-                    <div>
-                      <div className="flex items-center">
-                        {SEGUIMIENTO.map((e, i) => (
-                          <div key={e.clave} className="flex items-center flex-1 last:flex-none">
-                            <span
-                              title={e.label}
-                              className={`h-[10px] w-[10px] rounded-full shrink-0 ${
-                                i < idx
-                                  ? 'bg-[#1A1A18]'
-                                  : i === idx
-                                    ? 'bg-[#B87333]'
-                                    : 'bg-transparent border border-[#E0DDD2]'
-                              }`}
-                            />
-                            {i < SEGUIMIENTO.length - 1 && (
-                              <span className={`h-px flex-1 mx-1 ${i < idx ? 'bg-[#1A1A18]' : 'bg-[#E0DDD2]'}`} />
-                            )}
-                          </div>
-                        ))}
+                  <div className="border-t border-[#E0DDD2] px-5 py-4">
+                    {rechazada ? (
+                      <p className="text-[11px] leading-relaxed text-[#5F5E5A]">
+                        Esta postulación no fue seleccionada para este comprador. Puedes postular tu inmueble a otros compradores activos.
+                      </p>
+                    ) : (
+                      <div>
+                        <div className="flex items-center">
+                          {SEGUIMIENTO.map((e, i) => (
+                            <div key={e.clave} className="flex flex-1 items-center last:flex-none">
+                              <span
+                                title={e.label}
+                                className={`h-[10px] w-[10px] shrink-0 rounded-full ${
+                                  i < idx
+                                    ? 'bg-[#1A1A18]'
+                                    : i === idx
+                                      ? 'bg-[#B87333]'
+                                      : 'border border-[#E0DDD2] bg-transparent'
+                                }`}
+                              />
+                              {i < SEGUIMIENTO.length - 1 && (
+                                <span className={`mx-1 h-px flex-1 ${i < idx ? 'bg-[#1A1A18]' : 'bg-[#E0DDD2]'}`} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                          <p className="text-[11px] text-[#1A1A18]">
+                            {SEGUIMIENTO[idx]?.label}
+                            <span className="text-[#A8A69E]"> · etapa {idx + 1} de {SEGUIMIENTO.length}</span>
+                          </p>
+                          <p className="text-[11px] text-[#5F5E5A]">{SIGUIENTE_PASO[p.estado] ?? ''}</p>
+                        </div>
                       </div>
-                      <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                        <p className="text-[11px] text-[#1A1A18]">
-                          {SEGUIMIENTO[idx]?.label}
-                          <span className="text-[#A8A69E]"> · etapa {idx + 1} de {SEGUIMIENTO.length}</span>
-                        </p>
-                        <p className="text-[11px] text-[#5F5E5A]">{SIGUIENTE_PASO[p.estado] ?? ''}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -754,5 +777,24 @@ export default function PortalBroker() {
         )}
       </div>
     </div>
+  );
+}
+
+function HablaBroker() {
+  return (
+    <a
+      href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un broker de ${APP.nombre} y tengo una duda:`)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Habla con nosotros por WhatsApp"
+      className="fixed bottom-5 right-5 z-40 flex items-center gap-2.5 rounded-full bg-[#1A1A18] px-5 py-3 text-[14px] font-semibold text-[#F1EFE8] transition-transform hover:-translate-y-0.5"
+      style={{ boxShadow: '0 14px 34px -16px rgba(26,26,24,0.5)' }}
+    >
+      <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="#B87333" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.38-4.1-1.05L3 20l1.1-5.2A8.5 8.5 0 1 1 21 11.5z" />
+      </svg>
+      <span className="hidden sm:inline">Habla con nosotros</span>
+      <span className="sm:hidden">Dudas</span>
+    </a>
   );
 }
