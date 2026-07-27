@@ -11,6 +11,8 @@ export type Cliente = {
   ciudad: string | null;
   estado: string;
   prioridad: string;
+  etapa: string; // etapa del proceso (barra de avance)
+  etapa_actualizada: string | null;
   urgencia: string | null;
   probabilidad_cierre: number | null;
   credito_aprobado: boolean;
