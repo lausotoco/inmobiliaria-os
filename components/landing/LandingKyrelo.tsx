@@ -493,26 +493,26 @@ export default function LandingKyrelo({
         </div>
       </section>
 
-      {/* ════════ DOS CAMINOS: BROKERS / VENDEDORES ════════ */}
+      {/* ════════ CON QUIÉN TRABAJAMOS: 3 TARGETS ════════ */}
       <section className="px-6 py-20 sm:px-10 sm:py-28" style={{ borderTop: `1px solid ${C.linea}` }}>
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl">
           <Revelar className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: C.cobre }}>
               ¿Con quién trabajamos?
             </p>
             <h2 className="mt-3 text-[26px] leading-tight sm:text-[32px]" style={{ fontFamily: "Fraunces, serif" }}>
-              Dos caminos, un mismo lugar
+              Tres formas de trabajar con nosotros
             </h2>
           </Revelar>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            {/* Brokers */}
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {/* Brokers e inmobiliarias */}
             <Revelar>
-              <div className="flex h-full flex-col rounded-2xl border bg-white p-8" style={{ borderColor: C.linea }}>
+              <div className="flex h-full flex-col rounded-2xl border bg-white p-7" style={{ borderColor: C.linea }}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
                   Para brokers e inmobiliarias
                 </p>
-                <h3 className="mt-3 text-[21px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
+                <h3 className="mt-3 text-[20px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
                   Tienes inmuebles. Aquí están los compradores.
                 </h3>
                 <ul className="mt-5 space-y-3">
@@ -539,13 +539,13 @@ export default function LandingKyrelo({
               </div>
             </Revelar>
 
-            {/* Vendedores / propietarios */}
-            <Revelar delay={120}>
-              <div className="flex h-full flex-col rounded-2xl border bg-white p-8" style={{ borderColor: C.linea }}>
+            {/* Propietarios */}
+            <Revelar delay={100}>
+              <div className="flex h-full flex-col rounded-2xl border bg-white p-7" style={{ borderColor: C.linea }}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
                   Para propietarios
                 </p>
-                <h3 className="mt-3 text-[21px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
+                <h3 className="mt-3 text-[20px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
                   Quieres vender o arrendar. Nosotros lo cerramos.
                 </h3>
                 <ul className="mt-5 space-y-3">
@@ -569,6 +569,41 @@ export default function LandingKyrelo({
                     style={{ borderColor: C.grafito, color: C.grafito }}
                   >
                     Quiero vender o arrendar
+                  </a>
+                </div>
+              </div>
+            </Revelar>
+
+            {/* Compradores / quienes buscan inmueble */}
+            <Revelar delay={200}>
+              <div className="flex h-full flex-col rounded-2xl border bg-white p-7" style={{ borderColor: C.linea }}>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
+                  Para quienes buscan inmueble
+                </p>
+                <h3 className="mt-3 text-[20px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
+                  Buscas casa o apartamento. Te lo encontramos.
+                </h3>
+                <ul className="mt-5 space-y-3">
+                  {[
+                    "Cuéntanos qué buscas: zona, presupuesto y tipo de inmueble.",
+                    "Conectamos tu búsqueda con toda la red de brokers de la Sabana.",
+                    "Te presentamos opciones que encajan, sin que busques por tu cuenta.",
+                  ].map((t) => (
+                    <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
+                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto pt-7">
+                  <a
+                    href={wa("Hola KYRELO, estoy buscando un inmueble.")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ky-btn inline-flex items-center justify-center rounded-full border px-7 py-3 text-[14px] font-medium"
+                    style={{ borderColor: C.grafito, color: C.grafito }}
+                  >
+                    Estoy buscando inmueble
                   </a>
                 </div>
               </div>
@@ -623,52 +658,6 @@ export default function LandingKyrelo({
               ya validado y listo para avanzar.
             </p>
           </Revelar>
-        </div>
-      </section>
-
-      {/* ════════ SERVICIOS ════════ */}
-      <section
-        className="border-t px-6 py-24 sm:px-10 sm:py-32"
-        style={{ borderColor: C.linea }}
-      >
-        <div className="mx-auto max-w-5xl">
-          <Revelar>
-            <p
-              className="text-[11px] font-semibold uppercase"
-              style={{ color: C.cobre, letterSpacing: "0.26em" }}
-            >
-              Servicios
-            </p>
-            <h2
-              className="ky-display mt-5 max-w-xl text-[32px] leading-[1.1] sm:text-[44px]"
-              style={{ letterSpacing: "-0.025em" }}
-            >
-              Una sola plataforma, tres frentes.
-            </h2>
-          </Revelar>
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {SERVICIOS.map((s, i) => (
-              <Revelar key={s.titulo} delay={i * 110}>
-                <article
-                  className="ky-card h-full rounded-2xl border bg-white p-8"
-                  style={{ borderColor: C.linea }}
-                >
-                  <div
-                    className="ky-ico flex h-14 w-14 items-center justify-center rounded-xl border"
-                    style={{ borderColor: C.linea, color: C.grafito }}
-                  >
-                    <div className="h-8 w-8">{s.icono}</div>
-                  </div>
-                  <h3 className="ky-display mt-7 text-[22px]" style={{ letterSpacing: "-0.01em" }}>
-                    {s.titulo}
-                  </h3>
-                  <p className="mt-3 text-[14.5px] leading-[1.7]" style={{ color: C.piedra }}>
-                    {s.texto}
-                  </p>
-                </article>
-              </Revelar>
-            ))}
-          </div>
         </div>
       </section>
 
