@@ -57,6 +57,34 @@ function rangoPresupuesto(min?: number | null, max?: number | null) {
   return '—';
 }
 
+const formatoCOPfull = (n?: number | null) =>
+  n == null ? null : '$' + Math.round(Number(n)).toLocaleString('es-CO');
+
+function rangoPresupuestoFull(min?: number | null, max?: number | null) {
+  const a = formatoCOPfull(min);
+  const b = formatoCOPfull(max);
+  if (a && b) return `${a} – ${b}`;
+  if (b) return `Hasta ${b}`;
+  if (a) return `Desde ${a}`;
+  return 'Presupuesto por definir';
+}
+
+const TIPOS = [
+  { v: 'casa', l: 'Casa' },
+  { v: 'apartamento', l: 'Apartamento' },
+  { v: 'lote', l: 'Lote' },
+];
+
+function IconoTipo({ tipo }: { tipo?: string | null }) {
+  const t = (tipo || '').toLowerCase();
+  const pr = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  if (t.includes('apart') || t.includes('apto'))
+    return (<svg className="w-[17px] h-[17px] text-[#B87333]" viewBox="0 0 24 24" {...pr}><rect x="6" y="3" width="12" height="18" /><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3" /></svg>);
+  if (t.includes('lote') || t.includes('terreno') || t.includes('finca'))
+    return (<svg className="w-[17px] h-[17px] text-[#B87333]" viewBox="0 0 24 24" {...pr}><path d="M12 21c4-4.5 6-8 6-11a6 6 0 1 0-12 0c0 3 2 6.5 6 11z" /><circle cx="12" cy="10" r="2.2" /></svg>);
+  return (<svg className="w-[17px] h-[17px] text-[#B87333]" viewBox="0 0 24 24" {...pr}><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-5h4v5" /></svg>);
+}
+
 export default function PortalBroker() {
   const supabase = createClient();
   const router = useRouter();
@@ -67,6 +95,9 @@ export default function PortalBroker() {
   const [mias, setMias] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
   const [postulando, setPostulando] = useState<any | null>(null);
+  const [detalle, setDetalle] = useState<any | null>(null);
+  const [tipoFiltro, setTipoFiltro] = useState('');
+  const [mostrarResultados, setMostrarResultados] = useState(false);
   const [formP, setFormP] = useState({
     titulo: '', precio: '', area: '', habitaciones: '', banos: '', parqueaderos: '',
     administracion: '', estrato: '', descripcion: '', amenidades: '',
@@ -78,13 +109,13 @@ export default function PortalBroker() {
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
-  async function buscar() {
+  async function buscar(f = filtros) {
     setCargando(true);
     const { data, error } = await supabase.rpc('marketplace_buscar', {
-      p_alcobas: filtros.alcobas ? Number(filtros.alcobas) : null,
-      p_banos: filtros.banos ? Number(filtros.banos) : null,
-      p_zona: filtros.zona || null,
-      p_precio_max: filtros.precioMax ? Number(filtros.precioMax) * 1000000 : null,
+      p_alcobas: f.alcobas ? Number(f.alcobas) : null,
+      p_banos: f.banos ? Number(f.banos) : null,
+      p_zona: f.zona || null,
+      p_precio_max: f.precioMax ? Number(f.precioMax) * 1000000 : null,
     });
     if (!error) setTarjetas(data ?? []);
     setCargando(false);
@@ -115,6 +146,31 @@ export default function PortalBroker() {
     router.push('/brokers');
     router.refresh();
   }
+
+  function buscarDesdeHero() {
+    setMostrarResultados(true);
+    buscar();
+  }
+
+  function verTodo() {
+    const limpio = { alcobas: '', banos: '', zona: '', precioMax: '' };
+    setFiltros(limpio);
+    setTipoFiltro('');
+    setMostrarResultados(true);
+    buscar(limpio);
+  }
+
+  function abrirPostulacion(t: any) {
+    setPostulando(t);
+    setTempId(crypto.randomUUID());
+    setFotos([]);
+    setFormP((f) => ({ ...f, contacto: f.contacto || telPerfil }));
+    setDetalle(null);
+  }
+
+  const resultados = tipoFiltro
+    ? tarjetas.filter((t) => (t.tipo || '').toLowerCase().includes(tipoFiltro))
+    : tarjetas;
 
   async function postular() {
     if (!formP.titulo) { setMensaje('El título del inmueble es obligatorio.'); return; }
@@ -218,8 +274,72 @@ export default function PortalBroker() {
         </div>
       </header>
 
+      {tab === 'buscar' && (
+        <section className="relative bg-[#1A1A18] overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-60"
+            style={{ backgroundImage: "url('/broker-hero.jpg')" }}
+          />
+          <div className="absolute inset-0 bg-[#1A1A18]/45" />
+          <div className="relative px-8 py-14 sm:py-20 max-w-3xl mx-auto text-center">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-[#EBDBC8] mb-3">
+              {APP.nombre} · Red de brokers
+            </p>
+            <h1 className="text-3xl sm:text-4xl tracking-tight text-[#F1EFE8] mb-2">
+              ¿Qué inmueble tienes?
+            </h1>
+            <p className="text-sm text-[#F1EFE8]/80 mb-8">
+              Encuentra al comprador que ya lo está buscando
+            </p>
+
+            <div className="flex justify-center gap-2 mb-4 flex-wrap">
+              {TIPOS.map((t) => (
+                <button
+                  key={t.v}
+                  onClick={() => setTipoFiltro(tipoFiltro === t.v ? '' : t.v)}
+                  className={`rounded-full border px-5 py-2 text-[13px] transition-colors ${
+                    tipoFiltro === t.v
+                      ? 'bg-[#F1EFE8] text-[#1A1A18] border-[#F1EFE8]'
+                      : 'bg-transparent text-[#F1EFE8] border-[#F1EFE8]/40 hover:border-[#F1EFE8]'
+                  }`}
+                >
+                  {t.l}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-full p-1.5 pl-5 flex items-center gap-2 max-w-xl mx-auto">
+              <svg className="w-4 h-4 text-[#5F5E5A] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+              <input
+                className="flex-1 min-w-0 bg-transparent text-sm text-[#1A1A18] outline-none placeholder:text-[#A8A69E]"
+                placeholder="¿En qué zona está? Cedritos, Chía, Cajicá…"
+                value={filtros.zona}
+                onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
+                onKeyDown={(e) => e.key === 'Enter' && buscarDesdeHero()}
+              />
+              <button
+                onClick={buscarDesdeHero}
+                className="rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity shrink-0"
+              >
+                Buscar
+              </button>
+            </div>
+
+            <button
+              onClick={verTodo}
+              className="mt-4 text-[12px] text-[#F1EFE8]/80 underline underline-offset-4 hover:text-[#F1EFE8] transition-colors"
+            >
+              o ver todos los requerimientos disponibles
+            </button>
+          </div>
+        </section>
+      )}
+
       <div className="px-8 py-10 max-w-3xl mx-auto">
-        <h1 className="text-2xl tracking-tight text-[#1A1A18] mb-8">Compradores activos</h1>
+
 
         <div className="flex gap-6 border-b border-[#E0DDD2] mb-8">
           {[
@@ -238,112 +358,174 @@ export default function PortalBroker() {
 
         {tab === 'buscar' && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-12 items-end">
-              <div><label className={labelCls}>Alcobas mín.</label>
-                <input className={inputCls} inputMode="numeric" value={filtros.alcobas} onChange={(e) => setFiltros({ ...filtros, alcobas: e.target.value })} /></div>
-              <div><label className={labelCls}>Baños mín.</label>
-                <input className={inputCls} inputMode="numeric" value={filtros.banos} onChange={(e) => setFiltros({ ...filtros, banos: e.target.value })} /></div>
-              <div><label className={labelCls}>Zona</label>
-                <input className={inputCls} placeholder="Cedritos" value={filtros.zona} onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })} /></div>
-              <div><label className={labelCls}>Presupuesto hasta (M)</label>
-                <input className={inputCls} inputMode="numeric" placeholder="520" value={filtros.precioMax} onChange={(e) => setFiltros({ ...filtros, precioMax: e.target.value })} /></div>
-              <button onClick={buscar} className="rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity">
-                Filtrar
-              </button>
-            </div>
-
-            {cargando ? (
+            {!mostrarResultados ? (
+              <p className="text-center text-sm text-[#5F5E5A] py-6">
+                Elige el tipo de inmueble y la zona arriba, o explora todos los requerimientos.
+              </p>
+            ) : cargando ? (
               <p className="text-sm text-[#5F5E5A]">Buscando compradores…</p>
-            ) : tarjetas.length === 0 ? (
-              <p className="text-sm text-[#5F5E5A]">No hay compradores publicados con esos filtros.</p>
+            ) : resultados.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-sm text-[#5F5E5A] mb-4">
+                  No hay compradores publicados con esa búsqueda.
+                </p>
+                <button
+                  onClick={verTodo}
+                  className="text-[12px] text-[#1A1A18] underline underline-offset-4"
+                >
+                  Ver todos los requerimientos disponibles
+                </button>
+              </div>
             ) : (
-              <div className="space-y-10">
-                {tarjetas.map((t) => {
-                  const zonas = aLista(t.zonas);
-                  const amenidades = aLista(t.amenidades);
-                  const area = rango(t.area_min, t.area_max, ' m²');
-                  return (
-                    <article key={t.id} className="border border-[#E0DDD2] bg-white transition-colors duration-300 hover:border-[#CFC9BB]">
-                      {/* Encabezado de la ficha: presupuesto y zona protagonizan */}
-                      <div className="px-8 pt-7 pb-6 border-b border-[#E0DDD2]">
-                        <div className="flex flex-wrap items-center gap-2 mb-4">
-                          <h2 className="text-[13px] uppercase tracking-[0.14em] text-[#5F5E5A] mr-auto">
-                            Comprador #{t.codigo}
-                          </h2>
-                          <span className={`${badgeCls} text-[#5F5E5A]`}>{haceCuanto(t.updated_at)}</span>
-                          {t.urgencia && <span className={`${badgeCls} text-[#1A1A18]`}>{t.urgencia}</span>}
-                          {t.financiacion && <span className={`${badgeCls} text-[#1A1A18]`}>{t.financiacion}</span>}
-                        </div>
-                        <p className="font-display text-3xl tracking-tight text-[#1A1A18] leading-none">
-                          {rangoPresupuesto(t.presupuesto_min, t.presupuesto_max)}
-                        </p>
-                        {(aLista(t.zonas).length > 0 || t.ciudad) && (
-                          <p className="mt-2 text-[14px] text-[#5F5E5A]">
-                            {[aLista(t.zonas).slice(0, 3).join(' · '), t.ciudad].filter(Boolean).join(' — ')}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="px-8 py-7">
-                        {/* Especificaciones en retícula */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6">
-                          <Spec etiqueta="Tipo de inmueble" valor={t.tipo} />
-                          <Spec etiqueta="Ciudad" valor={t.ciudad} />
-                          <Spec etiqueta="Alcobas" valor={t.alcobas} />
-                          <Spec etiqueta="Baños" valor={t.banos} />
-                          <Spec etiqueta="Parqueaderos" valor={t.parqueaderos} />
-                          <Spec etiqueta="Área" valor={area} />
-                          <Spec etiqueta="Barrio" valor={t.barrio} />
-                        </div>
-
-                        {/* Zonas de preferencia */}
-                        <Chips etiqueta="Zonas de preferencia" items={zonas} />
-
-                        {/* Amenidades deseadas */}
-                        <Chips etiqueta="Amenidades deseadas" items={amenidades} />
-
-                        {/* Comentarios del cliente */}
-                        {(t.preferencias || t.observaciones) && (
-                          <div className="mt-8 border-t border-[#E0DDD2] pt-6">
-                            <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-3">
-                              Comentarios del cliente
+              <>
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-5">
+                  {resultados.length} comprador{resultados.length === 1 ? '' : 'es'}
+                  {tipoFiltro ? ` buscando ${tipoFiltro}` : ' activos'}
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {resultados.map((t) => {
+                    const zonaLinea = [aLista(t.zonas)[0], t.ciudad].filter(Boolean).join(' · ');
+                    return (
+                      <article
+                        key={t.id}
+                        className="border border-[#E0DDD2] bg-white rounded-xl p-5 transition-colors duration-300 hover:border-[#CFC9BB]"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="w-9 h-9 rounded-full bg-[#F1EFE8] flex items-center justify-center shrink-0">
+                            <IconoTipo tipo={t.tipo} />
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[15px] font-medium text-[#1A1A18] tracking-tight leading-snug">
+                              {rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}
                             </p>
-                            {t.preferencias && (
-                              <p className="text-[14px] leading-relaxed text-[#1A1A18] border-l border-[#E0DDD2] pl-4 mb-3">
-                                {t.preferencias}
-                              </p>
-                            )}
-                            {t.observaciones && (
-                              <p className="text-[14px] leading-relaxed text-[#1A1A18] border-l border-[#E0DDD2] pl-4">
-                                {t.observaciones}
-                              </p>
-                            )}
+                            <p className="text-[12px] text-[#5F5E5A] truncate">
+                              {zonaLinea || t.tipo || 'Ver detalles'}
+                            </p>
                           </div>
-                        )}
-                      </div>
+                          <span className="text-[10px] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-2 py-0.5 shrink-0">
+                            #{t.codigo}
+                          </span>
+                        </div>
 
-                      {/* Pie de la ficha */}
-                      <div className="px-8 py-5 border-t border-[#E0DDD2] flex flex-wrap items-center justify-between gap-3">
-                        <span className="flex items-center gap-2 text-[11px] text-[#A8A69E]">
-                          {t.postulaciones > 0 && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#B87333]" aria-hidden />
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {t.alcobas != null && (
+                            <span className="text-[11px] text-[#1A1A18] bg-[#F1EFE8] rounded-full px-2.5 py-1">
+                              {t.alcobas} alcoba{t.alcobas === 1 ? '' : 's'}
+                            </span>
                           )}
-                          {t.postulaciones > 0
-                            ? `${t.postulaciones} postulacion${t.postulaciones === 1 ? '' : 'es'} recibida${t.postulaciones === 1 ? '' : 's'}`
-                            : 'Sé el primero en postular'}
-                        </span>
-                        <button
-                          onClick={() => { setPostulando(t); setTempId(crypto.randomUUID()); setFotos([]); setFormP((f) => ({ ...f, contacto: f.contacto || telPerfil })); }}
-                          className="group/btn rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm px-6 py-2.5 transition-all hover:opacity-90 hover:shadow-[inset_0_0_0_1.5px_#B87333]"
-                        >
-                          Tengo un inmueble
-                          <span className="hidden sm:inline"> para este comprador</span>
-                          <span className="ml-1.5 inline-block transition-transform group-hover/btn:translate-x-0.5">→</span>
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
+                          {t.banos != null && (
+                            <span className="text-[11px] text-[#1A1A18] bg-[#F1EFE8] rounded-full px-2.5 py-1">
+                              {t.banos} baño{t.banos === 1 ? '' : 's'}
+                            </span>
+                          )}
+                          {t.urgencia && (
+                            <span className="text-[11px] text-[#993C1D] bg-[#FAECE7] rounded-full px-2.5 py-1">
+                              {t.urgencia}
+                            </span>
+                          )}
+                          {t.financiacion && (
+                            <span className="text-[11px] text-[#1A1A18] bg-[#F1EFE8] rounded-full px-2.5 py-1">
+                              {t.financiacion}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <button
+                            onClick={() => setDetalle(t)}
+                            className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] transition-colors"
+                          >
+                            Ver detalles
+                          </button>
+                          <button
+                            onClick={() => abrirPostulacion(t)}
+                            className="rounded-full border border-[#1A1A18] text-[#1A1A18] text-[12px] px-4 py-1.5 hover:bg-[#1A1A18] hover:text-[#F1EFE8] transition-colors"
+                          >
+                            Postular →
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {detalle && (
+              <div
+                className="fixed inset-0 bg-[#1A1A18]/50 flex items-center justify-center px-6 z-50"
+                onClick={() => setDetalle(null)}
+              >
+                <div
+                  className="bg-white w-full max-w-md p-7 max-h-[85vh] overflow-y-auto rounded-xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="w-9 h-9 rounded-full bg-[#F1EFE8] flex items-center justify-center shrink-0">
+                      <IconoTipo tipo={detalle.tipo} />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[16px] font-medium text-[#1A1A18] tracking-tight leading-snug">
+                        {rangoPresupuestoFull(detalle.presupuesto_min, detalle.presupuesto_max)}
+                      </p>
+                      <p className="text-[12px] text-[#5F5E5A]">
+                        {[detalle.tipo, detalle.ciudad, `#${detalle.codigo}`].filter(Boolean).join(' · ')}
+                      </p>
+                    </div>
+                    <button onClick={() => setDetalle(null)} aria-label="Cerrar" className="text-[#5F5E5A] hover:text-[#1A1A18] transition-colors">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-x-4 gap-y-4 border-t border-[#E0DDD2] pt-5 mb-5">
+                    <Spec etiqueta="Alcobas" valor={detalle.alcobas} />
+                    <Spec etiqueta="Baños" valor={detalle.banos} />
+                    <Spec etiqueta="Parqueaderos" valor={detalle.parqueaderos} />
+                    <Spec etiqueta="Área" valor={rango(detalle.area_min, detalle.area_max, ' m²')} />
+                    <Spec etiqueta="Financiación" valor={detalle.financiacion} />
+                    <Spec etiqueta="Urgencia" valor={detalle.urgencia} />
+                    <Spec etiqueta="Barrio" valor={detalle.barrio} />
+                    <Spec etiqueta="Actualizado" valor={haceCuanto(detalle.updated_at).replace('Actualizado ', '')} />
+                  </div>
+
+                  <Chips etiqueta="Zonas de preferencia" items={aLista(detalle.zonas)} />
+                  <Chips etiqueta="Amenidades deseadas" items={aLista(detalle.amenidades)} />
+
+                  {(detalle.preferencias || detalle.observaciones) && (
+                    <div className="mt-6">
+                      <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-3">
+                        Lo que busca el cliente
+                      </p>
+                      {detalle.preferencias && (
+                        <p className="text-[13px] leading-relaxed text-[#1A1A18] border-l-2 border-[#E0DDD2] pl-3 mb-2">
+                          {detalle.preferencias}
+                        </p>
+                      )}
+                      {detalle.observaciones && (
+                        <p className="text-[13px] leading-relaxed text-[#1A1A18] border-l-2 border-[#E0DDD2] pl-3">
+                          {detalle.observaciones}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 mt-7">
+                    <button
+                      onClick={() => abrirPostulacion(detalle)}
+                      className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity"
+                    >
+                      Tengo un inmueble para este comprador
+                    </button>
+                    <button
+                      onClick={() => setDetalle(null)}
+                      className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2.5"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </>
