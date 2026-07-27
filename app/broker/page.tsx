@@ -69,6 +69,31 @@ function rangoPresupuestoFull(min?: number | null, max?: number | null) {
   return 'Presupuesto por definir';
 }
 
+const norm = (x: any) =>
+  String(x ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+const SEGUIMIENTO = [
+  { clave: 'postulado', label: 'Enviada' },
+  { clave: 'validado', label: 'Validada' },
+  { clave: 'acuerdo_firmado', label: 'Acuerdo firmado' },
+  { clave: 'presentado', label: 'Presentada al cliente' },
+  { clave: 'visita', label: 'Visita' },
+  { clave: 'negociacion', label: 'Negociación' },
+  { clave: 'cierre', label: 'Cierre' },
+  { clave: 'comision_repartida', label: 'Comisión repartida' },
+];
+
+const SIGUIENTE_PASO: Record<string, string> = {
+  postulado: 'Estamos revisando tu postulación.',
+  validado: 'Te enviaremos el acuerdo de corretaje para firmar.',
+  acuerdo_firmado: 'Presentaremos tu inmueble al cliente.',
+  presentado: 'Te contactaremos pronto para agendar una visita.',
+  visita: 'Esperando el resultado de la visita.',
+  negociacion: 'Estamos negociando con el cliente.',
+  cierre: 'Cierre en proceso — pronto se reparte la comisión.',
+  comision_repartida: 'Proceso completado. ¡Gracias por trabajar con nosotros!',
+};
+
 const TIPOS = [
   { v: 'casa', l: 'Casa' },
   { v: 'apartamento', l: 'Apartamento' },
@@ -97,6 +122,7 @@ export default function PortalBroker() {
   const [postulando, setPostulando] = useState<any | null>(null);
   const [detalle, setDetalle] = useState<any | null>(null);
   const [tipoFiltro, setTipoFiltro] = useState('');
+  const [zonaFiltro, setZonaFiltro] = useState('');
   const [mostrarResultados, setMostrarResultados] = useState(false);
   const [formP, setFormP] = useState({
     titulo: '', precio: '', area: '', habitaciones: '', banos: '', parqueaderos: '',
@@ -114,7 +140,7 @@ export default function PortalBroker() {
     const { data, error } = await supabase.rpc('marketplace_buscar', {
       p_alcobas: f.alcobas ? Number(f.alcobas) : null,
       p_banos: f.banos ? Number(f.banos) : null,
-      p_zona: f.zona || null,
+      p_zona: null,
       p_precio_max: f.precioMax ? Number(f.precioMax) * 1000000 : null,
     });
     if (!error) setTarjetas(data ?? []);
@@ -156,6 +182,7 @@ export default function PortalBroker() {
     const limpio = { alcobas: '', banos: '', zona: '', precioMax: '' };
     setFiltros(limpio);
     setTipoFiltro('');
+    setZonaFiltro('');
     setMostrarResultados(true);
     buscar(limpio);
   }
@@ -168,9 +195,26 @@ export default function PortalBroker() {
     setDetalle(null);
   }
 
-  const resultados = tipoFiltro
-    ? tarjetas.filter((t) => (t.tipo || '').toLowerCase().includes(tipoFiltro))
-    : tarjetas;
+  const resultados = tarjetas.filter((t) => {
+    const okTipo = !tipoFiltro || (t.tipo || '').toLowerCase().includes(tipoFiltro);
+    const okZona =
+      !zonaFiltro ||
+      [...aLista(t.zonas), t.ciudad, t.barrio]
+        .filter(Boolean)
+        .some((z) => norm(z).includes(norm(zonaFiltro)));
+    return okTipo && okZona;
+  });
+
+  const zonasDisponibles = (() => {
+    const m = new Map<string, string>();
+    tarjetas.forEach((t) => {
+      [...aLista(t.zonas), t.ciudad].filter(Boolean).forEach((z) => {
+        const k = norm(z);
+        if (k && !m.has(k)) m.set(k, String(z).trim());
+      });
+    });
+    return Array.from(m.values()).sort((a, b) => a.localeCompare(b, 'es'));
+  })();
 
   async function postular() {
     if (!formP.titulo) { setMensaje('El título del inmueble es obligatorio.'); return; }
@@ -313,13 +357,16 @@ export default function PortalBroker() {
                 <circle cx="11" cy="11" r="7" />
                 <path d="M20 20l-3.5-3.5" />
               </svg>
-              <input
-                className="flex-1 min-w-0 bg-transparent text-sm text-[#1A1A18] outline-none placeholder:text-[#A8A69E]"
-                placeholder="¿En qué zona está? Cedritos, Chía, Cajicá…"
-                value={filtros.zona}
-                onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
-                onKeyDown={(e) => e.key === 'Enter' && buscarDesdeHero()}
-              />
+              <select
+                className="flex-1 min-w-0 bg-transparent text-sm text-[#1A1A18] outline-none cursor-pointer appearance-none"
+                value={zonaFiltro}
+                onChange={(e) => setZonaFiltro(e.target.value)}
+              >
+                <option value="">¿En qué zona está? Todas las zonas</option>
+                {zonasDisponibles.map((z) => (
+                  <option key={z} value={z}>{z}</option>
+                ))}
+              </select>
               <button
                 onClick={buscarDesdeHero}
                 className="rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm px-6 py-2.5 hover:opacity-80 transition-opacity shrink-0"
@@ -534,19 +581,66 @@ export default function PortalBroker() {
         {tab === 'mias' && (
           <div className="divide-y divide-[#E0DDD2] border-t border-b border-[#E0DDD2]">
             {mias.length === 0 && <p className="py-6 text-sm text-[#5F5E5A]">Aún no has postulado inmuebles.</p>}
-            {mias.map((p) => (
-              <div key={p.id} className="py-6 flex items-center gap-4">
-                <div className="flex-1">
-                  <p className="text-sm text-[#1A1A18] tracking-tight mb-1">{p.titulo}</p>
-                  <p className="text-sm text-[#5F5E5A]">
-                    {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, formatoCOP(p.precio)].filter(Boolean).join(' · ')}
-                  </p>
+            {mias.map((p) => {
+              const idx = Math.max(0, SEGUIMIENTO.findIndex((e) => e.clave === p.estado));
+              const rechazada = p.estado === 'rechazado';
+              return (
+                <div key={p.id} className="py-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-[#1A1A18] tracking-tight mb-1">{p.titulo}</p>
+                      <p className="text-sm text-[#5F5E5A]">
+                        {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, formatoCOPfull(p.precio)].filter(Boolean).join(' · ')}
+                      </p>
+                    </div>
+                    {rechazada ? (
+                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#8E3B31] border border-[#D5BBB5] rounded-full px-3 py-1 shrink-0">
+                        No seleccionada
+                      </span>
+                    ) : (
+                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1 shrink-0">
+                        {SEGUIMIENTO[idx]?.label ?? ESTADOS[p.estado] ?? p.estado}
+                      </span>
+                    )}
+                  </div>
+
+                  {rechazada ? (
+                    <p className="text-[11px] text-[#5F5E5A]">
+                      Esta postulación no fue seleccionada para este comprador. Puedes postular tu inmueble a otros compradores activos.
+                    </p>
+                  ) : (
+                    <div>
+                      <div className="flex items-center">
+                        {SEGUIMIENTO.map((e, i) => (
+                          <div key={e.clave} className="flex items-center flex-1 last:flex-none">
+                            <span
+                              title={e.label}
+                              className={`h-[10px] w-[10px] rounded-full shrink-0 ${
+                                i < idx
+                                  ? 'bg-[#1A1A18]'
+                                  : i === idx
+                                    ? 'bg-[#B87333]'
+                                    : 'bg-transparent border border-[#E0DDD2]'
+                              }`}
+                            />
+                            {i < SEGUIMIENTO.length - 1 && (
+                              <span className={`h-px flex-1 mx-1 ${i < idx ? 'bg-[#1A1A18]' : 'bg-[#E0DDD2]'}`} />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                        <p className="text-[11px] text-[#1A1A18]">
+                          {SEGUIMIENTO[idx]?.label}
+                          <span className="text-[#A8A69E]"> · etapa {idx + 1} de {SEGUIMIENTO.length}</span>
+                        </p>
+                        <p className="text-[11px] text-[#5F5E5A]">{SIGUIENTE_PASO[p.estado] ?? ''}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <span className="text-[9px] uppercase tracking-[0.15em] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1">
-                  {ESTADOS[p.estado]}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -556,7 +650,15 @@ export default function PortalBroker() {
               <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-1">
                 Comprador #{postulando.codigo}
               </p>
-              <h2 className="text-lg tracking-tight text-[#1A1A18] mb-6">Postular inmueble</h2>
+              <h2 className="text-lg tracking-tight text-[#1A1A18] mb-2">Postular inmueble</h2>
+              <a
+                href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un broker de ${APP.nombre}. Estoy registrando un inmueble para el comprador #${postulando.codigo} y tengo una duda:`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] transition-colors mb-6"
+              >
+                ¿Tienes dudas? Escríbenos por WhatsApp
+              </a>
 
               <div className="space-y-4">
                 <div><label className={labelCls}>Título del inmueble *</label>
