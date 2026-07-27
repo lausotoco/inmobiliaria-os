@@ -126,7 +126,7 @@ export default function PortalBroker() {
   const supabase = createClient();
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [tab, setTab] = useState<'buscar' | 'mias'>('buscar');
+  const [tab, setTab] = useState<'buscar' | 'info' | 'mias'>('buscar');
   const [filtros, setFiltros] = useState({ alcobas: '', banos: '', zona: '', precioMax: '' });
   const [tarjetas, setTarjetas] = useState<any[]>([]);
   const [mias, setMias] = useState<any[]>([]);
@@ -416,6 +416,7 @@ export default function PortalBroker() {
         <div className="flex gap-6 border-b border-[#E0DDD2] mb-8">
           {[
             { k: 'buscar', l: 'Buscar compradores' },
+            { k: 'info', l: 'Cómo funciona' },
             { k: 'mias', l: `Mis postulaciones (${mias.length})` },
           ].map((t) => (
             <button
@@ -608,6 +609,13 @@ export default function PortalBroker() {
                 </div>
               </div>
             )}
+          </>
+        )}
+
+        {tab === 'info' && (
+          <>
+            <ComoFunciona />
+            <FAQBrokers />
           </>
         )}
 
