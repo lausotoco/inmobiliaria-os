@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     path === "/registro-broker" ||
     path === "/recuperar" ||
     path === "/nueva-clave" ||
+    path.startsWith("/legal") ||
     path.startsWith("/p/") ||
     path === "/inmuebles" ||
     path.startsWith("/inmuebles/") ||

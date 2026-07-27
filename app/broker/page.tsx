@@ -145,6 +145,7 @@ export default function PortalBroker() {
   const [fotos, setFotos] = useState<string[]>([]);
   const [tempId, setTempId] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [confirmandoAlcance, setConfirmandoAlcance] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
   async function buscar(f = filtros) {
@@ -228,10 +229,16 @@ export default function PortalBroker() {
     return Array.from(m.values()).sort((a, b) => a.localeCompare(b, 'es'));
   })();
 
-  async function postular() {
+  function postular() {
     if (!formP.titulo) { setMensaje('El título del inmueble es obligatorio.'); return; }
     if (fotos.length === 0) { setMensaje('Sube al menos una foto del inmueble.'); return; }
     if (!formP.contacto.trim()) { setMensaje('Escribe tu celular o WhatsApp de contacto.'); return; }
+    setMensaje('');
+    setConfirmandoAlcance(true);
+  }
+
+  async function enviarPostulacion(alcance: 'futuros' | 'solo_este') {
+    setConfirmandoAlcance(false);
     setEnviando(true);
 
     const { data: { user }, error: errUser } = await supabase.auth.getUser();
@@ -263,6 +270,7 @@ export default function PortalBroker() {
         barrio: formP.barrio || null,
         ciudad: formP.ciudad || null,
         direccion: formP.direccion || null,
+        alcance,
       },
       contacto_telefono: formP.contacto.trim(),
       fotos_rutas: fotos,
@@ -270,6 +278,9 @@ export default function PortalBroker() {
     });
     setEnviando(false);
     if (error) { setMensaje('No se pudo postular: ' + error.message); return; }
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'SubmitApplication');
+    }
     setPostulando(null);
     setFotos([]);
     setMensaje('');
@@ -420,9 +431,10 @@ export default function PortalBroker() {
         {tab === 'buscar' && (
           <>
             {!mostrarResultados ? (
-              <p className="text-center text-sm text-[#5F5E5A] py-6">
-                Elige el tipo de inmueble y la zona arriba, o explora todos los requerimientos.
-              </p>
+              <>
+                <ComoFunciona />
+                <FAQBrokers />
+              </>
             ) : cargando ? (
               <p className="text-sm text-[#5F5E5A]">Buscando compradores…</p>
             ) : resultados.length === 0 ? (
@@ -686,6 +698,53 @@ export default function PortalBroker() {
           </div>
         )}
 
+        {confirmandoAlcance && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#1A1A18]/50 px-6">
+            <div className="w-full max-w-md rounded-2xl bg-[#F1EFE8] p-8">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-[#B87333]">Antes de enviar</p>
+              <h2 className="mt-2 text-[19px] leading-snug tracking-tight text-[#1A1A18]" style={{ fontFamily: 'Fraunces, serif' }}>
+                ¿Para qué requerimientos quieres este inmueble?
+              </h2>
+              <p className="mt-3 text-[12px] leading-relaxed text-[#5F5E5A]">
+                Tu inmueble solo se usa dentro de KYRELO. Nunca lo comercializamos por fuera ni en otras
+                plataformas. Tú decides su alcance:
+              </p>
+
+              <div className="mt-6 space-y-3">
+                <button
+                  onClick={() => enviarPostulacion('futuros')}
+                  disabled={enviando}
+                  className="w-full rounded-xl bg-[#1A1A18] px-5 py-4 text-left transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  <span className="block text-[14px] font-semibold text-[#F1EFE8]">Disponible para futuros requerimientos</span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-[#F1EFE8]/70">
+                    Autorizas que KYRELO también lo considere para otros compradores internos. Más oportunidades de cierre.
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => enviarPostulacion('solo_este')}
+                  disabled={enviando}
+                  className="w-full rounded-xl border border-[#D8D3C6] bg-white px-5 py-4 text-left transition-colors hover:border-[#1A1A18] disabled:opacity-40"
+                >
+                  <span className="block text-[14px] font-semibold text-[#1A1A18]">Solo para este requerimiento</span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-[#5F5E5A]">
+                    El inmueble se usa únicamente para el comprador #{postulando?.codigo}. No se cruza con ningún otro.
+                  </span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setConfirmandoAlcance(false)}
+                disabled={enviando}
+                className="mt-5 w-full text-center text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] disabled:opacity-40"
+              >
+                {enviando ? 'Enviando…' : 'Volver'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {postulando && (
           <div className="fixed inset-0 bg-[#1A1A18]/30 flex items-center justify-center px-6 z-50">
             <div className="bg-[#F1EFE8] w-full max-w-md p-8 max-h-[85vh] overflow-y-auto">
@@ -776,7 +835,89 @@ export default function PortalBroker() {
           </div>
         )}
       </div>
+
+      <FooterBroker />
     </div>
+  );
+}
+
+function ComoFunciona() {
+  const pasos = [
+    { n: '01', t: 'Mira compradores reales', d: 'Requerimientos de compradores verificados en la Sabana, con presupuesto y zona. Sin datos inflados.' },
+    { n: '02', t: 'Postula tu inmueble', d: 'Si tienes algo que encaja, lo postulas en dos minutos. Tú decides si queda solo para ese comprador o para más.' },
+    { n: '03', t: 'Cierras y ganas', d: 'Acompañamos el proceso hasta la firma. Solo compartes comisión cuando el negocio se cierra.' },
+  ];
+  return (
+    <section className="py-4">
+      <div className="mb-8 rounded-2xl border border-[#EBDBC8] bg-[#F6EFE4] px-6 py-5 text-center">
+        <p className="text-[13px] font-medium text-[#1A1A18]">
+          Registrarte e ingresar es <span className="text-[#B87333]">gratis</span>. Solo compartes comisión cuando cierras un negocio con un requerimiento de KYRELO.
+        </p>
+      </div>
+
+      <p className="text-[10px] uppercase tracking-[0.2em] text-[#A8A69E]">Cómo funciona</p>
+      <div className="mt-5 grid gap-5 sm:grid-cols-3">
+        {pasos.map((p) => (
+          <div key={p.n} className="rounded-2xl border border-[#E0DDD2] bg-white p-6">
+            <p className="text-[12px] font-semibold text-[#B87333]">{p.n}</p>
+            <p className="mt-3 text-[15px] font-semibold tracking-tight text-[#1A1A18]">{p.t}</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-[#5F5E5A]">{p.d}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FAQBrokers() {
+  const faqs = [
+    { q: '¿Registrarme tiene algún costo?', a: 'No. Crear tu cuenta, ver los compradores y postular tus inmuebles es totalmente gratis. Solo compartes comisión cuando se cierra un negocio con un requerimiento traído de KYRELO.' },
+    { q: '¿Cómo funciona la comisión?', a: 'La comisión aplica únicamente cuando concretas un cierre con un comprador de KYRELO. Las condiciones se acuerdan contigo antes de presentar el inmueble al comprador.' },
+    { q: '¿Me pueden quitar el cliente?', a: 'No. Tu postulación queda registrada y firmamos un acuerdo antes de presentar el inmueble. El proceso es transparente y tu participación queda protegida.' },
+    { q: '¿Qué pasa si ya trabajo con otra inmobiliaria?', a: 'Puedes usar KYRELO como un canal más de oportunidades. Tú decides qué inmuebles postular y con qué alcance.' },
+    { q: '¿Los compradores son reales?', a: 'Sí. Cada requerimiento viene de un comprador verificado con presupuesto y zona definidos. No mostramos búsquedas infladas ni datos falsos.' },
+  ];
+  return (
+    <section className="mt-12 border-t border-[#E0DDD2] pt-10">
+      <p className="text-[10px] uppercase tracking-[0.2em] text-[#A8A69E]">Preguntas frecuentes</p>
+      <div className="mt-5 divide-y divide-[#E0DDD2]">
+        {faqs.map((f) => (
+          <details key={f.q} className="group py-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[14px] font-medium text-[#1A1A18]">
+              {f.q}
+              <span className="shrink-0 text-[#B87333] transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <p className="mt-2.5 text-[12px] leading-relaxed text-[#5F5E5A]">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FooterBroker() {
+  return (
+    <footer className="border-t border-[#E0DDD2] bg-[#F1EFE8]">
+      <div className="mx-auto max-w-3xl px-8 py-8">
+        <p className="text-[14px] font-semibold tracking-tight text-[#1A1A18]" style={{ fontFamily: 'Fraunces, serif' }}>
+          {APP.marca}
+        </p>
+        <p className="mt-1 text-[12px] text-[#5F5E5A]">Kyrelocorp · {APP.eslogan}</p>
+        <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-[12px] text-[#5F5E5A]">
+          <a
+            href={`https://wa.me/${APP.whatsapp}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 hover:text-[#1A1A18]"
+          >
+            WhatsApp +57 311 801 8295
+          </a>
+          <a href="/legal/tratamiento-de-datos" className="underline underline-offset-4 hover:text-[#1A1A18]">Tratamiento de datos</a>
+          <a href="/legal/terminos" className="underline underline-offset-4 hover:text-[#1A1A18]">Términos y condiciones</a>
+        </div>
+        <p className="mt-6 text-[10px] text-[#A8A69E]">© {new Date().getFullYear()} Kyrelocorp. Todos los derechos reservados.</p>
+      </div>
+    </footer>
   );
 }
 
@@ -787,6 +928,7 @@ function HablaBroker() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Habla con nosotros por WhatsApp"
+      onClick={() => { if (typeof window !== 'undefined' && (window as any).fbq) (window as any).fbq('track', 'Contact'); }}
       className="fixed bottom-5 right-5 z-40 flex items-center gap-2.5 rounded-full bg-[#1A1A18] px-5 py-3 text-[14px] font-semibold text-[#F1EFE8] transition-transform hover:-translate-y-0.5"
       style={{ boxShadow: '0 14px 34px -16px rgba(26,26,24,0.5)' }}
     >
