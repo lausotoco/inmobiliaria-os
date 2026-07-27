@@ -1,234 +1,263 @@
-'use client';
+"use client";
 
-// app/(privada)/marketplace/page.tsx
-// Vista del BROKER: busca compradores anonimizados y postula inmuebles.
-// El broker NUNCA ve nombre, cédula ni contacto del comprador.
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { formatoCOP, formatoFecha } from "@/lib/utils";
+import Badge from "@/components/ui/Badge";
+import FormCliente from "@/components/clientes/FormCliente";
+import TabRequerimientos from "@/components/clientes/TabRequerimientos";
+import TabNotas from "@/components/clientes/TabNotas";
+import TabPropiedadesEnviadas from "@/components/clientes/TabPropiedadesEnviadas";
+import type { Cliente, Requerimiento, Conversacion } from "@/lib/types";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+const TABS = ["requerimientos", "enviadas", "notas", "editar"] as const;
+type Tab = (typeof TABS)[number];
 
-const ESTADOS: Record<string, string> = {
-  postulado: 'Postulado',
-  validado: 'Validado',
-  acuerdo_firmado: 'Acuerdo firmado',
-  presentado: 'Presentado',
-  visita: 'Visita',
-  negociacion: 'Negociación',
-  cierre: 'Cierre',
-  comision_repartida: 'Comisión repartida',
-};
+export default function ClienteDetallePage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = params.id as string;
 
-function haceCuanto(fecha: string) {
-  const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
-  if (dias === 0) return 'actualizado hoy';
-  if (dias === 1) return 'actualizado hace 1 día';
-  return `actualizado hace ${dias} días`;
-}
-
-const formatoCOP = (n?: number | null) =>
-  n == null ? '—' : '$' + Math.round(n / 1000000) + 'M';
-
-export default function Marketplace() {
-  const supabase = createClient();
-  const [tab, setTab] = useState<'buscar' | 'mias'>('buscar');
-  const [filtros, setFiltros] = useState({ alcobas: '', banos: '', zona: '', precioMax: '' });
-  const [tarjetas, setTarjetas] = useState<any[]>([]);
-  const [mias, setMias] = useState<any[]>([]);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [requerimientos, setRequerimientos] = useState<Requerimiento[]>([]);
+  const [conversaciones, setConversaciones] = useState<Conversacion[]>([]);
+  const [tab, setTab] = useState<Tab>("requerimientos");
   const [cargando, setCargando] = useState(true);
-  const [postulando, setPostulando] = useState<any | null>(null); // tarjeta seleccionada
-  const [formP, setFormP] = useState({ titulo: '', descripcion: '', precio: '', ubicacion: '', alcobas: '', banos: '', area: '', fotos_url: '' });
-  const [enviando, setEnviando] = useState(false);
-  const [mensaje, setMensaje] = useState('');
+  const [eliminando, setEliminando] = useState(false);
 
-  async function buscar() {
+  useEffect(() => {
+    cargar();
+  }, [id]);
+
+  async function cargar() {
     setCargando(true);
-    const { data, error } = await supabase.rpc('marketplace_buscar', {
-      p_alcobas: filtros.alcobas ? Number(filtros.alcobas) : null,
-      p_banos: filtros.banos ? Number(filtros.banos) : null,
-      p_zona: filtros.zona || null,
-      p_precio_max: filtros.precioMax ? Number(filtros.precioMax) * 1000000 : null,
-    });
-    if (!error) setTarjetas(data ?? []);
+    const supabase = createClient();
+
+    const [clienteRes, reqRes, convRes] = await Promise.all([
+      supabase.from("clientes").select("*").eq("id", id).single(),
+      supabase
+        .from("requerimientos")
+        .select("*")
+        .eq("cliente_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("conversaciones")
+        .select("*")
+        .eq("cliente_id", id)
+        .order("fecha", { ascending: false }),
+    ]);
+
+    setCliente(clienteRes.data);
+    setRequerimientos(reqRes.data ?? []);
+    setConversaciones(convRes.data ?? []);
     setCargando(false);
   }
 
-  async function cargarMias() {
-    const { data } = await supabase
-      .from('marketplace_postulaciones')
-      .select('*')
-      .order('updated_at', { ascending: false });
-    setMias(data ?? []);
+  // Re-fetch cuando se vuelve a la pestaña (para reflejar cambios de tabs internos)
+  useEffect(() => {
+    if (!cargando) cargar();
+  }, [tab]);
+
+  async function cambiarRapido(campo: "estado" | "prioridad", valor: string) {
+    if (!cliente) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("clientes")
+      .update({ [campo]: valor })
+      .eq("id", id);
+    if (!error) setCliente({ ...cliente, [campo]: valor });
   }
 
-  useEffect(() => { buscar(); cargarMias(); }, []); // eslint-disable-line
-
-  async function postular() {
-    if (!formP.titulo) { setMensaje('El título del inmueble es obligatorio.'); return; }
-    setEnviando(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('marketplace_postulaciones').insert({
-      requerimiento_id: postulando.id,
-      broker_profile_id: user?.id,
-      titulo: formP.titulo,
-      descripcion: formP.descripcion || null,
-      precio: formP.precio ? Number(formP.precio) * 1000000 : null,
-      ubicacion: formP.ubicacion || null,
-      alcobas: formP.alcobas ? Number(formP.alcobas) : null,
-      banos: formP.banos ? Number(formP.banos) : null,
-      area: formP.area ? Number(formP.area) : null,
-      fotos_url: formP.fotos_url || null,
-    });
-    setEnviando(false);
-    if (error) { setMensaje(error.message); return; }
-    setPostulando(null);
-    setFormP({ titulo: '', descripcion: '', precio: '', ubicacion: '', alcobas: '', banos: '', area: '', fotos_url: '' });
-    setMensaje('');
-    cargarMias();
-    setTab('mias');
+  async function eliminarCliente() {
+    if (
+      !confirm(
+        "¿Eliminar este cliente y todos sus datos? Esta acción no se puede deshacer."
+      )
+    )
+      return;
+    setEliminando(true);
+    const supabase = createClient();
+    await supabase.from("clientes").delete().eq("id", id);
+    router.push("/clientes");
+    router.refresh();
   }
 
-  const inputCls = 'w-full bg-transparent border-b border-[#E6E6E1] pb-1.5 text-sm text-[#141414] outline-none focus:border-[#141414] transition-colors';
-  const labelCls = 'block text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] mb-1';
+  if (cargando) {
+    return <p className="mt-12 text-center text-sm text-neutro">Cargando…</p>;
+  }
+
+  if (!cliente) {
+    return (
+      <div className="mt-12 text-center">
+        <p className="text-neutro">Cliente no encontrado.</p>
+        <Link href="/clientes" className="mt-3 text-sm text-bosque underline">
+          Volver a clientes
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF7] px-8 py-10 max-w-5xl mx-auto">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-[#8C8C86] mb-2">Marketplace</p>
-      <h1 className="text-2xl tracking-tight text-[#141414] mb-8">Compradores activos</h1>
+    <div>
+      {/* Header */}
+      <Link
+        href="/clientes"
+        className="text-sm text-neutro transition hover:text-tinta"
+      >
+        ← Clientes
+      </Link>
+
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-medium">{cliente.nombre}</h1>
+          <div className="mt-3 space-y-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[10px] font-medium uppercase tracking-widest text-neutro">
+                Estado
+              </span>
+              {["activo", "en pausa", "cerrado", "perdido"].map((e) => (
+                <button
+                  key={e}
+                  onClick={() => cambiarRapido("estado", e)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium capitalize transition ${
+                    cliente.estado === e
+                      ? "border-bosque bg-bosque text-white"
+                      : "border-linea bg-superficie text-neutro hover:border-bosque hover:text-bosque"
+                  }`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-[10px] font-medium uppercase tracking-widest text-neutro">
+                Prioridad
+              </span>
+              {["alta", "media", "baja"].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => cambiarRapido("prioridad", p)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium capitalize transition ${
+                    cliente.prioridad === p
+                      ? "border-[#1A1A18] bg-[#1A1A18] text-white"
+                      : "border-linea bg-superficie text-neutro hover:border-[#1A1A18] hover:text-tinta"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <span className="ml-2 flex gap-1.5">
+                <Badge texto={cliente.urgencia} />
+                {cliente.credito_aprobado && <Badge texto="crédito aprobado" />}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {cliente.whatsapp && (
+          <a
+            href={`https://wa.me/${cliente.whatsapp.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-lg bg-[#1A1A18] rounded-full px-5 py-2.5 text-center text-sm font-medium text-white transition hover:opacity-80"
+          >
+            WhatsApp →
+          </a>
+        )}
+      </div>
+
+      {/* Resumen */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        {[
+          { k: "WhatsApp", v: cliente.whatsapp },
+          { k: "Cédula", v: cliente.cedula },
+          { k: "Ciudad", v: cliente.ciudad },
+          { k: "Banco", v: cliente.banco },
+          {
+            k: "Inicial disponible",
+            v: formatoCOP(cliente.inicial_disponible),
+          },
+          { k: "Probabilidad", v: cliente.probabilidad_cierre ? `${cliente.probabilidad_cierre}%` : null },
+          { k: "Último contacto", v: formatoFecha(cliente.ultimo_contacto) },
+        ]
+          .filter((x) => x.v && x.v !== "—")
+          .map((x) => (
+            <div
+              key={x.k}
+              className="rounded-lg border border-linea bg-superficie px-3 py-2.5"
+            >
+              <p className="text-xs text-neutro">{x.k}</p>
+              <p className="mt-0.5 text-sm font-medium text-tinta">{x.v}</p>
+            </div>
+          ))}
+      </div>
+
+      {cliente.notas && (
+        <p className="mt-4 rounded-lg border border-linea bg-superficie px-4 py-3 text-sm italic text-neutro">
+          {cliente.notas}
+        </p>
+      )}
 
       {/* Tabs */}
-      <div className="flex gap-6 border-b border-[#E6E6E1] mb-8">
-        {[
-          { k: 'buscar', l: 'Buscar compradores' },
-          { k: 'mias', l: `Mis postulaciones (${mias.length})` },
-        ].map((t) => (
+      <div className="mt-8 flex gap-1 border-b border-linea">
+        {TABS.map((t) => (
           <button
-            key={t.k}
-            onClick={() => setTab(t.k as any)}
-            className={`pb-3 text-sm transition-colors ${tab === t.k ? 'text-[#141414] border-b border-[#141414] -mb-px' : 'text-[#8C8C86]'}`}
+            key={t}
+            onClick={() => setTab(t)}
+            className={`border-b-2 px-4 py-2.5 text-sm font-medium capitalize transition ${
+              tab === t
+                ? "border-bosque text-bosque"
+                : "border-transparent text-neutro hover:text-tinta"
+            }`}
           >
-            {t.l}
+            {t === "requerimientos"
+              ? `Requerimientos (${requerimientos.length})`
+              : t === "enviadas"
+                ? "Propiedades enviadas"
+                : t === "notas"
+                  ? `Notas (${conversaciones.length})`
+                  : "Editar"}
           </button>
         ))}
       </div>
 
-      {tab === 'buscar' && (
-        <>
-          {/* Filtros */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10 items-end">
-            <div><label className={labelCls}>Alcobas mín.</label>
-              <input className={inputCls} inputMode="numeric" value={filtros.alcobas} onChange={(e) => setFiltros({ ...filtros, alcobas: e.target.value })} /></div>
-            <div><label className={labelCls}>Baños mín.</label>
-              <input className={inputCls} inputMode="numeric" value={filtros.banos} onChange={(e) => setFiltros({ ...filtros, banos: e.target.value })} /></div>
-            <div><label className={labelCls}>Zona</label>
-              <input className={inputCls} placeholder="Cedritos" value={filtros.zona} onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })} /></div>
-            <div><label className={labelCls}>Presupuesto hasta (M)</label>
-              <input className={inputCls} inputMode="numeric" placeholder="520" value={filtros.precioMax} onChange={(e) => setFiltros({ ...filtros, precioMax: e.target.value })} /></div>
-            <button onClick={buscar} className="rounded-full bg-[#141414] text-[#FAFAF7] text-sm py-2.5 hover:opacity-80 transition-opacity">
-              Filtrar
-            </button>
-          </div>
+      {/* Tab content */}
+      <div className="mt-6">
+        {tab === "requerimientos" && (
+          <TabRequerimientos
+            clienteId={id}
+            requerimientos={requerimientos}
+          />
+        )}
 
-          {/* Tarjetas anonimizadas */}
-          {cargando ? (
-            <p className="text-sm text-[#8C8C86]">Buscando compradores…</p>
-          ) : tarjetas.length === 0 ? (
-            <p className="text-sm text-[#8C8C86]">No hay compradores publicados con esos filtros.</p>
-          ) : (
-            <div className="divide-y divide-[#E6E6E1] border-t border-b border-[#E6E6E1]">
-              {tarjetas.map((t) => (
-                <div key={t.id} className="py-6 flex flex-col md:flex-row md:items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <span className="text-sm text-[#141414] tracking-tight">Comprador #{t.codigo}</span>
-                      <span className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86] border border-[#E6E6E1] rounded-full px-2.5 py-0.5">
-                        {haceCuanto(t.updated_at)}
-                      </span>
-                      {t.postulaciones > 0 && (
-                        <span className="text-[9px] uppercase tracking-[0.15em] text-[#8C8C86]">
-                          {t.postulaciones} postulacion{t.postulaciones === 1 ? '' : 'es'}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-[#8C8C86]">
-                      {[t.tipo, t.alcobas && `${t.alcobas} alcobas`, t.banos && `${t.banos} baños`, t.zona, `hasta ${formatoCOP(t.presupuesto_max)}`]
-                        .filter(Boolean).join(' · ')}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setPostulando(t)}
-                    className="rounded-full border border-[#141414] text-[#141414] text-sm px-5 py-2 hover:bg-[#141414] hover:text-[#FAFAF7] transition-colors self-start md:self-auto"
-                  >
-                    Tengo un inmueble para este comprador
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+        {tab === "enviadas" && <TabPropiedadesEnviadas clienteId={id} />}
 
-      {tab === 'mias' && (
-        <div className="divide-y divide-[#E6E6E1] border-t border-b border-[#E6E6E1]">
-          {mias.length === 0 && <p className="py-6 text-sm text-[#8C8C86]">Aún no has postulado inmuebles.</p>}
-          {mias.map((p) => (
-            <div key={p.id} className="py-6 flex items-center gap-4">
-              <div className="flex-1">
-                <p className="text-sm text-[#141414] tracking-tight mb-1">{p.titulo}</p>
-                <p className="text-sm text-[#8C8C86]">
-                  {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, p.precio && formatoCOP(p.precio)].filter(Boolean).join(' · ')}
-                </p>
-              </div>
-              <span className="text-[9px] uppercase tracking-[0.15em] text-[#141414] border border-[#E6E6E1] rounded-full px-3 py-1">
-                {ESTADOS[p.estado]}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+        {tab === "notas" && (
+          <TabNotas clienteId={id} conversaciones={conversaciones} />
+        )}
 
-      {/* Modal de postulación */}
-      {postulando && (
-        <div className="fixed inset-0 bg-[#141414]/30 flex items-center justify-center px-6 z-50">
-          <div className="bg-[#FAFAF7] w-full max-w-md p-8 max-h-[85vh] overflow-y-auto">
-            <p className="text-[9px] uppercase tracking-[0.2em] text-[#8C8C86] mb-1">
-              Comprador #{postulando.codigo}
-            </p>
-            <h2 className="text-lg tracking-tight text-[#141414] mb-6">Postular inmueble</h2>
-
-            <div className="space-y-4">
-              <div><label className={labelCls}>Título *</label>
-                <input className={inputCls} value={formP.titulo} onChange={(e) => setFormP({ ...formP, titulo: e.target.value })} /></div>
-              <div><label className={labelCls}>Descripción</label>
-                <input className={inputCls} value={formP.descripcion} onChange={(e) => setFormP({ ...formP, descripcion: e.target.value })} /></div>
-              <div className="grid grid-cols-3 gap-4">
-                <div><label className={labelCls}>Precio (M)</label>
-                  <input className={inputCls} inputMode="numeric" value={formP.precio} onChange={(e) => setFormP({ ...formP, precio: e.target.value })} /></div>
-                <div><label className={labelCls}>Alcobas</label>
-                  <input className={inputCls} inputMode="numeric" value={formP.alcobas} onChange={(e) => setFormP({ ...formP, alcobas: e.target.value })} /></div>
-                <div><label className={labelCls}>Baños</label>
-                  <input className={inputCls} inputMode="numeric" value={formP.banos} onChange={(e) => setFormP({ ...formP, banos: e.target.value })} /></div>
-              </div>
-              <div><label className={labelCls}>Ubicación</label>
-                <input className={inputCls} value={formP.ubicacion} onChange={(e) => setFormP({ ...formP, ubicacion: e.target.value })} /></div>
-              <div><label className={labelCls}>Link a fotos</label>
-                <input className={inputCls} value={formP.fotos_url} onChange={(e) => setFormP({ ...formP, fotos_url: e.target.value })} /></div>
-            </div>
-
-            {mensaje && <p className="text-xs text-[#141414] mt-4 border-l border-[#141414] pl-3">{mensaje}</p>}
-
-            <div className="flex gap-3 mt-8">
-              <button onClick={postular} disabled={enviando}
-                className="flex-1 rounded-full bg-[#141414] text-[#FAFAF7] text-sm py-2.5 hover:opacity-80 transition-opacity disabled:opacity-40">
-                {enviando ? 'Enviando…' : 'Postular'}
-              </button>
-              <button onClick={() => { setPostulando(null); setMensaje(''); }}
-                className="rounded-full border border-[#E6E6E1] text-[#8C8C86] text-sm px-5 py-2.5">
-                Cancelar
+        {tab === "editar" && (
+          <div>
+            <FormCliente cliente={cliente} />
+            <div className="mt-12 rounded-xl border border-[#E8D8D3] bg-[#F7EFEC] p-6">
+              <p className="text-sm font-medium text-[#8E3B31]">Zona peligrosa</p>
+              <p className="mt-1 text-sm text-[#8E3B31]">
+                Eliminar este cliente borra también todos sus requerimientos,
+                notas y portafolios asociados.
+              </p>
+              <button
+                onClick={eliminarCliente}
+                disabled={eliminando}
+                className="mt-4 rounded-lg bg-[#8E3B31] px-4 py-2 text-sm font-medium text-white transition hover:opacity-85 disabled:opacity-60"
+              >
+                {eliminando ? "Eliminando…" : "Eliminar cliente"}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
