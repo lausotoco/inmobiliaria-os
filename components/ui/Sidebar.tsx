@@ -31,6 +31,7 @@ export default function Sidebar({ email }: { email: string }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [rol, setRol] = useState<"agente" | "broker">("agente");
+  const [pendientes, setPendientes] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -44,6 +45,9 @@ export default function Sidebar({ email }: { email: string }) {
         .then(({ data }) => {
           if (data?.rol === "broker") setRol("broker");
         });
+      supabase.rpc("marketplace_resumen").then(({ data }) => {
+        if (data && typeof data.pendientes === "number") setPendientes(data.pendientes);
+      });
     });
   }, []);
 
@@ -71,7 +75,14 @@ export default function Sidebar({ email }: { email: string }) {
                 : "border-transparent font-medium text-[#5F5E5A] hover:text-[#1A1A18]"
             }`}
           >
-            {e.etiqueta}
+            <span className="flex items-center justify-between gap-2">
+              {e.etiqueta}
+              {e.href === "/postulaciones" && pendientes > 0 && (
+                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#B87333] px-1.5 text-[10px] font-semibold text-white">
+                  {pendientes}
+                </span>
+              )}
+            </span>
           </Link>
         );
       })}

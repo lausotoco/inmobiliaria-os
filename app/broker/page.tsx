@@ -493,7 +493,10 @@ export default function PortalBroker() {
                         </div>
 
                         <div className="p-5">
-                          <p className="text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">
+                          <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">
+                            Presupuesto del cliente
+                          </p>
+                          <p className="mt-0.5 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">
                             {rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}
                           </p>
                           <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
@@ -546,6 +549,9 @@ export default function PortalBroker() {
                       <IconoTipo tipo={detalle.tipo} />
                     </span>
                     <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">
+                        Presupuesto del cliente
+                      </p>
                       <p className="text-[16px] font-medium text-[#1A1A18] tracking-tight leading-snug">
                         {rangoPresupuestoFull(detalle.presupuesto_min, detalle.presupuesto_max)}
                       </p>

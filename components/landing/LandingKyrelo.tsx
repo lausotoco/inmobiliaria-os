@@ -493,6 +493,106 @@ export default function LandingKyrelo({
         </div>
       </section>
 
+      {/* ════════ DOS CAMINOS: BROKERS / VENDEDORES ════════ */}
+      <section className="px-6 py-20 sm:px-10 sm:py-28" style={{ borderTop: `1px solid ${C.linea}` }}>
+        <div className="mx-auto max-w-5xl">
+          <Revelar className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: C.cobre }}>
+              ¿Con quién trabajamos?
+            </p>
+            <h2 className="mt-3 text-[26px] leading-tight sm:text-[32px]" style={{ fontFamily: "Fraunces, serif" }}>
+              Dos caminos, un mismo lugar
+            </h2>
+          </Revelar>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            {/* Brokers */}
+            <Revelar>
+              <div className="flex h-full flex-col rounded-2xl border bg-white p-8" style={{ borderColor: C.linea }}>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
+                  Para brokers e inmobiliarias
+                </p>
+                <h3 className="mt-3 text-[21px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
+                  Tienes inmuebles. Aquí están los compradores.
+                </h3>
+                <ul className="mt-5 space-y-3">
+                  {[
+                    "Ve requerimientos reales de compradores verificados en la Sabana.",
+                    "Postula tus inmuebles a los que encajan, gratis.",
+                    "Solo compartes comisión cuando cierras. Nunca pagas por registrarte.",
+                  ].map((t) => (
+                    <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
+                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto pt-7">
+                  <a
+                    href="/registro-broker"
+                    className="ky-btn inline-flex items-center justify-center rounded-full px-7 py-3 text-[14px] font-semibold text-white"
+                    style={{ background: C.grafito }}
+                  >
+                    Únete como broker
+                  </a>
+                </div>
+              </div>
+            </Revelar>
+
+            {/* Vendedores / propietarios */}
+            <Revelar delay={120}>
+              <div className="flex h-full flex-col rounded-2xl border bg-white p-8" style={{ borderColor: C.linea }}>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
+                  Para propietarios
+                </p>
+                <h3 className="mt-3 text-[21px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
+                  Quieres vender o arrendar. Nosotros lo cerramos.
+                </h3>
+                <ul className="mt-5 space-y-3">
+                  {[
+                    "Captamos tu inmueble y lo presentamos a compradores reales.",
+                    "Lo movemos dentro de nuestra red de brokers de la Sabana.",
+                    "Te acompañamos en todo el proceso, hasta la firma.",
+                  ].map((t) => (
+                    <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
+                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto pt-7">
+                  <a
+                    href={wa("Hola KYRELO, quiero vender o arrendar mi inmueble.")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ky-btn inline-flex items-center justify-center rounded-full border px-7 py-3 text-[14px] font-medium"
+                    style={{ borderColor: C.grafito, color: C.grafito }}
+                  >
+                    Quiero vender o arrendar
+                  </a>
+                </div>
+              </div>
+            </Revelar>
+          </div>
+
+          {/* Prueba social */}
+          <Revelar delay={80}>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 rounded-2xl px-8 py-6 text-center" style={{ background: C.hueso, border: `1px solid ${C.linea}` }}>
+              <p className="text-[13px]" style={{ color: C.piedra }}>
+                Brokers e inmobiliarias de la Sabana ya operan dentro de KYRELO.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Chía</span>
+                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Cajicá</span>
+                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Cota</span>
+                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>La Calera</span>
+                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Bogotá norte</span>
+              </div>
+            </div>
+          </Revelar>
+        </div>
+      </section>
+
       {/* ════════ QUÉ ES KYRELO ════════ */}
       <section className="px-6 py-24 sm:px-10 sm:py-32">
         <div className="mx-auto max-w-3xl">
