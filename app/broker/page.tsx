@@ -94,6 +94,18 @@ const SIGUIENTE_PASO: Record<string, string> = {
   comision_repartida: 'Proceso completado. ¡Gracias por trabajar con nosotros!',
 };
 
+const FOTOS_TARJETAS = 5;
+
+function imagenPara(codigo: string) {
+  let h = 0;
+  const c = String(codigo || '');
+  for (let i = 0; i < c.length; i++) h = (h * 31 + c.charCodeAt(i)) % 997;
+  return `/requerimientos/${(h % FOTOS_TARJETAS) + 1}.jpg`;
+}
+
+const primerNombre = (n?: string | null) =>
+  n ? String(n).trim().split(/\s+/)[0] : null;
+
 const TIPOS = [
   { v: 'casa', l: 'Casa' },
   { v: 'apartamento', l: 'Apartamento' },
@@ -429,67 +441,74 @@ export default function PortalBroker() {
                   {resultados.length} comprador{resultados.length === 1 ? '' : 'es'}
                   {tipoFiltro ? ` buscando ${tipoFiltro}` : ' activos'}
                 </p>
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid gap-5 sm:grid-cols-2">
                   {resultados.map((t) => {
                     const zonaLinea = [aLista(t.zonas)[0], t.ciudad].filter(Boolean).join(' · ');
+                    const nombre = primerNombre(t.nombre ?? t.cliente_nombre);
                     return (
                       <article
                         key={t.id}
-                        className="border border-[#E0DDD2] bg-white rounded-xl p-5 transition-colors duration-300 hover:border-[#CFC9BB]"
+                        className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]"
                       >
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="w-9 h-9 rounded-full bg-[#F1EFE8] flex items-center justify-center shrink-0">
+                        <div className="relative aspect-[4/3] bg-[#F1EFE8]">
+                          <div className="absolute inset-0 flex items-center justify-center opacity-60">
                             <IconoTipo tipo={t.tipo} />
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[15px] font-medium text-[#1A1A18] tracking-tight leading-snug">
-                              {rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}
-                            </p>
-                            <p className="text-[12px] text-[#5F5E5A] truncate">
-                              {zonaLinea || t.tipo || 'Ver detalles'}
-                            </p>
                           </div>
-                          <span className="text-[10px] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-2 py-0.5 shrink-0">
+                          <img
+                            src={imagenPara(t.codigo)}
+                            alt=""
+                            className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                          />
+                          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                            {t.urgencia && (
+                              <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">
+                                {t.urgencia}
+                              </span>
+                            )}
+                            {t.tipo && (
+                              <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">
+                                {t.tipo}
+                              </span>
+                            )}
+                          </div>
+                          <span className="absolute right-3 top-3 rounded-full bg-[#1A1A18]/75 px-2.5 py-1 text-[10px] text-[#F1EFE8]">
                             #{t.codigo}
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {t.alcobas != null && (
-                            <span className="text-[11px] text-[#1A1A18] bg-[#F1EFE8] rounded-full px-2.5 py-1">
-                              {t.alcobas} alcoba{t.alcobas === 1 ? '' : 's'}
-                            </span>
-                          )}
-                          {t.banos != null && (
-                            <span className="text-[11px] text-[#1A1A18] bg-[#F1EFE8] rounded-full px-2.5 py-1">
-                              {t.banos} baño{t.banos === 1 ? '' : 's'}
-                            </span>
-                          )}
-                          {t.urgencia && (
-                            <span className="text-[11px] text-[#993C1D] bg-[#FAECE7] rounded-full px-2.5 py-1">
-                              {t.urgencia}
-                            </span>
-                          )}
-                          {t.financiacion && (
-                            <span className="text-[11px] text-[#1A1A18] bg-[#F1EFE8] rounded-full px-2.5 py-1">
-                              {t.financiacion}
-                            </span>
-                          )}
-                        </div>
+                        <div className="p-5">
+                          <p className="text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">
+                            {rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}
+                          </p>
+                          <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
+                            {[nombre ? `Busca ${nombre}` : null, zonaLinea].filter(Boolean).join(' · ') || 'Comprador verificado'}
+                          </p>
 
-                        <div className="flex items-center justify-between">
-                          <button
-                            onClick={() => setDetalle(t)}
-                            className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] transition-colors"
-                          >
-                            Ver detalles
-                          </button>
-                          <button
-                            onClick={() => abrirPostulacion(t)}
-                            className="rounded-full border border-[#1A1A18] text-[#1A1A18] text-[12px] px-4 py-1.5 hover:bg-[#1A1A18] hover:text-[#F1EFE8] transition-colors"
-                          >
-                            Postular →
-                          </button>
+                          <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
+                            <div className="flex flex-1 items-center justify-center gap-1.5">
+                              <svg className="h-[14px] w-[14px] text-[#5F5E5A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><rect x="4" y="4" width="16" height="16" rx="1" /><path d="M4 9h3M4 15h3M9 4v3M15 4v3" /></svg>
+                              {rango(t.area_min, t.area_max, ' m²') ?? '—'}
+                            </div>
+                            <div className="flex flex-1 items-center justify-center gap-1.5 border-x border-[#E0DDD2]">
+                              <svg className="h-[14px] w-[14px] text-[#5F5E5A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M6 10V7h12v3" /></svg>
+                              {t.alcobas != null ? `${t.alcobas} alc.` : '—'}
+                            </div>
+                            <div className="flex flex-1 items-center justify-center gap-1.5">
+                              <svg className="h-[14px] w-[14px] text-[#5F5E5A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M5 12h14a1 1 0 0 1 1 1c0 3-2 5-5 5H9c-3 0-5-2-5-5a1 1 0 0 1 1-1zM7 12V6a2 2 0 0 1 4 0" /></svg>
+                              {t.banos != null ? `${t.banos} baños` : '—'}
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex items-center justify-between">
+                            <span className="text-[11px] text-[#A8A69E]">{haceCuanto(t.updated_at)}</span>
+                            <button
+                              onClick={() => setDetalle(t)}
+                              className="rounded-full bg-[#1A1A18] px-6 py-2.5 text-[13px] font-medium text-[#F1EFE8] transition-opacity hover:opacity-85"
+                            >
+                              Ver más
+                            </button>
+                          </div>
                         </div>
                       </article>
                     );

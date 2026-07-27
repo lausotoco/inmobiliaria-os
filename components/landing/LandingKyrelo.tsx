@@ -608,16 +608,13 @@ export default function LandingKyrelo({
               <div className="w-full rounded-2xl border bg-white p-5 sm:p-7" style={{ borderColor: C.linea }}>
                 <MapaCobertura />
               </div>
-              {/* Chips de zonas */}
-              <div className="flex flex-wrap gap-2.5">
+              {/* Listado de zonas de cobertura */}
+              <div className="grid w-full grid-cols-2 gap-x-8 gap-y-3.5 sm:grid-cols-3">
                 {ZONAS.map((z) => (
-                  <span
-                    key={z}
-                    className="ky-chip rounded-full border px-4 py-2 text-[13px] font-medium"
-                    style={{ borderColor: C.linea, color: C.grafito }}
-                  >
-                    {z}
-                  </span>
+                  <div key={z} className="flex items-center gap-2.5">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
+                    <span className="text-[14px]" style={{ color: C.grafito }}>{z}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -836,56 +833,43 @@ function HablaFlotante() {
   );
 }
 
-/* ── Mapa editorial de cobertura: Bogotá norte + Sabana ── */
+/* ── Mapa editorial de cobertura: mapamundi de puntos con Colombia iluminada ── */
+const MUNDO = {
+  W: 104, H: 52,
+  rows: ["0", "0", "dffdfc000000", "5003fff98080000", "fe01000003ff004080000", "ffffffffffffffffffffffffff", "2031ffffffffffffffe", "fffffffffffb8060e18bffffc0", "19fffffffffde00080c1fffdf0", "60ffffffffdc40003c3ffe0c0", "21fffffffffca000fefff8000", "3ffffffffff4000dffff8000", "ffffffffff80017ffff0000", "27fffffb0e9e0000ffff0000", "11fffffbf54e00007fff0000", "197ffffff07400003ffe0000", "27fffffc0fe00001ffc0000", "7ffffbfffe000011f00000", "7fffe3bfff000010f00000", "1fff1fbfff800010e00000", "f8e1f7fff800084c00000", "706077fff80000e000000", "d0401ffff800008000000", "10407ffff0003b0000000", "220003ffce001f00000000", "310001ff80003f00000000", "4720000ff80007f60000000", "308400007f8003ffe0000000", "4410000007f0003ffe0000000", "c000000ff0001ffc0000000", "27000006ff8001ffc0000000", "3f8000023f0001ff00000000", "ffe000023f0000ff00000000", "ffe000001f00003f00000000", "ffe000001e00003f80000000", "f8e000000e00001f80000000", "700000000000000f80000000", "40000000000000000380000000", "20400000000000000180000000", "1c0000000", "c0000000", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"] as string[],
+  col: [[30, 23], [30.5, 23], [29.5, 23.5], [30, 23.5], [30.5, 23.5], [29.5, 24], [30, 24], [30.5, 24], [31, 24], [31.5, 24], [32, 24], [29.5, 24.5], [30, 24.5], [30.5, 24.5], [31, 24.5], [31.5, 24.5], [32, 24.5], [29.5, 25], [30, 25], [30.5, 25], [31, 25], [31.5, 25], [32, 25], [29.5, 25.5], [30, 25.5], [30.5, 25.5], [31, 25.5], [31.5, 25.5], [30.5, 26], [31, 26], [31.5, 26], [31.5, 26.5]] as [number, number][],
+  bog: [30.6, 24.6] as [number, number],
+};
+
 function MapaCobertura() {
-  const cubiertas: {
-    nombre: string; d: string; lx: number; ly: number; cx: number; cy: number; beg: string;
-  }[] = [
-    { nombre: "Zipaquirá", d: "M150,40 Q192,26 230,46 Q246,76 226,100 Q190,114 154,98 Q134,70 150,40 Z", lx: 190, ly: 74, cx: 190, cy: 89, beg: "0s" },
-    { nombre: "Cajicá", d: "M148,122 Q188,110 224,126 Q240,156 222,180 Q186,192 152,178 Q132,150 148,122 Z", lx: 186, ly: 150, cx: 186, cy: 165, beg: "0.45s" },
-    { nombre: "Chía", d: "M138,202 Q178,190 216,206 Q234,238 214,262 Q176,274 142,258 Q122,230 138,202 Z", lx: 177, ly: 230, cx: 177, cy: 245, beg: "0.9s" },
-    { nombre: "Cota", d: "M62,278 Q102,264 138,280 Q152,310 134,334 Q98,346 66,330 Q48,304 62,278 Z", lx: 100, ly: 304, cx: 100, cy: 319, beg: "1.35s" },
-    { nombre: "La Calera", d: "M258,258 Q298,246 332,264 Q346,296 328,322 Q292,336 262,318 Q246,288 258,258 Z", lx: 295, ly: 288, cx: 295, cy: 303, beg: "1.8s" },
-    { nombre: "Bogotá · Zona norte", d: "M132,344 Q180,332 226,344 Q234,372 228,394 Q180,406 136,396 Q126,370 132,344 Z", lx: 180, ly: 368, cx: 180, cy: 382, beg: "2.25s" },
-  ];
+  const S = 6;
+  const pts: [number, number][] = [];
+  MUNDO.rows.forEach((hex, y) => {
+    for (let i = 0; i < hex.length; i++) {
+      const nib = parseInt(hex[hex.length - 1 - i], 16);
+      for (let b = 0; b < 4; b++) if (nib & (1 << b)) pts.push([i * 4 + b, y]);
+    }
+  });
+  const bx = MUNDO.bog[0] * S, by = MUNDO.bog[1] * S;
   return (
-    <svg viewBox="0 0 380 500" className="h-auto w-full" role="img" aria-label="Mapa de cobertura: Bogotá zona norte, Chía, Cajicá, Cota, La Calera y Zipaquirá">
-      {/* Leyenda */}
-      <circle cx={18} cy={22} r={4} fill={C.cobre} />
-      <text x={28} y={26} fontSize="11" fill={C.piedra}>Cobertura actual</text>
-
-      {/* Autopista Norte (guía sutil) */}
-      <path
-        d="M182,468 Q176,420 178,380 Q176,330 177,290 Q175,250 180,210 Q184,170 186,150 Q188,120 190,95"
-        fill="none" stroke={C.piedra} strokeOpacity={0.3} strokeWidth={1.2} strokeDasharray="1.5 5" strokeLinecap="round"
-      />
-      {/* Cerros orientales */}
-      <path
-        d="M240,208 Q252,258 245,310 Q238,370 247,438"
-        fill="none" stroke={C.piedra} strokeOpacity={0.25} strokeWidth={1} strokeDasharray="4 4"
-      />
-
-      {/* Bogotá (resto, fuera de cobertura por ahora) */}
-      <path
-        d="M136,398 Q180,410 226,398 Q238,440 214,466 Q176,480 146,464 Q128,432 136,398 Z"
-        fill="#FFFFFF" stroke="#CFC9BB" strokeWidth={1}
-      />
-      <text x={180} y={440} fontSize="11" fill={C.piedra} textAnchor="middle">Bogotá</text>
-
-      {/* Zonas cubiertas, iluminadas */}
-      {cubiertas.map((z) => (
-        <g key={z.nombre}>
-          <path d={z.d} fill="#EBDBC8" fillOpacity={0.62} stroke={C.cobre} strokeOpacity={0.5} strokeWidth={1} />
-          <text x={z.lx} y={z.ly} fontSize="11" fontWeight={600} fill={C.grafito} textAnchor="middle" style={{ letterSpacing: "0.01em" }}>
-            {z.nombre}
-          </text>
-          <circle cx={z.cx} cy={z.cy} r={3} fill={C.cobre} />
-          <circle cx={z.cx} cy={z.cy} r={3} fill="none" stroke={C.cobre} strokeWidth={1}>
-            <animate attributeName="r" values="3;11" dur="2.7s" begin={z.beg} repeatCount="indefinite" />
-            <animate attributeName="stroke-opacity" values="0.55;0" dur="2.7s" begin={z.beg} repeatCount="indefinite" />
-          </circle>
-        </g>
+    <svg
+      viewBox={`0 0 ${MUNDO.W * S} ${MUNDO.H * S}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label="Mapamundi de puntos con Colombia iluminada en cobre"
+    >
+      {pts.map(([x, y], i) => (
+        <circle key={i} cx={x * S + S / 2} cy={y * S + S / 2} r={1.8} fill="#D9D5C9" />
       ))}
+      {MUNDO.col.map(([x, y], i) => (
+        <circle key={`c${i}`} cx={x * S + S / 2} cy={y * S + S / 2} r={2.2} fill={C.cobre} />
+      ))}
+      <circle cx={bx} cy={by} r={4} fill={C.cobre} />
+      <circle cx={bx} cy={by} r={4} fill="none" stroke={C.cobre} strokeWidth={1.4}>
+        <animate attributeName="r" values="4;16" dur="2.8s" repeatCount="indefinite" />
+        <animate attributeName="stroke-opacity" values="0.6;0" dur="2.8s" repeatCount="indefinite" />
+      </circle>
+      <text x={bx + 14} y={by + 4} fontSize="13" fontWeight={600} fill={C.grafito}>Colombia</text>
     </svg>
   );
 }
