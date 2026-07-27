@@ -711,7 +711,16 @@ export default function PortalBroker() {
 
               {mensaje && <p className="text-xs text-[#1A1A18] mt-4 border-l border-[#1A1A18] pl-3">{mensaje}</p>}
 
-              <div className="flex gap-3 mt-8">
+              <a
+                href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un broker de ${APP.nombre}. Estoy registrando un inmueble para el comprador #${postulando.codigo} y tengo una duda:`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-block text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] transition-colors"
+              >
+                ¿Tienes dudas antes de enviar? Escríbenos por WhatsApp
+              </a>
+
+              <div className="flex gap-3 mt-4">
                 <button onClick={postular} disabled={enviando}
                   className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity disabled:opacity-40">
                   {enviando ? 'Enviando…' : 'Postular'}
