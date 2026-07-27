@@ -304,7 +304,13 @@ function Revelar({
   );
 }
 
-export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean }) {
+export default function LandingKyrelo({
+  loggedIn = false,
+  panelHref = "/dashboard",
+}: {
+  loggedIn?: boolean;
+  panelHref?: string;
+}) {
   // Animación del titular (entra al montar) y fade+zoom del hero al hacer scroll
   const [montado, setMontado] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
@@ -389,13 +395,15 @@ export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean
           </span>
         </div>
         <a
-          href={loggedIn ? "/dashboard" : "/login"}
+          href={loggedIn ? panelHref : "/login"}
           className="text-[13px] font-medium"
           style={{ color: C.piedra }}
         >
           {loggedIn ? "Ir a mi panel" : "Entrar"}
         </a>
       </header>
+
+      <HablaFlotante />
 
       {/* ════════ HERO ════════ */}
       <section
@@ -455,7 +463,7 @@ export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean
             style={{ transitionDelay: "560ms" }}
           >
             <a
-              href="/registro-broker"
+              href="/brokers"
               className="ky-btn inline-flex items-center justify-center rounded-full px-8 py-3.5 text-[14px] font-semibold text-white"
               style={{ background: C.cobre }}
             >
@@ -596,9 +604,9 @@ export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean
           </Revelar>
           <Revelar delay={120}>
             <div className="flex flex-col items-start gap-6">
-              {/* Contador "5 zonas" (count-up) */}
-              <div className="w-full rounded-2xl border bg-white px-8 py-10" style={{ borderColor: C.linea }}>
-                <Contador objetivo={5} />
+              {/* Mapa editorial de cobertura */}
+              <div className="w-full rounded-2xl border bg-white p-5 sm:p-7" style={{ borderColor: C.linea }}>
+                <MapaCobertura />
               </div>
               {/* Chips de zonas */}
               <div className="flex flex-wrap gap-2.5">
@@ -694,22 +702,50 @@ export default function LandingKyrelo({ loggedIn = false }: { loggedIn?: boolean
 
       {/* ════════ FOOTER (mínimo, opcional) ════════ */}
       <footer
-        className="flex flex-col items-center justify-between gap-4 px-6 py-8 sm:flex-row sm:px-10"
+        className="flex flex-col gap-6 px-6 py-10 sm:px-10"
         style={{ background: C.grafito, borderTop: `1px solid rgba(255,255,255,0.08)` }}
       >
-        <div className="flex items-center gap-2.5">
-          <Image
-            src="/kyrelo-isotipo.png"
-            alt="KYRELO"
-            width={64}
-            height={64}
-            className="h-7 w-7 rounded-[6px]"
-          />
-          <span className="ky-display text-[15px] text-white" style={{ letterSpacing: "0.04em" }}>
-            KYRELO
-          </span>
+        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/kyrelo-isotipo.png"
+              alt="KYRELO"
+              width={64}
+              height={64}
+              className="h-7 w-7 rounded-[6px]"
+            />
+            <span className="ky-display text-[15px] text-white" style={{ letterSpacing: "0.04em" }}>
+              KYRELO
+            </span>
+          </div>
+
+          {/* Contacto: Instagram + WhatsApp/teléfono */}
+          <div className="flex flex-wrap items-center gap-x-7 gap-y-3">
+            <a
+              href="https://www.instagram.com/kyrelocorp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] transition-opacity hover:opacity-70"
+              style={{ color: "rgba(255,255,255,0.72)" }}
+            >
+              Instagram · @kyrelocorp
+            </a>
+            <a
+              href={wa("Hola KYRELO, quiero más información.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] transition-opacity hover:opacity-70"
+              style={{ color: "rgba(255,255,255,0.72)" }}
+            >
+              WhatsApp · +57 311 801 8295
+            </a>
+          </div>
         </div>
-        <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.5)" }}>
+
+        <p
+          className="border-t pt-6 text-[12px]"
+          style={{ color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.08)" }}
+        >
           Menos búsqueda. Más cierre. · © {new Date().getFullYear()} KYRELO
         </p>
       </footer>
@@ -764,5 +800,92 @@ function ComoFunciona() {
         </div>
       </div>
     </section>
+  );
+}
+
+/* ── Botón flotante "Habla con nosotros" (aparece al hacer scroll) ── */
+function HablaFlotante() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const f = () => setVisible(window.scrollY > 480);
+    f();
+    window.addEventListener("scroll", f, { passive: true });
+    return () => window.removeEventListener("scroll", f);
+  }, []);
+  return (
+    <a
+      href={wa("Hola KYRELO, quiero hablar con ustedes.")}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Habla con nosotros por WhatsApp"
+      className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-full px-5 py-3 text-[14px] font-semibold transition-all duration-300"
+      style={{
+        background: C.grafito,
+        color: C.hueso,
+        boxShadow: "0 14px 34px -16px rgba(26,26,24,0.5)",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(14px)",
+        pointerEvents: visible ? "auto" : "none",
+      }}
+    >
+      <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke={C.cobre} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.38-4.1-1.05L3 20l1.1-5.2A8.5 8.5 0 1 1 21 11.5z" />
+      </svg>
+      Habla con nosotros
+    </a>
+  );
+}
+
+/* ── Mapa editorial de cobertura: Bogotá norte + Sabana ── */
+function MapaCobertura() {
+  const cubiertas: {
+    nombre: string; d: string; lx: number; ly: number; cx: number; cy: number; beg: string;
+  }[] = [
+    { nombre: "Zipaquirá", d: "M150,40 Q192,26 230,46 Q246,76 226,100 Q190,114 154,98 Q134,70 150,40 Z", lx: 190, ly: 74, cx: 190, cy: 89, beg: "0s" },
+    { nombre: "Cajicá", d: "M148,122 Q188,110 224,126 Q240,156 222,180 Q186,192 152,178 Q132,150 148,122 Z", lx: 186, ly: 150, cx: 186, cy: 165, beg: "0.45s" },
+    { nombre: "Chía", d: "M138,202 Q178,190 216,206 Q234,238 214,262 Q176,274 142,258 Q122,230 138,202 Z", lx: 177, ly: 230, cx: 177, cy: 245, beg: "0.9s" },
+    { nombre: "Cota", d: "M62,278 Q102,264 138,280 Q152,310 134,334 Q98,346 66,330 Q48,304 62,278 Z", lx: 100, ly: 304, cx: 100, cy: 319, beg: "1.35s" },
+    { nombre: "La Calera", d: "M258,258 Q298,246 332,264 Q346,296 328,322 Q292,336 262,318 Q246,288 258,258 Z", lx: 295, ly: 288, cx: 295, cy: 303, beg: "1.8s" },
+    { nombre: "Bogotá · Zona norte", d: "M132,344 Q180,332 226,344 Q234,372 228,394 Q180,406 136,396 Q126,370 132,344 Z", lx: 180, ly: 368, cx: 180, cy: 382, beg: "2.25s" },
+  ];
+  return (
+    <svg viewBox="0 0 380 500" className="h-auto w-full" role="img" aria-label="Mapa de cobertura: Bogotá zona norte, Chía, Cajicá, Cota, La Calera y Zipaquirá">
+      {/* Leyenda */}
+      <circle cx={18} cy={22} r={4} fill={C.cobre} />
+      <text x={28} y={26} fontSize="11" fill={C.piedra}>Cobertura actual</text>
+
+      {/* Autopista Norte (guía sutil) */}
+      <path
+        d="M182,468 Q176,420 178,380 Q176,330 177,290 Q175,250 180,210 Q184,170 186,150 Q188,120 190,95"
+        fill="none" stroke={C.piedra} strokeOpacity={0.3} strokeWidth={1.2} strokeDasharray="1.5 5" strokeLinecap="round"
+      />
+      {/* Cerros orientales */}
+      <path
+        d="M240,208 Q252,258 245,310 Q238,370 247,438"
+        fill="none" stroke={C.piedra} strokeOpacity={0.25} strokeWidth={1} strokeDasharray="4 4"
+      />
+
+      {/* Bogotá (resto, fuera de cobertura por ahora) */}
+      <path
+        d="M136,398 Q180,410 226,398 Q238,440 214,466 Q176,480 146,464 Q128,432 136,398 Z"
+        fill="#FFFFFF" stroke="#CFC9BB" strokeWidth={1}
+      />
+      <text x={180} y={440} fontSize="11" fill={C.piedra} textAnchor="middle">Bogotá</text>
+
+      {/* Zonas cubiertas, iluminadas */}
+      {cubiertas.map((z) => (
+        <g key={z.nombre}>
+          <path d={z.d} fill="#EBDBC8" fillOpacity={0.62} stroke={C.cobre} strokeOpacity={0.5} strokeWidth={1} />
+          <text x={z.lx} y={z.ly} fontSize="11" fontWeight={600} fill={C.grafito} textAnchor="middle" style={{ letterSpacing: "0.01em" }}>
+            {z.nombre}
+          </text>
+          <circle cx={z.cx} cy={z.cy} r={3} fill={C.cobre} />
+          <circle cx={z.cx} cy={z.cy} r={3} fill="none" stroke={C.cobre} strokeWidth={1}>
+            <animate attributeName="r" values="3;11" dur="2.7s" begin={z.beg} repeatCount="indefinite" />
+            <animate attributeName="stroke-opacity" values="0.55;0" dur="2.7s" begin={z.beg} repeatCount="indefinite" />
+          </circle>
+        </g>
+      ))}
+    </svg>
   );
 }
