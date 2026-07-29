@@ -97,9 +97,12 @@ type Extraccion = {
   ciudad: string | null;
   zonas: string[] | null;
   barrio: string | null;
+  area_min: number | null;
+  area_max: number | null;
   habitaciones: number | null;
   banos: number | null;
   tipo_inmueble: string | null;
+  amenidades: string[] | null;
   preferencias: string | null;
   financiacion: string | null;
   urgencia: string | null;
@@ -117,10 +120,13 @@ const PROMPT = `Eres un asistente inmobiliario colombiano para la Sabana de Bogo
  "ciudad": string|null,
  "zonas": string[]|null (zonas o municipios),
  "barrio": string|null,
+ "area_min": number|null (metros cuadrados, si menciona un área o metraje),
+ "area_max": number|null (m2; si dice un solo valor "unos 90 metros", ponlo en area_max),
  "habitaciones": number|null,
  "banos": number|null,
  "tipo_inmueble": "apartamento"|"casa"|"lote"|"oficina"|"local"|"bodega"|"finca"|null,
- "preferencias": string|null (lo cualitativo),
+ "amenidades": string[]|null (cosas concretas que pide: "jardín","piscina","gimnasio","terraza","balcón","parqueadero","depósito","zona BBQ"…),
+ "preferencias": string|null (lo cualitativo que NO es una amenidad: cocina abierta, buena luz, cerca de colegios, para mascotas, estilo…),
  "financiacion": string|null ("crédito aprobado"|"en trámite"|"recursos propios"),
  "urgencia": "inmediata"|"1-3 meses"|"+3 meses"|null,
  "observaciones": string|null (contexto útil),
@@ -135,7 +141,15 @@ const PROMPT = `Eres un asistente inmobiliario colombiano para la Sabana de Bogo
  }
 }
 
-Reglas de presupuesto: "450 millones" -> 450000000. "mil doscientos" -> 1200000000. Si dice "hasta 500", es presupuesto_max.`;
+Reglas de presupuesto:
+- "450 millones" -> 450000000. "mil doscientos" o "1.200 millones" -> 1200000000.
+- RANGOS: "entre X y Y", "de X a Y", "X a Y millones" -> presupuesto_min = el menor, presupuesto_max = el mayor. Ejemplo: "de 900 a 1000 millones" -> presupuesto_min 900000000, presupuesto_max 1000000000.
+- Un solo tope ("hasta 500") -> presupuesto_max, y presupuesto_min = null.
+
+Reglas de EXACTITUD (muy importante):
+- NUNCA inventes ni supongas datos. Si el cliente no lo dice de forma explícita, el campo va en null.
+- "urgencia" SOLO se llena si el cliente da un plazo o afán concreto ("ya", "en dos meses", "antes de fin de año"). Si dice que NO tiene afán, que compraría solo si encuentra algo, o no menciona tiempos -> urgencia = null.
+- Ante cualquier duda, prefiere null antes que adivinar.`;
 
 async function entender(texto: string): Promise<Extraccion | null> {
   if (!GROQ_KEY) return null;
@@ -326,9 +340,12 @@ export async function POST(req: NextRequest) {
             ciudad: ext.ciudad,
             zonas: ext.zonas,
             barrio: ext.barrio,
+            area_min: ext.area_min,
+            area_max: ext.area_max,
             habitaciones: ext.habitaciones,
             banos: ext.banos,
             tipo_inmueble: ext.tipo_inmueble,
+            amenidades: ext.amenidades ?? [],
             preferencias: ext.preferencias,
             financiacion: ext.financiacion,
             urgencia: ext.urgencia,
