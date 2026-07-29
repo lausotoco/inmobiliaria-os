@@ -14,9 +14,8 @@ const GROQ_KEY = process.env.GROQ_API_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Modelo de Groq que entiende el texto. Si algún día hace falta cambiarlo,
-// es solo esta línea (alternativa: "llama-3.1-8b-instant").
-const GROQ_LLM_MODEL = "llama-3.3-70b-versatile";
+// Transcripción con Groq (gratis). Entender el texto con Claude (más exacto).
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
 function admin() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return null;
@@ -152,29 +151,29 @@ Reglas de EXACTITUD (muy importante):
 - Ante cualquier duda, prefiere null antes que adivinar.`;
 
 async function entender(texto: string): Promise<Extraccion | null> {
-  if (!GROQ_KEY) return null;
-  const r = await fetch(
-    "https://api.groq.com/openai/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${GROQ_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: GROQ_LLM_MODEL,
-        temperature: 0.1,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: PROMPT },
-          { role: "user", content: `Transcripción:\n\n"${texto.slice(0, 6000)}"` },
-        ],
-      }),
-    }
-  );
+  if (!ANTHROPIC_KEY) return null;
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1200,
+      system: PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: `Transcripción del cliente:\n\n"${texto.slice(0, 8000)}"`,
+        },
+      ],
+    }),
+  });
   if (!r.ok) return null;
   const j = await r.json();
-  let contenido: string = j?.choices?.[0]?.message?.content ?? "";
+  let contenido: string = j?.content?.[0]?.text ?? "";
   contenido = contenido.replace(/```json/gi, "").replace(/```/g, "").trim();
   try {
     return JSON.parse(contenido) as Extraccion;
