@@ -48,6 +48,7 @@ export async function updateSession(request: NextRequest) {
     path === "/recuperar" ||
     path === "/nueva-clave" ||
     path === "/oportunidades" ||
+    path.startsWith("/api/telegram") ||
     path.startsWith("/legal") ||
     path.startsWith("/p/") ||
     path === "/inmuebles" ||
