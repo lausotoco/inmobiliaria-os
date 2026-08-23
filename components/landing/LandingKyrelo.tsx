@@ -596,10 +596,11 @@ export default function LandingKyrelo({
                   ))}
                 </ul>
                 <div className="mt-auto pt-7">
+                  {/* Va a la landing de captación, no directo a WhatsApp: así
+                      el requerimiento llega estructurado y queda guardado con
+                      su atribución, igual que el que viene de un anuncio. */}
                   <a
-                    href={wa("Hola KYRELO, estoy buscando un inmueble.")}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="/casas/sabana-norte"
                     className="ky-btn inline-flex items-center justify-center rounded-full border px-7 py-3 text-[14px] font-medium"
                     style={{ borderColor: C.grafito, color: C.grafito }}
                   >
