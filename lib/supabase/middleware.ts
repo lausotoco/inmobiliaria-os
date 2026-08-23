@@ -50,6 +50,12 @@ export async function updateSession(request: NextRequest) {
     path === "/oportunidades" ||
     path.startsWith("/api/telegram") ||
     path.startsWith("/legal") ||
+    // Landings de captación de compradores (tráfico pagado: nunca pueden pedir login)
+    path.startsWith("/casas/") ||
+    path.startsWith("/api/leads") ||
+    path === "/gracias" ||
+    path === "/politica-de-datos" ||
+    path === "/verificacion" ||
     path.startsWith("/p/") ||
     path === "/inmuebles" ||
     path.startsWith("/inmuebles/") ||
