@@ -61,6 +61,14 @@ pill `border-radius: 999px`, fondo #1A1A18, texto blanco, font-weight 600, hover
 - **Páginas públicas (landing, /brokers, /inmuebles, portafolios /p/[token]):** el mismo sistema pero más generoso: titulares Fraunces grandes, fotografía protagonista, cobre en micro-detalles. Los portafolios nunca muestran la fuente del anuncio original.
 - **Textos de UI:** español colombiano sobrio, sin signos de admiración gratuitos, precios con `formatoCOP` de `lib/utils.ts`.
 
+## Landings de captación `/casas/*` (caso especial)
+
+`components/casas/LandingCasas.tsx` NO usa las clases globales: lleva su propia paleta en un objeto `C` con los mismos hex de marca. Es a propósito (la landing es una pieza publicitaria autónoma y no debe romperse si cambia una clase del CRM). No la "corrijas" a clases de Tailwind.
+
+Dentro de ese objeto vive `cobreTexto: #96602A` — el cobre de marca un punto más oscuro. Existe por accesibilidad: `#B87333` da 3.30:1 sobre hueso y no alcanza el mínimo de 4.5:1 en texto pequeño. **Texto pequeño en cobre → `cobreTexto`. El `#B87333` original solo en piezas grandes** (números de paso, detalles decorativos).
+
+El bloque principal de la landing está calculado para caber completo en 390x844 (iPhone) sin scroll. Si agregas algo arriba del formulario, verifica que siga cabiendo.
+
 ## Checklist antes de entregar cualquier pantalla
 
 1. ¿Fondo hueso #F1EFE8 y tarjetas blancas con hairline?
@@ -69,4 +77,5 @@ pill `border-radius: 999px`, fondo #1A1A18, texto blanco, font-weight 600, hover
 4. ¿Badges con el componente Badge existente?
 5. ¿El cobre aparece solo como detalle premium?
 6. ¿Cero gradientes, cero sombras pesadas, cero paleta obsoleta?
-7. ¿Leíste el archivo real del repo antes de modificarlo? (regla de oro de la skill `kyrelo`)
+7. ¿Texto pequeño en cobre usa el tono accesible `#96602A` y no el `#B87333`?
+8. ¿Leíste el archivo real del repo antes de modificarlo? (regla de oro de la skill `kyrelo`)
