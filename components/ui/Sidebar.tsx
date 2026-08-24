@@ -10,6 +10,7 @@ import { APP } from "@/lib/config";
 const ENLACES_AGENTE = [
   { href: "/", etiqueta: "Inicio" },
   { href: "/dashboard", etiqueta: "Dashboard" },
+  { href: "/compradores", etiqueta: "Compradores" },
   { href: "/clientes", etiqueta: "Clientes" },
   { href: "/requerimientos", etiqueta: "Requerimientos" },
   { href: "/propiedades", etiqueta: "Propiedades" },
@@ -20,6 +21,7 @@ const ENLACES_AGENTE = [
   { href: "/tareas", etiqueta: "Tareas" },
   { href: "/comisiones", etiqueta: "Comisiones" },
   { href: "/documentos", etiqueta: "Documentos" },
+  { href: "/configuracion/score", etiqueta: "Configuración" },
 ];
 
 const ENLACES_BROKER = [

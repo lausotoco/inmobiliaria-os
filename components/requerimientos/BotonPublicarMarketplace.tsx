@@ -1,6 +1,11 @@
 'use client';
 
 // components/requerimientos/BotonPublicarMarketplace.tsx
+//
+// ⚠️ NO USAR. Hoy no está montado en ninguna pantalla y publica
+// SIN pasar por la puerta de calificación: se saltaría la regla de
+// que al marketplace solo salen compradores banda A.
+// Para publicar usa components/requerimientos/PuertaPublicacion.tsx.
 // Insértalo en app/(privada)/requerimientos/[id]/page.tsx:
 //   <BotonPublicarMarketplace requerimientoId={req.id} organizationId={req.organization_id} />
 

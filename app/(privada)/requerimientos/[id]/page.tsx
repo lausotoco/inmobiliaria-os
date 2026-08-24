@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { formatoCOP } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
+import PuertaPublicacion from "@/components/requerimientos/PuertaPublicacion";
 import type { Requerimiento, Propiedad, Match } from "@/lib/types";
 
 type MatchConPropiedad = Match & {
@@ -233,34 +234,14 @@ export default function RequerimientoDetallePage() {
         </button>
       </div>
 
-      {/* Interruptor: visible para brokers */}
-      <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-linea bg-superficie px-5 py-4">
-        <div>
-          <p className="text-sm font-medium text-tinta">Visible para brokers</p>
-          <p className="mt-0.5 text-xs text-neutro">
-            {publicado
-              ? "Aparece en la plataforma pública de brokers."
-              : "Oculto. Actívalo solo cuando el requerimiento esté verificado y completo."}
-          </p>
-        </div>
-        {publicado !== null && (
-          <button
-            role="switch"
-            aria-checked={publicado}
-            onClick={alternarPublicado}
-            disabled={guardandoPub}
-            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-              publicado ? "bg-bosque" : "bg-linea"
-            }`}
-          >
-            <span
-              className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
-                publicado ? "left-6" : "left-1"
-              }`}
-            />
-          </button>
-        )}
-      </div>
+      {/* Puerta de publicación: solo salen al marketplace los
+          requerimientos de compradores banda A. */}
+      <PuertaPublicacion
+        req={req}
+        publicado={publicado}
+        guardando={guardandoPub}
+        onAlternar={alternarPublicado}
+      />
 
       {/* Resumen del requerimiento */}
       <div className="mt-5 flex flex-wrap gap-x-6 gap-y-1.5 rounded-xl border border-linea bg-superficie px-5 py-4 text-sm">
