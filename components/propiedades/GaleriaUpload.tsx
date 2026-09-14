@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { PropiedadImagen } from "@/lib/types";
+import { comprimirImagen, mensajeErrorSubida } from "@/lib/comprimir-imagen";
 
 type Props = {
   propiedadId: string;
@@ -16,6 +17,7 @@ export default function GaleriaUpload({ propiedadId, imagenes }: Props) {
   const [subiendo, setSubiendo] = useState(false);
   const [progreso, setProgreso] = useState("");
   const [eliminando, setEliminando] = useState<string | null>(null);
+  const [errores, setErrores] = useState<string[]>([]);
 
   const supabase = createClient();
 
@@ -27,33 +29,52 @@ export default function GaleriaUpload({ propiedadId, imagenes }: Props) {
   async function subirArchivos(archivos: FileList | null) {
     if (!archivos || archivos.length === 0) return;
     setSubiendo(true);
+    setErrores([]);
+    const fallidas: string[] = [];
 
     const maxOrden =
       imagenes.length > 0 ? Math.max(...imagenes.map((i) => i.orden)) : -1;
 
     for (let i = 0; i < archivos.length; i++) {
       const archivo = archivos[i];
-      setProgreso(`Subiendo ${i + 1} de ${archivos.length}…`);
+      setProgreso(`Optimizando y subiendo ${i + 1} de ${archivos.length}…`);
 
-      const ext = archivo.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const nombreArchivo = `${Date.now()}-${i}.${ext}`;
+      let foto;
+      try {
+        foto = await comprimirImagen(archivo);
+      } catch (e) {
+        fallidas.push((e as Error).message);
+        continue;
+      }
+
+      const nombreArchivo = `${Date.now()}-${i}.${foto.extension}`;
       const ruta = `${propiedadId}/${nombreArchivo}`;
 
       const { error: errStorage } = await supabase.storage
         .from("propiedades")
-        .upload(ruta, archivo, { contentType: archivo.type });
+        .upload(ruta, foto.contenido, { contentType: foto.tipo });
 
       if (errStorage) {
         console.error("Error subiendo imagen:", errStorage);
+        fallidas.push(mensajeErrorSubida(archivo.name, errStorage.message));
         continue;
       }
 
-      await supabase.from("propiedad_imagenes").insert({
+      const { error: errTabla } = await supabase.from("propiedad_imagenes").insert({
         propiedad_id: propiedadId,
         ruta_storage: ruta,
         orden: maxOrden + 1 + i,
       });
+
+      if (errTabla) {
+        console.error("Error registrando imagen:", errTabla);
+        // Sin registro la foto no se vería: se borra para no ocupar espacio
+        await supabase.storage.from("propiedades").remove([ruta]);
+        fallidas.push(mensajeErrorSubida(archivo.name, errTabla.message));
+      }
     }
+
+    setErrores(fallidas);
 
     setSubiendo(false);
     setProgreso("");
@@ -103,11 +124,26 @@ export default function GaleriaUpload({ propiedadId, imagenes }: Props) {
               Arrastra imágenes aquí o toca para seleccionar
             </p>
             <p className="mt-1 text-xs text-neutro">
-              JPG, PNG o WebP. Puedes subir varias a la vez.
+              JPG, PNG o WebP. Puedes subir varias a la vez; se optimizan
+              automáticamente.
             </p>
           </>
         )}
       </div>
+
+      {errores.length > 0 && (
+        <div className="mt-3 rounded-lg border border-[#D5BBB5] bg-white p-3 text-sm text-[#8E3B31]">
+          <p className="font-medium">
+            {errores.length} foto{errores.length !== 1 ? "s" : ""} no se
+            subi{errores.length !== 1 ? "eron" : "ó"}:
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+            {errores.map((err, idx) => (
+              <li key={idx}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Galería */}
       {imagenes.length > 0 && (

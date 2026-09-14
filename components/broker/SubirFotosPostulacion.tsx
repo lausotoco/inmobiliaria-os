@@ -7,6 +7,7 @@
 
 import { useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { comprimirImagen, mensajeErrorSubida } from '@/lib/comprimir-imagen';
 
 export default function SubirFotosPostulacion({
   tempId,
@@ -21,6 +22,7 @@ export default function SubirFotosPostulacion({
   const inputRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [progreso, setProgreso] = useState('');
+  const [errores, setErrores] = useState<string[]>([]);
 
   function urlPublica(ruta: string) {
     const { data } = supabase.storage.from('propiedades').getPublicUrl(ruta);
@@ -30,21 +32,33 @@ export default function SubirFotosPostulacion({
   async function subir(archivos: FileList | null) {
     if (!archivos || archivos.length === 0) return;
     setSubiendo(true);
+    setErrores([]);
     const nuevas: string[] = [];
+    const fallidas: string[] = [];
 
     for (let i = 0; i < archivos.length; i++) {
       const archivo = archivos[i];
-      setProgreso(`Subiendo ${i + 1} de ${archivos.length}…`);
-      const ext = archivo.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-      const ruta = `postulaciones/${tempId}/${Date.now()}-${i}.${ext}`;
+      setProgreso(`Optimizando y subiendo ${i + 1} de ${archivos.length}…`);
+
+      let foto;
+      try {
+        foto = await comprimirImagen(archivo);
+      } catch (e) {
+        fallidas.push((e as Error).message);
+        continue;
+      }
+
+      const ruta = `postulaciones/${tempId}/${Date.now()}-${i}.${foto.extension}`;
 
       const { error } = await supabase.storage
         .from('propiedades')
-        .upload(ruta, archivo, { contentType: archivo.type });
+        .upload(ruta, foto.contenido, { contentType: foto.tipo });
 
-      if (!error) nuevas.push(ruta);
+      if (error) fallidas.push(mensajeErrorSubida(archivo.name, error.message));
+      else nuevas.push(ruta);
     }
 
+    setErrores(fallidas);
     setSubiendo(false);
     setProgreso('');
     if (inputRef.current) inputRef.current.value = '';
@@ -86,6 +100,20 @@ export default function SubirFotosPostulacion({
           </>
         )}
       </div>
+
+      {errores.length > 0 && (
+        <div className="mt-3 rounded-lg border border-[#D5BBB5] bg-white p-3 text-sm text-[#8E3B31]">
+          <p className="font-medium">
+            {errores.length} foto{errores.length !== 1 ? 's' : ''} no se
+            subi{errores.length !== 1 ? 'eron' : 'ó'}:
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+            {errores.map((err, idx) => (
+              <li key={idx}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {rutas.length > 0 && (
         <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
