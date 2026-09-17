@@ -14,7 +14,8 @@ const ENLACES_AGENTE = [
   { href: "/clientes", etiqueta: "Compradores" },
   { href: "/propiedades", etiqueta: "Propiedades" },
   { href: "/postulaciones", etiqueta: "Red de agentes" },
-  { href: "/comisiones", etiqueta: "Comisiones" },
+  { href: "/agentes", etiqueta: "Agentes aliados" },
+  { href: "/comisiones", etiqueta: "Negocios" },
   { href: "/documentos", etiqueta: "Documentos" },
   { href: "/configuracion/score", etiqueta: "Configuración" },
 ];

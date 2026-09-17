@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -65,6 +66,10 @@ export default function DocumentosPage() {
 
   return (
     <div>
+      <div className="mb-6 flex gap-1 border-b border-linea">
+        <span className="border-b-2 border-bosque px-4 py-2.5 text-sm font-medium text-bosque">Analizar documentos</span>
+        <Link href="/documentos/acuerdos" className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-neutro hover:text-tinta">Acuerdos con agentes</Link>
+      </div>
       <div>
         <p className="text-sm font-medium uppercase tracking-widest text-laton">
           Notariado e inmobiliario

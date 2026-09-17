@@ -57,6 +57,7 @@ export async function updateSession(request: NextRequest) {
     path === "/politica-de-datos" ||
     path === "/verificacion" ||
     path.startsWith("/p/") ||
+    path.startsWith("/acuerdo/") ||
     path === "/inmuebles" ||
     path.startsWith("/inmuebles/") ||
     path === "/sitemap.xml" ||
