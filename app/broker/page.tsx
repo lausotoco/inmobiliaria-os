@@ -94,15 +94,6 @@ const SIGUIENTE_PASO: Record<string, string> = {
   comision_repartida: 'Proceso completado. ¡Gracias por trabajar con nosotros!',
 };
 
-const FOTOS_TARJETAS = 5;
-
-function imagenPara(codigo: string) {
-  let h = 0;
-  const c = String(codigo || '');
-  for (let i = 0; i < c.length; i++) h = (h * 31 + c.charCodeAt(i)) % 997;
-  return `/requerimientos/${(h % FOTOS_TARJETAS) + 1}.jpg`;
-}
-
 const primerNombre = (n?: string | null) =>
   n ? String(n).trim().split(/\s+/)[0] : null;
 
@@ -345,11 +336,6 @@ export default function PortalBroker() {
 
       {tab === 'buscar' && (
         <section className="relative bg-[#1A1A18] overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-60"
-            style={{ backgroundImage: "url('/broker-hero.jpg')" }}
-          />
-          <div className="absolute inset-0 bg-[#1A1A18]/45" />
           <div className="relative px-8 py-14 sm:py-20 max-w-3xl mx-auto text-center">
             <p className="text-[10px] uppercase tracking-[0.24em] text-[#EBDBC8] mb-3">
               {APP.nombre} · Red de brokers
@@ -465,16 +451,11 @@ export default function PortalBroker() {
                         key={t.id}
                         className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]"
                       >
-                        <div className="relative aspect-[4/3] bg-[#F1EFE8]">
+                        {/* Un requerimiento es una persona buscando, no un inmueble: sin foto de archivo */}
+                        <div className="relative aspect-[16/9] bg-[#EBDBC8]">
                           <div className="absolute inset-0 flex items-center justify-center opacity-60">
                             <IconoTipo tipo={t.tipo} />
                           </div>
-                          <img
-                            src={imagenPara(t.codigo)}
-                            alt=""
-                            className="absolute inset-0 h-full w-full object-cover"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                          />
                           <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                             {t.urgencia && (
                               <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">

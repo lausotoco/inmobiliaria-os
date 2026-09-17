@@ -184,16 +184,16 @@ async function entender(texto: string): Promise<Extraccion | null> {
 
 // ── Puntaje transparente a partir de los 5 criterios (0..100) ──
 function puntuar(c: Criterios) {
-  const activos = [
-    c.presupuesto_claro,
-    c.financiacion_resuelta,
-    c.urgencia_real,
-    c.sabe_que_y_donde,
-    c.contacto_directo,
-  ].filter(Boolean).length;
-  let score = activos * 20;
-  if (c.solo_mirando) score = Math.min(score, 20); // "solo mirando" lo baja a Baja
-  const nivel = score >= 80 ? "Alta" : score >= 40 ? "Media" : "Baja";
+  // La financiación es el mejor predictor de cierre: pesa más que el resto.
+  let score = 0;
+  if (c.financiacion_resuelta) score += 30;
+  if (c.urgencia_real) score += 25;
+  if (c.presupuesto_claro) score += 20;
+  if (c.sabe_que_y_donde) score += 15;
+  if (c.contacto_directo) score += 10;
+  if (c.solo_mirando) score = Math.min(score, 20); // "solo mirando" lo baja a banda D
+  // Solo la banda A (75 o más) se publica a brokers.
+  const nivel = score >= 75 ? "A" : score >= 50 ? "B" : score >= 25 ? "C" : "D";
   return { score, nivel };
 }
 
@@ -375,7 +375,8 @@ export async function POST(req: NextRequest) {
           `Zona: ${ext.zonas?.join(", ") || "—"}\n` +
           `Financiación: ${ext.financiacion ?? "—"}\n` +
           `Urgencia: ${ext.urgencia ?? "—"}\n\n` +
-          `Probabilidad de cierre: <b>${nivel}</b> (${score}/100)` +
+          `Probabilidad de cierre: <b>Banda ${nivel}</b> (${score}/100)` +
+          (nivel === "A" ? "" : "\nNo se publica a brokers: solo la banda A (75 o más).") +
           (faltantes.length ? `\n\nOjo, faltó por confirmar: ${faltantes.join(", ")}.` : "");
 
         await enviar(chatId, resumen, {

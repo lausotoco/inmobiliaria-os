@@ -36,13 +36,6 @@ function rango(min?: number | null, max?: number | null, sufijo = '') {
 const norm = (x: any) =>
   String(x ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-const FOTOS_TARJETAS = 5;
-function imagenPara(codigo: string) {
-  let h = 0;
-  const c = String(codigo || '');
-  for (let i = 0; i < c.length; i++) h = (h * 31 + c.charCodeAt(i)) % 997;
-  return `/requerimientos/${(h % FOTOS_TARJETAS) + 1}.jpg`;
-}
 
 const TIPOS = [
   { v: 'casa', l: 'Casa' },
@@ -127,10 +120,8 @@ export default function Oportunidades() {
         </div>
       </header>
 
-      {/* Hero con imagen + buscador (mismo look que /broker) */}
+      {/* Hero grafito + buscador (mismo look que /broker). Sin foto: la promesa es la Sabana, no una torre. */}
       <section className="relative bg-[#1A1A18] overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: "url('/broker-hero.jpg')" }} />
-        <div className="absolute inset-0 bg-[#1A1A18]/45" />
         <div className="relative mx-auto max-w-3xl px-8 py-14 text-center sm:py-20">
           <p className="mb-3 text-[10px] uppercase tracking-[0.24em] text-[#EBDBC8]">
             {APP.nombre} · Compradores activos
@@ -202,9 +193,9 @@ export default function Oportunidades() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {resultados.map((t) => (
                 <article key={t.id} className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]">
-                  <div className="relative aspect-[4/3] bg-[#F1EFE8]">
+                  {/* Un requerimiento es una persona buscando, no un inmueble: sin foto de archivo */}
+                  <div className="relative aspect-[16/9] bg-[#EBDBC8]">
                     <div className="absolute inset-0 flex items-center justify-center opacity-60"><IconoTipo tipo={t.tipo} /></div>
-                    <img src={imagenPara(t.codigo)} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                     <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                       {t.urgencia && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">{t.urgencia}</span>}
                       {t.tipo && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">{t.tipo}</span>}

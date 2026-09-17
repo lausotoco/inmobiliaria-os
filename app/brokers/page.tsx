@@ -24,10 +24,14 @@ const C = {
 const BENEFICIOS = [
   ["Registro sin costo", "Unirte a KYRELO no tiene ningún cargo."],
   [
-    "Solo pagas si cierras",
-    "Cobramos únicamente cuando la negociación se concreta — 50% sobre el valor de la comisión total del inmueble.",
+    "Solo ganas si cierras, y ganas más al principio",
+    "En los compradores que te asignamos: 60% de la comisión para ti en tus tres primeros cierres, 50/50 desde el cuarto.\nEn los inmuebles que nosotros captamos: 50/50, con el material de venta incluido.",
   ],
-  ["Te acompañamos en todo el proceso", "Desde que recibes el requerimiento hasta el cierre."],
+  [
+    "Te damos con qué vender",
+    "Cuando te asocias a un inmueble de KYRELO te entregamos fotos, video, ficha técnica y los textos de venta listos.",
+  ],
+  ["Nosotros hacemos el papeleo", "Del acuerdo en adelante: promesa, banco, notaría y escrituración."],
   [
     "No es competencia, es red",
     "Varias oficinas e inmobiliarias operan dentro de KYRELO al mismo tiempo. Entre más requerimientos puedas atender, más cierres puedes lograr.",
@@ -118,7 +122,7 @@ export default function BrokersPage() {
                     <p className="text-[16px] font-semibold" style={{ letterSpacing: "-0.01em" }}>
                       {titulo}
                     </p>
-                    <p className="mt-1.5 text-[14.5px] leading-[1.65]" style={{ color: C.piedra }}>
+                    <p className="mt-1.5 whitespace-pre-line text-[14.5px] leading-[1.65]" style={{ color: C.piedra }}>
                       {texto}
                     </p>
                   </div>
