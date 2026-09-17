@@ -3,6 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { formatoCOP } from "@/lib/utils";
 import { APP } from "@/lib/config";
 import Carrusel from "@/components/portafolio/Carrusel";
+import {
+  ReaccionesProvider,
+  Reaccion,
+  ReaccionesCierre,
+  type Reaccion as ReaccionGuardada,
+} from "@/components/portafolio/Reacciones";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +57,16 @@ export default async function PortafolioPublicoPage({ params }: Props) {
   }
 
   const propiedades: any[] = portafolio.propiedades ?? [];
+
+  // Reacciones ya guardadas (para que se vean igual al recargar)
+  const reaccionesIniciales: Record<string, ReaccionGuardada> = {};
+  for (const p of propiedades) {
+    if (p.reaccion === "interesa") {
+      reaccionesIniciales[p.id] = { interesa: true, motivo: null };
+    } else if (p.reaccion === "no_interesa") {
+      reaccionesIniciales[p.id] = { interesa: false, motivo: p.reaccion_motivo ?? null };
+    }
+  }
 
   // Agrupar: las que le gustaron pasan a "Propiedades con visita agendada"
   const agendadas = propiedades.filter((p: any) => p.estatus === "le gustó");
@@ -139,6 +155,11 @@ export default async function PortafolioPublicoPage({ params }: Props) {
         </header>
 
         {/* ── Propiedades ── */}
+        <ReaccionesProvider
+          token={params.token}
+          total={propiedades.length}
+          inicial={reaccionesIniciales}
+        >
         <div className="space-y-24 pb-24">
           {lista.map((p: any) => {
             if (p.__seccion) {
@@ -290,19 +311,14 @@ export default async function PortafolioPublicoPage({ params }: Props) {
                   </p>
                 )}
 
+                {/* Reacción del comprador: se guarda sin login */}
+                <Reaccion
+                  propiedadId={p.id}
+                  waHref={waDigits ? `https://wa.me/${waDigits}?text=${waTexto}` : null}
+                />
+
                 {/* Acciones */}
-                <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-                  {waDigits && (
-                    <a
-                      href={`https://wa.me/${waDigits}?text=${waTexto}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-full px-8 py-3.5 text-center text-[13px] font-semibold text-white transition-opacity duration-300 hover:opacity-80"
-                      style={{ backgroundColor: C.negro, letterSpacing: "0.02em" }}
-                    >
-                      Me interesa esta propiedad
-                    </a>
-                  )}
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
                     target="_blank"
@@ -316,7 +332,9 @@ export default async function PortafolioPublicoPage({ params }: Props) {
               </article>
             );
           })}
+          <ReaccionesCierre />
         </div>
+        </ReaccionesProvider>
 
         {/* ── Pie ── */}
         <footer

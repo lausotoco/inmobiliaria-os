@@ -135,6 +135,9 @@ export type PortafolioItem = {
   nota: string | null;
   estatus: EstatusEnviada;
   estatus_updated_at: string | null;
+  reaccion: "interesa" | "no_interesa" | null;   // lo que marcó el comprador
+  reaccion_motivo: string | null;                // precio · zona · tamano · estado · distribucion
+  reaccion_at: string | null;
 };
 
 export type Conversacion = {

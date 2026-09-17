@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatoCOP, formatoFecha, codigoSabana } from "@/lib/utils";
 import Vacio from "@/components/ui/Vacio";
 import type { EstatusEnviada } from "@/lib/types";
+import { MOTIVOS } from "@/components/portafolio/Reacciones";
 
 const ESTATUS: EstatusEnviada[] = [
   "enviada",
@@ -27,6 +28,9 @@ type Enviada = {
   id: string;
   estatus: EstatusEnviada;
   estatus_updated_at: string | null;
+  reaccion: "interesa" | "no_interesa" | null;
+  reaccion_motivo: string | null;
+  reaccion_at: string | null;
   propiedad: {
     id: string;
     consecutivo: number | null;
@@ -63,7 +67,7 @@ export default function TabPropiedadesEnviadas({
     const { data } = await supabase
       .from("portafolio_items")
       .select(
-        `id, estatus, estatus_updated_at,
+        `id, estatus, estatus_updated_at, reaccion, reaccion_motivo, reaccion_at,
          propiedad:propiedades ( id, consecutivo, titulo, precio, barrio, ciudad ),
          portafolio:portafolios!inner ( id, titulo, created_at, cliente_id )`
       )
@@ -190,6 +194,19 @@ export default function TabPropiedadesEnviadas({
               {e.estatus === "le gustó" && (
                 <p className="mt-1 text-[11px] text-bosque">
                   Aparece en «Propiedades con visita agendada» en su portafolio
+                </p>
+              )}
+              {e.reaccion && (
+                <p
+                  className={`mt-1 text-[11px] font-medium ${
+                    e.reaccion === "interesa" ? "text-tinta" : "text-[#8E3B31]"
+                  }`}
+                >
+                  El cliente marcó «{e.reaccion === "interesa" ? "Me interesa" : "No me interesa"}»
+                  {e.reaccion_motivo
+                    ? ` · motivo: ${MOTIVOS.find((m) => m.clave === e.reaccion_motivo)?.label ?? e.reaccion_motivo}`
+                    : ""}
+                  {e.reaccion_at ? ` · ${formatoFecha(e.reaccion_at)}` : ""}
                 </p>
               )}
             </div>
