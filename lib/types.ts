@@ -81,7 +81,19 @@ export type Propiedad = {
   slug: string | null;
   descripcion_publica: string | null;
   created_at: string;
-  updated_at: string;
+  updated_at: string;  // Red de agentes (actualizacion-sistema-agentes.sql)
+  tipo?: string | null;
+  matricula_inmobiliaria?: string | null;
+  area_lote?: number | null;
+  sector?: string | null;
+  conjunto?: string | null;
+  pct_comparte?: number | null;
+  tiene_mandato?: boolean;
+  tiene_exclusividad?: boolean;
+  kit_url?: string | null;
+  foto_brokers_ruta?: string | null;
+  publicada_brokers?: boolean;
+  estado_captacion?: string | null;
 };
 
 export type PropiedadImagen = {

@@ -17,6 +17,7 @@ const ENLACES_AGENTE = [
   { href: "/captaciones", etiqueta: "Captaciones" },
   { href: "/portafolios", etiqueta: "Portafolios" },
   { href: "/postulaciones", etiqueta: "Marketplace" },
+  { href: "/asociaciones", etiqueta: "Asociaciones" },
   { href: "/agenda", etiqueta: "Agenda" },
   { href: "/tareas", etiqueta: "Tareas" },
   { href: "/comisiones", etiqueta: "Comisiones" },

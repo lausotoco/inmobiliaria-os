@@ -92,6 +92,25 @@ export default function MarketplaceControl() {
     cargar();
   }
 
+  async function rechazar(p: any) {
+    const motivo = prompt('Motivo del rechazo (lo verá el agente en su panel):', '');
+    if (motivo === null) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from('marketplace_postulaciones')
+      .update({ estado: 'rechazado', motivo_rechazo: motivo || null, updated_at: new Date().toISOString() })
+      .eq('id', p.id);
+    if (error) { alert('No se pudo rechazar: ' + error.message); return; }
+    await supabase.from('marketplace_eventos').insert({
+      postulacion_id: p.id,
+      estado_anterior: p.estado,
+      estado_nuevo: 'rechazado',
+      comentario: motivo || null,
+      profile_id: user?.id,
+    });
+    cargar();
+  }
+
   function mover(p: any, direccion: 1 | -1) {
     const i = PIPELINE.indexOf(p.estado);
     const nuevo = PIPELINE[i + direccion];
@@ -276,7 +295,19 @@ export default function MarketplaceControl() {
                       <Spec etiqueta="Administración" valor={formatoCOPcompleto(d.administracion)} />
                       <Spec etiqueta="Ciudad" valor={d.ciudad} />
                       <Spec etiqueta="Barrio" valor={d.barrio} />
+                      <Spec etiqueta="Matrícula" valor={p.matricula_inmobiliaria} />
+                      <Spec etiqueta="Exclusividad" valor={p.exclusividad ? String(p.exclusividad).replace('_', ' ') : null} />
+                      <Spec etiqueta="Certificado" valor={p.tiene_certificado ? 'Tiene tradición y libertad' : null} />
+                      <Spec etiqueta="Conjunto" valor={p.conjunto ?? d.conjunto} />
                     </div>
+                    {(p.link_fotos || p.fotos_url) && (
+                      <p className="px-7 pb-5 text-[12px] text-[#5F5E5A]">
+                        <span className="uppercase tracking-[0.12em] text-[9px] mr-2">Fotos</span>
+                        <a href={p.link_fotos || p.fotos_url} target="_blank" rel="noreferrer" className="text-[#1A1A18] underline underline-offset-4 break-all">
+                          {p.link_fotos || p.fotos_url}
+                        </a>
+                      </p>
+                    )}
                     {(d.direccion || d.amenidades) && (
                       <div className="px-7 pb-5 space-y-2">
                         {d.direccion && (
@@ -304,7 +335,7 @@ export default function MarketplaceControl() {
                       <ContactoBroker p={p} />
                       <div className="flex gap-3">
                         <button
-                          onClick={() => cambiarEstado(p, 'rechazado')}
+                          onClick={() => rechazar(p)}
                           className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2 hover:text-[#1A1A18] hover:border-[#1A1A18] transition-colors"
                         >
                           Rechazar

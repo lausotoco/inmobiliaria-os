@@ -9,6 +9,7 @@ import Badge from "@/components/ui/Badge";
 import FormPropiedad from "@/components/propiedades/FormPropiedad";
 import GaleriaUpload from "@/components/propiedades/GaleriaUpload";
 import PanelCaptacion from "@/components/propiedades/PanelCaptacion";
+import PanelAgentes from "@/components/propiedades/PanelAgentes";
 import type { Propiedad, PropiedadImagen } from "@/lib/types";
 
 type Tab = "galeria" | "editar";
@@ -207,6 +208,7 @@ export default function PropiedadDetallePage() {
 
       {/* Captación propia + publicación en el portal público */}
       <PanelCaptacion propiedad={propiedad} onCambio={cargar} />
+      <PanelAgentes propiedad={propiedad} imagenes={imagenes} onCambio={cargar} />
 
       {/* Tabs */}
       <div className="mt-8 flex gap-1 border-b border-linea">

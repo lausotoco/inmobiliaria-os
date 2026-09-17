@@ -53,6 +53,14 @@ function IconoTipo({ tipo }: { tipo?: string | null }) {
   return (<svg className="w-[17px] h-[17px] text-[#B87333]" viewBox="0 0 24 24" {...pr}><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-5h4v5" /></svg>);
 }
 
+// Días restantes de publicación: en cobre cuando quedan 5 o menos
+function Vigencia({ dias }: { dias?: number | null }) {
+  if (dias == null) return null;
+  const urgente = dias <= 5;
+  const texto = dias <= 0 ? 'Vence hoy' : dias === 1 ? 'Vence mañana' : `Vence en ${dias} días`;
+  return <span className={`text-[11px] font-medium ${urgente ? 'text-[#B87333]' : 'text-[#5F5E5A]'}`}>{texto}</span>;
+}
+
 export default function Oportunidades() {
   const supabase = createClient();
   const [items, setItems] = useState<any[]>([]);
@@ -203,16 +211,21 @@ export default function Oportunidades() {
                     <span className="absolute right-3 top-3 rounded-full bg-[#1A1A18]/75 px-2.5 py-1 text-[10px] text-[#F1EFE8]">#{t.codigo}</span>
                   </div>
                   <div className="p-5">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">Presupuesto del cliente</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#B87333]">Comprador verificado · Banda {t.banda || 'A'}</p>
+                    <p className="text-[10px] text-[#5F5E5A]">presupuesto y plazo confirmados</p>
+                    <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">Presupuesto del cliente</p>
                     <p className="mt-0.5 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">{rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}</p>
-                    <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">{[t.tipo, t.ciudad].filter(Boolean).join(' · ') || 'Comprador verificado'}</p>
+                    <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">{[t.tipo, t.ciudad, t.financiacion].filter(Boolean).join(' · ') || 'Comprador verificado'}</p>
                     <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
                       <div className="flex-1">{rango(t.area_min, t.area_max, ' m²') ?? '—'}</div>
                       <div className="flex-1 border-x border-[#E0DDD2]">{t.alcobas != null ? `${t.alcobas} alc.` : '—'}</div>
                       <div className="flex-1">{t.banos != null ? `${t.banos} baños` : '—'}</div>
                     </div>
                     <div className="mt-4 flex items-center justify-between">
-                      <button onClick={() => setDetalle(t)} className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">Ver detalles</button>
+                      <span className="flex items-center gap-3">
+                        <Vigencia dias={t.dias_restantes} />
+                        <button onClick={() => setDetalle(t)} className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">Ver detalles</button>
+                      </span>
                       <Link href={ENTRADA} className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] transition-opacity hover:opacity-85">
                         Postular →
                       </Link>
@@ -254,7 +267,8 @@ export default function Oportunidades() {
               <Spec etiqueta="Baños" valor={detalle.banos} />
               <Spec etiqueta="Parqueaderos" valor={detalle.parqueaderos} />
               <Spec etiqueta="Barrio" valor={detalle.barrio} />
-              <Spec etiqueta="Financiación" valor={detalle.financiacion} />
+              <Spec etiqueta="Forma de pago" valor={detalle.financiacion} />
+              <Spec etiqueta="Vigencia" valor={detalle.dias_restantes != null ? (detalle.dias_restantes <= 0 ? 'Vence hoy' : `Vence en ${detalle.dias_restantes} días`) : null} />
             </div>
             {Array.isArray(detalle.zonas) && detalle.zonas.length > 0 && (
               <div className="mt-4">

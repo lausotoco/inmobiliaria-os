@@ -1,15 +1,14 @@
 'use client';
 
-// app/broker/page.tsx — v2
-// Portal independiente del broker con fichas editoriales organizadas
-// por secciones (estilo portafolio): especificaciones, zonas de
-// preferencia, amenidades y comentarios del cliente.
+// app/broker/page.tsx — v3 · Portal del agente
+// Tres pestañas de trabajo: Compradores (requerimientos banda A), Inmuebles
+// KYRELO (captaciones con solicitud de asociación) y Mi panel. Más "Cómo
+// funciona". Nunca muestra nombre ni contacto del comprador.
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { APP } from '@/lib/config';
-import SubirFotosPostulacion from '@/components/broker/SubirFotosPostulacion';
 
 const ESTADOS: Record<string, string> = {
   postulado: 'Postulado',
@@ -21,6 +20,55 @@ const ESTADOS: Record<string, string> = {
   cierre: 'Cierre',
   comision_repartida: 'Comisión repartida',
 };
+
+const SEGUIMIENTO = [
+  { clave: 'postulado', label: 'Postulada' },
+  { clave: 'validado', label: 'Validada' },
+  { clave: 'acuerdo_firmado', label: 'Acuerdo firmado' },
+  { clave: 'presentado', label: 'Presentada al cliente' },
+  { clave: 'visita', label: 'Visita' },
+  { clave: 'negociacion', label: 'Negociación' },
+  { clave: 'cierre', label: 'Cierre' },
+  { clave: 'comision_repartida', label: 'Comisión repartida' },
+];
+
+const SIGUIENTE_PASO: Record<string, string> = {
+  postulado: 'Estamos revisando tu postulación.',
+  validado: 'Te enviaremos el acuerdo de corretaje para firmar.',
+  acuerdo_firmado: 'Presentaremos tu inmueble al cliente.',
+  presentado: 'Te contactaremos pronto para agendar una visita.',
+  visita: 'Esperando el resultado de la visita.',
+  negociacion: 'Estamos negociando con el cliente.',
+  cierre: 'Cierre en proceso — pronto se reparte la comisión.',
+  comision_repartida: 'Proceso completado. ¡Gracias por trabajar con nosotros!',
+};
+
+const ASOC_ESTADOS: Record<string, string> = {
+  solicitada: 'En revisión',
+  aceptada: 'Aceptada',
+  rechazada: 'No aceptada',
+  vencida: 'Vencida',
+  cerrada: 'Cerrada',
+};
+
+const NEGOCIO_ESTADOS: Record<string, string> = {
+  conectado: 'Conectado',
+  visita_agendada: 'Visita agendada',
+  visitado: 'Visitado',
+  oferta: 'Oferta',
+  promesa: 'Promesa',
+  escriturado: 'Escriturado',
+  perdido: 'No se concretó',
+};
+
+const EXCLUSIVIDAD = [
+  { v: '', l: 'No lo sé / prefiero no decir' },
+  { v: 'propia', l: 'Propia: solo yo lo comercializo' },
+  { v: 'compartida', l: 'Compartida: el dueño trabaja con varias inmobiliarias' },
+  { v: 'sin_exclusividad', l: 'Sin exclusividad: no hay acuerdo firmado' },
+];
+const PLAZOS = ['Inmediato', '1 a 3 meses', '3 a 6 meses', 'Más de 6 meses'];
+const FORMAS_PAGO = ['Crédito aprobado', 'Recursos propios', 'Venta previa', 'Mixto'];
 
 function haceCuanto(fecha: string) {
   const dias = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
@@ -48,15 +96,6 @@ function rango(min?: number | null, max?: number | null, sufijo = '') {
   return null;
 }
 
-function rangoPresupuesto(min?: number | null, max?: number | null) {
-  const a = formatoCOP(min);
-  const b = formatoCOP(max);
-  if (a && b) return `${a} – ${b}`;
-  if (b) return `Hasta ${b}`;
-  if (a) return `Desde ${a}`;
-  return '—';
-}
-
 const formatoCOPfull = (n?: number | null) =>
   n == null ? null : '$' + Math.round(Number(n)).toLocaleString('es-CO');
 
@@ -70,32 +109,12 @@ function rangoPresupuestoFull(min?: number | null, max?: number | null) {
 }
 
 const norm = (x: any) =>
-  String(x ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  String(x ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
-const SEGUIMIENTO = [
-  { clave: 'postulado', label: 'Enviada' },
-  { clave: 'validado', label: 'Validada' },
-  { clave: 'acuerdo_firmado', label: 'Acuerdo firmado' },
-  { clave: 'presentado', label: 'Presentada al cliente' },
-  { clave: 'visita', label: 'Visita' },
-  { clave: 'negociacion', label: 'Negociación' },
-  { clave: 'cierre', label: 'Cierre' },
-  { clave: 'comision_repartida', label: 'Comisión repartida' },
-];
-
-const SIGUIENTE_PASO: Record<string, string> = {
-  postulado: 'Estamos revisando tu postulación.',
-  validado: 'Te enviaremos el acuerdo de corretaje para firmar.',
-  acuerdo_firmado: 'Presentaremos tu inmueble al cliente.',
-  presentado: 'Te contactaremos pronto para agendar una visita.',
-  visita: 'Esperando el resultado de la visita.',
-  negociacion: 'Estamos negociando con el cliente.',
-  cierre: 'Cierre en proceso — pronto se reparte la comisión.',
-  comision_repartida: 'Proceso completado. ¡Gracias por trabajar con nosotros!',
-};
-
-const primerNombre = (n?: string | null) =>
-  n ? String(n).trim().split(/\s+/)[0] : null;
+function diasHasta(fecha?: string | null) {
+  if (!fecha) return null;
+  return Math.ceil((new Date(fecha).getTime() - Date.now()) / 86400000);
+}
 
 const TIPOS = [
   { v: 'casa', l: 'Casa' },
@@ -113,41 +132,112 @@ function IconoTipo({ tipo }: { tipo?: string | null }) {
   return (<svg className="w-[17px] h-[17px] text-[#B87333]" viewBox="0 0 24 24" {...pr}><path d="M4 11l8-7 8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-5h4v5" /></svg>);
 }
 
+// Sello de verificación: el diferencial de KYRELO. Solo se publican banda A.
+function SelloVerificado({ banda }: { banda?: string | null }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#B87333]">
+        Comprador verificado · Banda {banda || 'A'}
+      </p>
+      <p className="text-[10px] text-[#5F5E5A]">presupuesto y plazo confirmados</p>
+    </div>
+  );
+}
+
+function Vigencia({ dias }: { dias?: number | null }) {
+  if (dias == null) return null;
+  const urgente = dias <= 5;
+  const texto = dias <= 0 ? 'Vence hoy' : dias === 1 ? 'Vence mañana' : `Vence en ${dias} días`;
+  return (
+    <span className={`text-[11px] font-medium ${urgente ? 'text-[#B87333]' : 'text-[#5F5E5A]'}`}>
+      {texto}
+    </span>
+  );
+}
+
+function Spec({ etiqueta, valor }: { etiqueta: string; valor: any }) {
+  if (valor == null || valor === '') return null;
+  return (
+    <div>
+      <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1">{etiqueta}</p>
+      <p className="text-[15px] text-[#1A1A18] tracking-tight">{valor}</p>
+    </div>
+  );
+}
+
+function Chips({ etiqueta, items }: { etiqueta: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-6">
+      <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-2">{etiqueta}</p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((z) => (
+          <span key={z} className="text-[11px] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1">
+            {z}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const inputCls = 'w-full bg-transparent border-b border-[#E0DDD2] pb-1.5 text-sm text-[#1A1A18] outline-none focus:border-[#1A1A18] transition-colors';
+const labelCls = 'block text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1';
+const pillCls = 'shrink-0 rounded-full bg-[#F1EFE8] px-3 py-1 text-[9px] uppercase tracking-[0.15em] text-[#1A1A18]';
+
+type Tab = 'buscar' | 'inmuebles' | 'panel' | 'info';
+
 export default function PortalBroker() {
   const supabase = createClient();
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [tab, setTab] = useState<'buscar' | 'info' | 'mias'>('buscar');
+  const [userId, setUserId] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('buscar');
   const [filtros, setFiltros] = useState({ alcobas: '', banos: '', zona: '', precioMax: '' });
   const [tarjetas, setTarjetas] = useState<any[]>([]);
   const [mias, setMias] = useState<any[]>([]);
+  const [inmuebles, setInmuebles] = useState<any[]>([]);
+  const [negocios, setNegocios] = useState<any[]>([]);
+  const [perfil, setPerfil] = useState<any | null>(null);
   const [cargando, setCargando] = useState(true);
+  const [cargandoInmuebles, setCargandoInmuebles] = useState(true);
   const [postulando, setPostulando] = useState<any | null>(null);
   const [detalle, setDetalle] = useState<any | null>(null);
+  const [asociando, setAsociando] = useState<any | null>(null);
+  const [inmuebleAbierto, setInmuebleAbierto] = useState<any | null>(null);
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [zonaFiltro, setZonaFiltro] = useState('');
   const [mostrarResultados, setMostrarResultados] = useState(false);
   const [formP, setFormP] = useState({
     titulo: '', precio: '', area: '', habitaciones: '', banos: '', parqueaderos: '',
     administracion: '', estrato: '', descripcion: '', amenidades: '',
-    barrio: '', ciudad: '', direccion: '', contacto: '',
+    barrio: '', ciudad: '', direccion: '', conjunto: '', contacto: '',
+    matricula: '', exclusividad: '', linkFotos: '', certificado: false,
+  });
+  const [formA, setFormA] = useState({
+    presupuesto: '', plazo: PLAZOS[1], formaPago: FORMAS_PAGO[0], verificado: false, pctPropuesto: '',
   });
   const [telPerfil, setTelPerfil] = useState('');
-  const [fotos, setFotos] = useState<string[]>([]);
   const [tempId, setTempId] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [confirmandoAlcance, setConfirmandoAlcance] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const [mensajeA, setMensajeA] = useState('');
+
+  function urlFoto(ruta?: string | null) {
+    if (!ruta) return null;
+    return supabase.storage.from('propiedades').getPublicUrl(ruta).data.publicUrl;
+  }
 
   async function buscar(f = filtros) {
     setCargando(true);
-    const { data, error } = await supabase.rpc('marketplace_buscar', {
+    const { data, error } = await supabase.rpc('marketplace_buscar_v2', {
       p_alcobas: f.alcobas ? Number(f.alcobas) : null,
       p_banos: f.banos ? Number(f.banos) : null,
       p_zona: null,
       p_precio_max: f.precioMax ? Number(f.precioMax) * 1000000 : null,
     });
-    if (!error) setTarjetas(data ?? []);
+    if (!error) setTarjetas(Array.isArray(data) ? data : []);
     setCargando(false);
   }
 
@@ -159,16 +249,41 @@ export default function PortalBroker() {
     setMias(data ?? []);
   }
 
+  async function cargarInmuebles() {
+    setCargandoInmuebles(true);
+    const { data, error } = await supabase.rpc('inmuebles_kyrelo');
+    if (!error) setInmuebles(Array.isArray(data) ? data : []);
+    setCargandoInmuebles(false);
+  }
+
+  async function cargarNegocios() {
+    const { data } = await supabase
+      .from('negocios')
+      .select('*')
+      .order('fecha_ultimo_movimiento', { ascending: false });
+    setNegocios(data ?? []);
+  }
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setEmail(user?.email ?? '');
+      setUserId(user?.id ?? null);
       if (user) {
-        supabase.from('profiles').select('telefono').eq('id', user.id).maybeSingle()
-          .then(({ data }) => setTelPerfil(data?.telefono ?? ''));
+        supabase
+          .from('profiles')
+          .select('nombre, telefono, empresa, cierres, estado_agente')
+          .eq('id', user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            setPerfil(data ?? null);
+            setTelPerfil(data?.telefono ?? '');
+          });
       }
     });
     buscar();
     cargarMias();
+    cargarInmuebles();
+    cargarNegocios();
   }, []); // eslint-disable-line
 
   async function cerrarSesion() {
@@ -194,7 +309,6 @@ export default function PortalBroker() {
   function abrirPostulacion(t: any) {
     setPostulando(t);
     setTempId(crypto.randomUUID());
-    setFotos([]);
     setFormP((f) => ({ ...f, contacto: f.contacto || telPerfil }));
     setDetalle(null);
   }
@@ -222,7 +336,8 @@ export default function PortalBroker() {
 
   function postular() {
     if (!formP.titulo) { setMensaje('El título del inmueble es obligatorio.'); return; }
-    if (fotos.length === 0) { setMensaje('Sube al menos una foto del inmueble.'); return; }
+    if (!formP.matricula.trim()) { setMensaje('La matrícula inmobiliaria es obligatoria: nos permite verificar el inmueble.'); return; }
+    if (!/^https?:\/\/\S+$/i.test(formP.linkFotos.trim())) { setMensaje('Pega el enlace a las fotos (Drive, WeTransfer, portal…). Debe empezar por http.'); return; }
     if (!formP.contacto.trim()) { setMensaje('Escribe tu celular o WhatsApp de contacto.'); return; }
     setMensaje('');
     setConfirmandoAlcance(true);
@@ -239,6 +354,7 @@ export default function PortalBroker() {
       return;
     }
 
+    const link = formP.linkFotos.trim();
     const { error } = await supabase.from('marketplace_postulaciones').insert({
       requerimiento_id: postulando.id,
       broker_profile_id: user.id,
@@ -249,7 +365,15 @@ export default function PortalBroker() {
       alcobas: formP.habitaciones ? Number(formP.habitaciones) : null,
       banos: formP.banos ? Number(formP.banos) : null,
       area: formP.area ? Number(formP.area) : null,
-      fotos_url: null,
+      // Fotos por enlace, no subidas: no ocupan espacio en la plataforma
+      fotos_url: link,
+      link_fotos: link,
+      fotos_rutas: [],
+      matricula_inmobiliaria: formP.matricula.trim(),
+      exclusividad: formP.exclusividad || null,
+      tiene_certificado: formP.certificado,
+      municipio: formP.ciudad || null,
+      conjunto: formP.conjunto || null,
       datos_inmueble: {
         area: formP.area ? Number(formP.area) : null,
         habitaciones: formP.habitaciones ? Number(formP.habitaciones) : null,
@@ -261,10 +385,10 @@ export default function PortalBroker() {
         barrio: formP.barrio || null,
         ciudad: formP.ciudad || null,
         direccion: formP.direccion || null,
+        conjunto: formP.conjunto || null,
         alcance,
       },
       contacto_telefono: formP.contacto.trim(),
-      fotos_rutas: fotos,
       temp_id: tempId,
     });
     setEnviando(false);
@@ -273,41 +397,36 @@ export default function PortalBroker() {
       (window as any).fbq('track', 'SubmitApplication');
     }
     setPostulando(null);
-    setFotos([]);
     setMensaje('');
     cargarMias();
-    setTab('mias');
+    setTab('panel');
   }
 
-  const inputCls = 'w-full bg-transparent border-b border-[#E0DDD2] pb-1.5 text-sm text-[#1A1A18] outline-none focus:border-[#1A1A18] transition-colors';
-  const labelCls = 'block text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1';
-  const badgeCls = 'text-[9px] uppercase tracking-[0.15em] border border-[#E0DDD2] rounded-full px-2.5 py-0.5';
-
-  function Spec({ etiqueta, valor }: { etiqueta: string; valor: any }) {
-    if (valor == null || valor === '' ) return null;
-    return (
-      <div>
-        <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1">{etiqueta}</p>
-        <p className="text-[15px] text-[#1A1A18] tracking-tight">{valor}</p>
-      </div>
-    );
+  async function solicitarAsociacion() {
+    if (!asociando || !userId) return;
+    if (!formA.presupuesto) { setMensajeA('Indica el presupuesto de tu comprador.'); return; }
+    setEnviando(true);
+    setMensajeA('');
+    const { error } = await supabase.from('asociaciones').insert({
+      propiedad_id: asociando.id,
+      agente_id: userId,
+      presupuesto_comprador: Number(formA.presupuesto) * 1000000,
+      plazo_comprador: formA.plazo,
+      forma_pago_comprador: formA.formaPago,
+      comprador_verificado: formA.verificado,
+      pct_propuesto: formA.pctPropuesto ? Number(formA.pctPropuesto) / 100 : null,
+    });
+    setEnviando(false);
+    if (error) { setMensajeA('No se pudo enviar la solicitud: ' + error.message); return; }
+    setAsociando(null);
+    setFormA({ presupuesto: '', plazo: PLAZOS[1], formaPago: FORMAS_PAGO[0], verificado: false, pctPropuesto: '' });
+    cargarInmuebles();
+    setTab('panel');
   }
 
-  function Chips({ etiqueta, items }: { etiqueta: string; items: string[] }) {
-    if (items.length === 0) return null;
-    return (
-      <div className="mt-6">
-        <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-2">{etiqueta}</p>
-        <div className="flex flex-wrap gap-2">
-          {items.map((z) => (
-            <span key={z} className="text-[11px] text-[#1A1A18] border border-[#E0DDD2] rounded-full px-3 py-1">
-              {z}
-            </span>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const cierres = Number(perfil?.cierres ?? 0);
+  const pctAgente = cierres < 3 ? 40 : 50;
+  const asociaciones = inmuebles.filter((i) => i.asociacion_id);
 
   return (
     <div className="min-h-screen bg-[#F1EFE8]">
@@ -315,7 +434,7 @@ export default function PortalBroker() {
         <div>
           <p className="text-[15px] font-bold tracking-tight text-[#1A1A18]">{APP.nombre}</p>
           <p className="text-[9px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E] mt-0.5">
-            Red de brokers
+            Red de agentes
           </p>
         </div>
         <div className="flex items-center gap-6 text-right">
@@ -338,7 +457,7 @@ export default function PortalBroker() {
         <section className="relative bg-[#1A1A18] overflow-hidden">
           <div className="relative px-8 py-14 sm:py-20 max-w-3xl mx-auto text-center">
             <p className="text-[10px] uppercase tracking-[0.24em] text-[#EBDBC8] mb-3">
-              {APP.nombre} · Red de brokers
+              {APP.nombre} · Compradores verificados
             </p>
             <h1 className="text-3xl sm:text-4xl tracking-tight text-[#F1EFE8] mb-2">
               ¿Qué inmueble tienes?
@@ -398,23 +517,24 @@ export default function PortalBroker() {
 
       <div className="px-8 py-10 max-w-3xl mx-auto">
 
-
-        <div className="flex gap-6 border-b border-[#E0DDD2] mb-8">
+        <div className="flex gap-6 border-b border-[#E0DDD2] mb-8 overflow-x-auto">
           {[
-            { k: 'buscar', l: 'Buscar compradores' },
+            { k: 'buscar', l: 'Compradores' },
+            { k: 'inmuebles', l: `Inmuebles KYRELO${inmuebles.length ? ` (${inmuebles.length})` : ''}` },
+            { k: 'panel', l: 'Mi panel' },
             { k: 'info', l: 'Cómo funciona' },
-            { k: 'mias', l: `Mis postulaciones (${mias.length})` },
           ].map((t) => (
             <button
               key={t.k}
-              onClick={() => setTab(t.k as any)}
-              className={`pb-3 text-sm transition-colors ${tab === t.k ? 'text-[#1A1A18] border-b border-[#1A1A18] -mb-px' : 'text-[#5F5E5A]'}`}
+              onClick={() => setTab(t.k as Tab)}
+              className={`pb-3 text-sm whitespace-nowrap transition-colors ${tab === t.k ? 'text-[#1A1A18] border-b border-[#1A1A18] -mb-px' : 'text-[#5F5E5A]'}`}
             >
               {t.l}
             </button>
           ))}
         </div>
 
+        {/* ============ COMPRADORES ============ */}
         {tab === 'buscar' && (
           <>
             {!mostrarResultados ? (
@@ -439,19 +559,18 @@ export default function PortalBroker() {
             ) : (
               <>
                 <p className="text-[10px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-5">
-                  {resultados.length} comprador{resultados.length === 1 ? '' : 'es'}
-                  {tipoFiltro ? ` buscando ${tipoFiltro}` : ' activos'}
+                  {resultados.length} comprador{resultados.length === 1 ? '' : 'es'} verificado{resultados.length === 1 ? '' : 's'}
+                  {tipoFiltro ? ` buscando ${tipoFiltro}` : ''}
                 </p>
                 <div className="grid gap-5 sm:grid-cols-2">
                   {resultados.map((t) => {
                     const zonaLinea = [aLista(t.zonas)[0], t.ciudad].filter(Boolean).join(' · ');
-                    const nombre = primerNombre(t.nombre ?? t.cliente_nombre);
                     return (
                       <article
                         key={t.id}
                         className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]"
                       >
-                        {/* Un requerimiento es una persona buscando, no un inmueble: sin foto de archivo */}
+                        {/* Un requerimiento es una persona buscando, no un inmueble: sin foto */}
                         <div className="relative aspect-[16/9] bg-[#EBDBC8]">
                           <div className="absolute inset-0 flex items-center justify-center opacity-60">
                             <IconoTipo tipo={t.tipo} />
@@ -474,33 +593,29 @@ export default function PortalBroker() {
                         </div>
 
                         <div className="p-5">
-                          <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">
-                            Presupuesto del cliente
-                          </p>
+                          <SelloVerificado banda={t.banda} />
+                          <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">Presupuesto del cliente</p>
                           <p className="mt-0.5 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">
                             {rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}
                           </p>
                           <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
-                            {[nombre ? `Busca ${nombre}` : null, zonaLinea].filter(Boolean).join(' · ') || 'Comprador verificado'}
+                            {[zonaLinea, t.financiacion].filter(Boolean).join(' · ') || 'Zona por definir'}
                           </p>
 
                           <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
                             <div className="flex flex-1 items-center justify-center gap-1.5">
-                              <svg className="h-[14px] w-[14px] text-[#5F5E5A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><rect x="4" y="4" width="16" height="16" rx="1" /><path d="M4 9h3M4 15h3M9 4v3M15 4v3" /></svg>
                               {rango(t.area_min, t.area_max, ' m²') ?? '—'}
                             </div>
                             <div className="flex flex-1 items-center justify-center gap-1.5 border-x border-[#E0DDD2]">
-                              <svg className="h-[14px] w-[14px] text-[#5F5E5A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M6 10V7h12v3" /></svg>
                               {t.alcobas != null ? `${t.alcobas} alc.` : '—'}
                             </div>
                             <div className="flex flex-1 items-center justify-center gap-1.5">
-                              <svg className="h-[14px] w-[14px] text-[#5F5E5A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round"><path d="M5 12h14a1 1 0 0 1 1 1c0 3-2 5-5 5H9c-3 0-5-2-5-5a1 1 0 0 1 1-1zM7 12V6a2 2 0 0 1 4 0" /></svg>
                               {t.banos != null ? `${t.banos} baños` : '—'}
                             </div>
                           </div>
 
                           <div className="mt-4 flex items-center justify-between">
-                            <span className="text-[11px] text-[#A8A69E]">{haceCuanto(t.updated_at)}</span>
+                            <Vigencia dias={t.dias_restantes} />
                             <button
                               onClick={() => setDetalle(t)}
                               className="rounded-full bg-[#1A1A18] px-6 py-2.5 text-[13px] font-medium text-[#F1EFE8] transition-opacity hover:opacity-85"
@@ -547,12 +662,17 @@ export default function PortalBroker() {
                     </button>
                   </div>
 
+                  <div className="mb-5 flex items-center justify-between gap-3 rounded-xl bg-[#F6EFE4] px-4 py-3">
+                    <SelloVerificado banda={detalle.banda} />
+                    <Vigencia dias={detalle.dias_restantes} />
+                  </div>
+
                   <div className="grid grid-cols-3 gap-x-4 gap-y-4 border-t border-[#E0DDD2] pt-5 mb-5">
                     <Spec etiqueta="Alcobas" valor={detalle.alcobas} />
                     <Spec etiqueta="Baños" valor={detalle.banos} />
                     <Spec etiqueta="Parqueaderos" valor={detalle.parqueaderos} />
                     <Spec etiqueta="Área" valor={rango(detalle.area_min, detalle.area_max, ' m²')} />
-                    <Spec etiqueta="Financiación" valor={detalle.financiacion} />
+                    <Spec etiqueta="Forma de pago" valor={detalle.financiacion} />
                     <Spec etiqueta="Urgencia" valor={detalle.urgencia} />
                     <Spec etiqueta="Barrio" valor={detalle.barrio} />
                     <Spec etiqueta="Actualizado" valor={haceCuanto(detalle.updated_at).replace('Actualizado ', '')} />
@@ -599,98 +719,323 @@ export default function PortalBroker() {
           </>
         )}
 
+        {/* ============ INMUEBLES KYRELO ============ */}
+        {tab === 'inmuebles' && (
+          <>
+            <div className="mb-8 rounded-2xl border border-[#EBDBC8] bg-[#F6EFE4] px-6 py-5">
+              <p className="text-[13px] font-medium text-[#1A1A18]">
+                Inmuebles captados por KYRELO, con mandato y material de venta listo.
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-[#5F5E5A]">
+                Si tienes un comprador, solicita la asociación. Al aceptarla te entregamos dirección,
+                fotos, video, ficha técnica y textos de venta, con 30 días de vigencia. Reparto 50/50.
+              </p>
+            </div>
+
+            {cargandoInmuebles ? (
+              <p className="text-sm text-[#5F5E5A]">Cargando inmuebles…</p>
+            ) : inmuebles.length === 0 ? (
+              <p className="py-6 text-sm text-[#5F5E5A]">Por ahora no hay inmuebles de KYRELO publicados. Pronto habrá.</p>
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2">
+                {inmuebles.map((i) => {
+                  const foto = urlFoto(i.foto_brokers_ruta);
+                  const dias = diasHasta(i.fecha_vence);
+                  return (
+                    <article key={i.id} className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white">
+                      <div className="relative aspect-[4/3] bg-[#EBDBC8]">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-60">
+                          <IconoTipo tipo={i.tipo} />
+                        </div>
+                        {foto && (
+                          <img src={foto} alt="" className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                        )}
+                        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                          {i.tipo && (
+                            <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">{i.tipo}</span>
+                          )}
+                          {i.tiene_exclusividad && (
+                            <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#B87333]">Exclusividad KYRELO</span>
+                          )}
+                        </div>
+                        {i.asociacion_estado && (
+                          <span className="absolute right-3 top-3 rounded-full bg-[#1A1A18]/80 px-2.5 py-1 text-[10px] text-[#F1EFE8]">
+                            {ASOC_ESTADOS[i.asociacion_estado] ?? i.asociacion_estado}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-5">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#B87333]">
+                          Comparte {Math.round(Number(i.pct_comparte ?? 0.5) * 100)}% de comisión
+                        </p>
+                        <p className="mt-2 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">
+                          {formatoCOPfull(i.precio) ?? 'Precio por confirmar'}
+                        </p>
+                        <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
+                          {[i.municipio, i.sector].filter(Boolean).join(' · ') || 'Sabana de Bogotá'}
+                          {i.administracion ? ` · Admón. ${formatoCOPfull(i.administracion)}` : ''}
+                        </p>
+                        <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
+                          <div className="flex-1">{i.area ? `${Math.round(Number(i.area))} m²` : '—'}{i.area_lote ? ` · lote ${Math.round(Number(i.area_lote))}` : ''}</div>
+                          <div className="flex-1 border-x border-[#E0DDD2]">{i.habitaciones != null ? `${i.habitaciones} alc.` : '—'}</div>
+                          <div className="flex-1">{i.banos != null ? `${i.banos} baños` : '—'}{i.parqueaderos ? ` · ${i.parqueaderos} parq.` : ''}</div>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          {i.acceso_completo ? (
+                            <>
+                              <Vigencia dias={dias} />
+                              <button onClick={() => setInmuebleAbierto(i)}
+                                className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] hover:opacity-85 transition-opacity">
+                                Ver ficha y kit
+                              </button>
+                            </>
+                          ) : i.asociacion_estado === 'solicitada' ? (
+                            <p className="text-[12px] text-[#5F5E5A]">Solicitud enviada. Te avisamos al revisarla.</p>
+                          ) : (
+                            <>
+                              <span className="text-[11px] text-[#A8A69E]">Sin dirección hasta asociarte</span>
+                              <button onClick={() => { setAsociando(i); setMensajeA(''); }}
+                                className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] hover:opacity-85 transition-opacity">
+                                Solicitar asociación
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {inmuebleAbierto && (
+              <div className="fixed inset-0 bg-[#1A1A18]/50 flex items-center justify-center px-6 z-50" onClick={() => setInmuebleAbierto(null)}>
+                <div className="bg-white w-full max-w-md p-7 max-h-[85vh] overflow-y-auto rounded-xl" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-[#B87333]">Asociación vigente</p>
+                  <h2 className="mt-1 text-[18px] tracking-tight text-[#1A1A18]">{inmuebleAbierto.titulo || 'Inmueble KYRELO'}</h2>
+                  <p className="mt-1 text-[12px] text-[#5F5E5A]">
+                    {[inmuebleAbierto.direccion, inmuebleAbierto.conjunto, inmuebleAbierto.municipio].filter(Boolean).join(' · ')}
+                  </p>
+                  <div className="mt-3"><Vigencia dias={diasHasta(inmuebleAbierto.fecha_vence)} /></div>
+
+                  {Array.isArray(inmuebleAbierto.imagenes) && inmuebleAbierto.imagenes.length > 0 && (
+                    <div className="mt-5 grid grid-cols-3 gap-2">
+                      {inmuebleAbierto.imagenes.map((r: string) => (
+                        <a key={r} href={urlFoto(r) ?? '#'} target="_blank" rel="noreferrer">
+                          <img src={urlFoto(r) ?? ''} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  {inmuebleAbierto.descripcion_publica && (
+                    <p className="mt-5 text-[13px] leading-relaxed text-[#1A1A18] border-l border-[#E0DDD2] pl-4">
+                      {inmuebleAbierto.descripcion_publica}
+                    </p>
+                  )}
+
+                  <div className="mt-6 flex gap-2">
+                    {inmuebleAbierto.kit_url ? (
+                      <a href={inmuebleAbierto.kit_url} target="_blank" rel="noreferrer"
+                        className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 text-center hover:opacity-80 transition-opacity">
+                        Abrir kit de venta
+                      </a>
+                    ) : (
+                      <p className="flex-1 text-[12px] text-[#5F5E5A]">El kit de venta se está preparando.</p>
+                    )}
+                    <button onClick={() => setInmuebleAbierto(null)} className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2.5">Cerrar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {asociando && (
+              <div className="fixed inset-0 bg-[#1A1A18]/30 flex items-center justify-center px-6 z-50">
+                <div className="bg-[#F1EFE8] w-full max-w-md p-8 max-h-[85vh] overflow-y-auto">
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-1">
+                    Inmueble KYRELO · {formatoCOP(asociando.precio) ?? ''}
+                  </p>
+                  <h2 className="text-lg tracking-tight text-[#1A1A18] mb-2">Solicitar asociación</h2>
+                  <p className="text-[12px] leading-relaxed text-[#5F5E5A] mb-6">
+                    Cuéntanos de tu comprador. No pedimos su contacto: tú sigues siendo su agente.
+                  </p>
+
+                  <div className="space-y-4">
+                    <div><label className={labelCls}>Presupuesto de tu comprador (millones COP) *</label>
+                      <input className={inputCls} inputMode="numeric" value={formA.presupuesto} onChange={(e) => setFormA({ ...formA, presupuesto: e.target.value })} /></div>
+                    <div><label className={labelCls}>Plazo para comprar</label>
+                      <select className={inputCls} value={formA.plazo} onChange={(e) => setFormA({ ...formA, plazo: e.target.value })}>
+                        {PLAZOS.map((p) => <option key={p} value={p}>{p}</option>)}
+                      </select></div>
+                    <div><label className={labelCls}>Forma de pago</label>
+                      <select className={inputCls} value={formA.formaPago} onChange={(e) => setFormA({ ...formA, formaPago: e.target.value })}>
+                        {FORMAS_PAGO.map((p) => <option key={p} value={p}>{p}</option>)}
+                      </select></div>
+                    <label className="flex items-center gap-3 text-[13px] text-[#1A1A18]">
+                      <input type="checkbox" checked={formA.verificado} onChange={(e) => setFormA({ ...formA, verificado: e.target.checked })} />
+                      Ya verifiqué su capacidad de compra
+                    </label>
+                    <div><label className={labelCls}>¿Propones otro reparto? (opcional, % para ti)</label>
+                      <input className={inputCls} inputMode="numeric" placeholder="Publicado: 50" value={formA.pctPropuesto} onChange={(e) => setFormA({ ...formA, pctPropuesto: e.target.value })} /></div>
+                  </div>
+
+                  {mensajeA && <p className="text-xs text-[#1A1A18] mt-4 border-l border-[#1A1A18] pl-3">{mensajeA}</p>}
+
+                  <div className="flex gap-3 mt-6">
+                    <button onClick={solicitarAsociacion} disabled={enviando}
+                      className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity disabled:opacity-40">
+                      {enviando ? 'Enviando…' : 'Enviar solicitud'}
+                    </button>
+                    <button onClick={() => setAsociando(null)} className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2.5">Cancelar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ============ MI PANEL ============ */}
+        {tab === 'panel' && (
+          <div className="space-y-10">
+            <section className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl border border-[#E0DDD2] bg-white p-5">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#A8A69E]">Cierres con KYRELO</p>
+                <p className="mt-2 text-[28px] leading-none tracking-tight text-[#1A1A18]" style={{ fontFamily: 'Fraunces, serif' }}>{cierres}</p>
+              </div>
+              <div className="rounded-2xl border border-[#E0DDD2] bg-white p-5">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#A8A69E]">Tu parte hoy</p>
+                <p className="mt-2 text-[28px] leading-none tracking-tight text-[#B87333]" style={{ fontFamily: 'Fraunces, serif' }}>{pctAgente}%</p>
+                <p className="mt-1.5 text-[11px] leading-snug text-[#5F5E5A]">
+                  {cierres < 3 ? `de la comisión en compradores KYRELO. Desde tu cuarto cierre pasas a 50/50 (te faltan ${3 - cierres}).` : 'de la comisión en compradores KYRELO. Ya estás en 50/50.'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[#E0DDD2] bg-white p-5">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#A8A69E]">Inmuebles KYRELO</p>
+                <p className="mt-2 text-[28px] leading-none tracking-tight text-[#1A1A18]" style={{ fontFamily: 'Fraunces, serif' }}>50/50</p>
+                <p className="mt-1.5 text-[11px] leading-snug text-[#5F5E5A]">Reparto fijo, con el material de venta incluido.</p>
+              </div>
+            </section>
+
+            <section>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#A8A69E] mb-4">Mis postulaciones ({mias.length})</p>
+              {mias.length === 0 && <p className="py-4 text-sm text-[#5F5E5A]">Aún no has postulado inmuebles. Busca en «Compradores».</p>}
+              {mias.map((p) => {
+                const idx = Math.max(0, SEGUIMIENTO.findIndex((e) => e.clave === p.estado));
+                const rechazada = p.estado === 'rechazado';
+                return (
+                  <article key={p.id} className="mb-4 overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white">
+                    <div className="flex items-center gap-4 p-5">
+                      <div className="relative h-[52px] w-[52px] shrink-0 overflow-hidden rounded-xl bg-[#F1EFE8]">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-60">
+                          <IconoTipo tipo={p.titulo} />
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[15px] font-medium tracking-tight text-[#1A1A18]">{p.titulo}</p>
+                        <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
+                          {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, formatoCOPfull(p.precio)].filter(Boolean).join(' · ')}
+                        </p>
+                      </div>
+                      {rechazada ? (
+                        <span className="shrink-0 rounded-full border border-[#D5BBB5] px-3 py-1 text-[9px] uppercase tracking-[0.15em] text-[#8E3B31]">No seleccionada</span>
+                      ) : (
+                        <span className={pillCls}>{SEGUIMIENTO[idx]?.label ?? ESTADOS[p.estado] ?? p.estado}</span>
+                      )}
+                    </div>
+                    <div className="border-t border-[#E0DDD2] px-5 py-4">
+                      {rechazada ? (
+                        <p className="text-[11px] leading-relaxed text-[#5F5E5A]">
+                          {p.motivo_rechazo
+                            ? <>Motivo: <span className="text-[#1A1A18]">{p.motivo_rechazo}</span>. Puedes postular tu inmueble a otros compradores activos.</>
+                            : 'Esta postulación no fue seleccionada para este comprador. Puedes postular tu inmueble a otros compradores activos.'}
+                        </p>
+                      ) : (
+                        <div>
+                          <div className="flex items-center">
+                            {SEGUIMIENTO.map((e, i) => (
+                              <div key={e.clave} className="flex flex-1 items-center last:flex-none">
+                                <span
+                                  title={e.label}
+                                  className={`h-[10px] w-[10px] shrink-0 rounded-full ${
+                                    i < idx ? 'bg-[#1A1A18]' : i === idx ? 'bg-[#B87333]' : 'border border-[#E0DDD2] bg-transparent'
+                                  }`}
+                                />
+                                {i < SEGUIMIENTO.length - 1 && (
+                                  <span className={`mx-1 h-px flex-1 ${i < idx ? 'bg-[#1A1A18]' : 'bg-[#E0DDD2]'}`} />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                            <p className="text-[11px] text-[#1A1A18]">
+                              {SEGUIMIENTO[idx]?.label}
+                              <span className="text-[#A8A69E]"> · etapa {idx + 1} de {SEGUIMIENTO.length}</span>
+                            </p>
+                            <p className="text-[11px] text-[#5F5E5A]">{SIGUIENTE_PASO[p.estado] ?? ''}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+
+            <section>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#A8A69E] mb-4">Mis asociaciones ({asociaciones.length})</p>
+              {asociaciones.length === 0 && <p className="py-4 text-sm text-[#5F5E5A]">Todavía no has solicitado ninguna asociación. Mira «Inmuebles KYRELO».</p>}
+              {asociaciones.map((i) => {
+                const dias = diasHasta(i.fecha_vence);
+                return (
+                  <article key={i.asociacion_id} className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E0DDD2] bg-white p-5">
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-medium tracking-tight text-[#1A1A18]">{i.titulo || 'Inmueble KYRELO'}</p>
+                      <p className="mt-0.5 text-[12px] text-[#5F5E5A]">
+                        {[i.municipio, formatoCOPfull(i.precio)].filter(Boolean).join(' · ')}
+                        {i.acceso_completo && dias != null ? ` · ${dias <= 0 ? 'vence hoy' : `${dias} días de vigencia`}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={pillCls}>{ASOC_ESTADOS[i.asociacion_estado] ?? i.asociacion_estado}</span>
+                      {i.acceso_completo && (
+                        <button onClick={() => setInmuebleAbierto(i)} className="text-[12px] text-[#1A1A18] underline underline-offset-4">Ver ficha y kit</button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+
+            <section>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#A8A69E] mb-4">Mis negocios ({negocios.length})</p>
+              {negocios.length === 0 && <p className="py-4 text-sm text-[#5F5E5A]">Cuando un comprador y tu inmueble se conecten, el negocio aparece aquí con su avance.</p>}
+              {negocios.map((n) => (
+                <article key={n.id} className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E0DDD2] bg-white p-5">
+                  <div>
+                    <p className="text-[15px] font-medium tracking-tight text-[#1A1A18]">{NEGOCIO_ESTADOS[n.estado] ?? n.estado}</p>
+                    <p className="mt-0.5 text-[12px] text-[#5F5E5A]">
+                      {haceCuanto(n.fecha_ultimo_movimiento)}
+                      {n.estado === 'perdido' && n.motivo_perdida ? ` · ${n.motivo_perdida}` : ''}
+                    </p>
+                  </div>
+                  {n.acuerdo_comision_url ? (
+                    <a href={n.acuerdo_comision_url} target="_blank" rel="noreferrer" className="text-[12px] text-[#1A1A18] underline underline-offset-4">Acuerdo de comisión</a>
+                  ) : n.estado === 'conectado' ? (
+                    <span className="text-[11px] text-[#B87333]">Falta firmar el acuerdo para agendar visita</span>
+                  ) : null}
+                </article>
+              ))}
+            </section>
+          </div>
+        )}
+
+        {/* ============ CÓMO FUNCIONA ============ */}
         {tab === 'info' && (
           <>
             <ComoFunciona />
             <FAQBrokers />
           </>
-        )}
-
-        {tab === 'mias' && (
-          <div className="divide-y divide-[#E0DDD2] border-t border-b border-[#E0DDD2]">
-            {mias.length === 0 && <p className="py-6 text-sm text-[#5F5E5A]">Aún no has postulado inmuebles.</p>}
-            {mias.map((p) => {
-              const idx = Math.max(0, SEGUIMIENTO.findIndex((e) => e.clave === p.estado));
-              const rechazada = p.estado === 'rechazado';
-              const foto = Array.isArray(p.fotos_rutas) && p.fotos_rutas.length > 0
-                ? supabase.storage.from('propiedades').getPublicUrl(p.fotos_rutas[0]).data.publicUrl
-                : null;
-              return (
-                <article
-                  key={p.id}
-                  className="mb-4 overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white"
-                >
-                  <div className="flex items-center gap-4 p-5">
-                    <div className="relative h-[64px] w-[84px] shrink-0 overflow-hidden rounded-xl bg-[#F1EFE8]">
-                      <div className="absolute inset-0 flex items-center justify-center opacity-60">
-                        <IconoTipo tipo={p.titulo} />
-                      </div>
-                      {foto && (
-                        <img
-                          src={foto}
-                          alt=""
-                          className="absolute inset-0 h-full w-full object-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[15px] font-medium tracking-tight text-[#1A1A18]">{p.titulo}</p>
-                      <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
-                        {[p.ubicacion, p.alcobas && `${p.alcobas} alcobas`, formatoCOPfull(p.precio)].filter(Boolean).join(' · ')}
-                      </p>
-                    </div>
-                    {rechazada ? (
-                      <span className="shrink-0 rounded-full border border-[#D5BBB5] px-3 py-1 text-[9px] uppercase tracking-[0.15em] text-[#8E3B31]">
-                        No seleccionada
-                      </span>
-                    ) : (
-                      <span className="shrink-0 rounded-full bg-[#F1EFE8] px-3 py-1 text-[9px] uppercase tracking-[0.15em] text-[#1A1A18]">
-                        {SEGUIMIENTO[idx]?.label ?? ESTADOS[p.estado] ?? p.estado}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="border-t border-[#E0DDD2] px-5 py-4">
-                    {rechazada ? (
-                      <p className="text-[11px] leading-relaxed text-[#5F5E5A]">
-                        Esta postulación no fue seleccionada para este comprador. Puedes postular tu inmueble a otros compradores activos.
-                      </p>
-                    ) : (
-                      <div>
-                        <div className="flex items-center">
-                          {SEGUIMIENTO.map((e, i) => (
-                            <div key={e.clave} className="flex flex-1 items-center last:flex-none">
-                              <span
-                                title={e.label}
-                                className={`h-[10px] w-[10px] shrink-0 rounded-full ${
-                                  i < idx
-                                    ? 'bg-[#1A1A18]'
-                                    : i === idx
-                                      ? 'bg-[#B87333]'
-                                      : 'border border-[#E0DDD2] bg-transparent'
-                                }`}
-                              />
-                              {i < SEGUIMIENTO.length - 1 && (
-                                <span className={`mx-1 h-px flex-1 ${i < idx ? 'bg-[#1A1A18]' : 'bg-[#E0DDD2]'}`} />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                          <p className="text-[11px] text-[#1A1A18]">
-                            {SEGUIMIENTO[idx]?.label}
-                            <span className="text-[#A8A69E]"> · etapa {idx + 1} de {SEGUIMIENTO.length}</span>
-                          </p>
-                          <p className="text-[11px] text-[#5F5E5A]">{SIGUIENTE_PASO[p.estado] ?? ''}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
         )}
 
         {confirmandoAlcance && (
@@ -748,7 +1093,7 @@ export default function PortalBroker() {
               </p>
               <h2 className="text-lg tracking-tight text-[#1A1A18] mb-2">Postular inmueble</h2>
               <a
-                href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un broker de ${APP.nombre}. Estoy registrando un inmueble para el comprador #${postulando.codigo} y tengo una duda:`)}`}
+                href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un agente de ${APP.nombre}. Estoy registrando un inmueble para el comprador #${postulando.codigo} y tengo una duda:`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] transition-colors mb-6"
@@ -760,8 +1105,26 @@ export default function PortalBroker() {
                 <div><label className={labelCls}>Título del inmueble *</label>
                   <input className={inputCls} value={formP.titulo} onChange={(e) => setFormP({ ...formP, titulo: e.target.value })} /></div>
 
+                <div><label className={labelCls}>Matrícula inmobiliaria *</label>
+                  <input className={inputCls} placeholder="Ej: 50N-1234567" value={formP.matricula} onChange={(e) => setFormP({ ...formP, matricula: e.target.value })} />
+                  <p className="mt-1 text-[10px] text-[#A8A69E]">Nos permite verificar el inmueble. No se comparte con el comprador.</p></div>
+
+                <div><label className={labelCls}>Enlace a las fotos *</label>
+                  <input className={inputCls} type="url" placeholder="https://drive.google.com/… o el link del portal" value={formP.linkFotos} onChange={(e) => setFormP({ ...formP, linkFotos: e.target.value })} />
+                  <p className="mt-1 text-[10px] text-[#A8A69E]">Drive, WeTransfer, Dropbox o el anuncio en un portal.</p></div>
+
                 <div><label className={labelCls}>Tu celular / WhatsApp de contacto *</label>
                   <input className={inputCls} type="tel" placeholder="300 123 4567" value={formP.contacto} onChange={(e) => setFormP({ ...formP, contacto: e.target.value })} /></div>
+
+                <div><label className={labelCls}>¿Cómo tienes el inmueble?</label>
+                  <select className={inputCls} value={formP.exclusividad} onChange={(e) => setFormP({ ...formP, exclusividad: e.target.value })}>
+                    {EXCLUSIVIDAD.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                  </select></div>
+
+                <label className="flex items-center gap-3 text-[13px] text-[#1A1A18]">
+                  <input type="checkbox" checked={formP.certificado} onChange={(e) => setFormP({ ...formP, certificado: e.target.checked })} />
+                  Tengo el certificado de tradición y libertad
+                </label>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className={labelCls}>Precio (millones COP)</label>
@@ -786,10 +1149,12 @@ export default function PortalBroker() {
                     <input className={inputCls} inputMode="numeric" value={formP.estrato} onChange={(e) => setFormP({ ...formP, estrato: e.target.value })} /></div>
                 </div>
 
-                <div><label className={labelCls}>Ciudad</label>
+                <div><label className={labelCls}>Municipio / ciudad</label>
                   <input className={inputCls} value={formP.ciudad} onChange={(e) => setFormP({ ...formP, ciudad: e.target.value })} /></div>
-                <div><label className={labelCls}>Barrio</label>
+                <div><label className={labelCls}>Barrio o sector</label>
                   <input className={inputCls} value={formP.barrio} onChange={(e) => setFormP({ ...formP, barrio: e.target.value })} /></div>
+                <div><label className={labelCls}>Conjunto</label>
+                  <input className={inputCls} value={formP.conjunto} onChange={(e) => setFormP({ ...formP, conjunto: e.target.value })} /></div>
                 <div><label className={labelCls}>Dirección</label>
                   <input className={inputCls} value={formP.direccion} onChange={(e) => setFormP({ ...formP, direccion: e.target.value })} /></div>
 
@@ -798,25 +1163,11 @@ export default function PortalBroker() {
 
                 <div><label className={labelCls}>Descripción</label>
                   <textarea className={inputCls + ' resize-none'} rows={3} value={formP.descripcion} onChange={(e) => setFormP({ ...formP, descripcion: e.target.value })} /></div>
-
-                <div>
-                  <label className={labelCls}>Fotos del inmueble *</label>
-                  <SubirFotosPostulacion tempId={tempId} rutas={fotos} onChange={setFotos} />
-                </div>
               </div>
 
               {mensaje && <p className="text-xs text-[#1A1A18] mt-4 border-l border-[#1A1A18] pl-3">{mensaje}</p>}
 
-              <a
-                href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un broker de ${APP.nombre}. Estoy registrando un inmueble para el comprador #${postulando.codigo} y tengo una duda:`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-block text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18] transition-colors"
-              >
-                ¿Tienes dudas antes de enviar? Escríbenos por WhatsApp
-              </a>
-
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3 mt-6">
                 <button onClick={postular} disabled={enviando}
                   className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity disabled:opacity-40">
                   {enviando ? 'Enviando…' : 'Postular'}
@@ -838,15 +1189,15 @@ export default function PortalBroker() {
 
 function ComoFunciona() {
   const pasos = [
-    { n: '01', t: 'Mira compradores reales', d: 'Requerimientos de compradores verificados en la Sabana, con presupuesto y zona. Sin datos inflados.' },
-    { n: '02', t: 'Postula tu inmueble', d: 'Si tienes algo que encaja, lo postulas en dos minutos. Tú decides si queda solo para ese comprador o para más.' },
-    { n: '03', t: 'Cierras y ganas', d: 'Acompañamos el proceso hasta la firma. Solo compartes comisión cuando el negocio se cierra.' },
+    { n: '01', t: 'Compradores verificados', d: 'Solo publicamos compradores banda A: presupuesto, plazo y forma de pago confirmados. Cada requerimiento vence a los 30 días para que nunca trabajes sobre datos viejos.' },
+    { n: '02', t: 'Postula o asóciate', d: 'Si tienes el inmueble que busca un comprador, lo postulas con el enlace a tus fotos. Si tienes el comprador, te asocias a un inmueble de KYRELO y te damos el kit de venta.' },
+    { n: '03', t: 'Cierras y creces', d: 'En compradores KYRELO: 40% de la comisión para ti en tus tres primeros cierres y 50/50 desde el cuarto. En inmuebles KYRELO: 50/50 fijo. Nosotros hacemos el papeleo.' },
   ];
   return (
     <section className="py-4">
       <div className="mb-8 rounded-2xl border border-[#EBDBC8] bg-[#F6EFE4] px-6 py-5 text-center">
         <p className="text-[13px] font-medium text-[#1A1A18]">
-          Registrarte e ingresar es <span className="text-[#B87333]">gratis</span>. Solo compartes comisión cuando cierras un negocio con un requerimiento de KYRELO.
+          Registrarte e ingresar es <span className="text-[#B87333]">gratis</span>. Solo compartes comisión cuando cierras un negocio dentro de KYRELO.
         </p>
       </div>
 
@@ -866,11 +1217,12 @@ function ComoFunciona() {
 
 function FAQBrokers() {
   const faqs = [
-    { q: '¿Registrarme tiene algún costo?', a: 'No. Crear tu cuenta, ver los compradores y postular tus inmuebles es totalmente gratis. Solo compartes comisión cuando se cierra un negocio con un requerimiento traído de KYRELO.' },
-    { q: '¿Cómo funciona la comisión?', a: 'La comisión aplica únicamente cuando concretas un cierre con un comprador de KYRELO. Las condiciones se acuerdan contigo antes de presentar el inmueble al comprador.' },
-    { q: '¿Me pueden quitar el cliente?', a: 'No. Tu postulación queda registrada y firmamos un acuerdo antes de presentar el inmueble. El proceso es transparente y tu participación queda protegida.' },
+    { q: '¿Registrarme tiene algún costo?', a: 'No. Crear tu cuenta, ver los compradores y postular tus inmuebles es totalmente gratis. Solo compartes comisión cuando se cierra un negocio dentro de KYRELO.' },
+    { q: '¿Cómo se reparte la comisión?', a: 'En los compradores que te asignamos: 40% para ti en tus tres primeros cierres y 50/50 desde el cuarto. En los inmuebles que capta KYRELO: 50/50 fijo, con fotos, video, ficha técnica y textos de venta incluidos. Firmamos el acuerdo antes de presentar el inmueble o agendar la visita.' },
+    { q: '¿Qué es la exclusividad que me preguntan al postular?', a: 'Si el dueño te dio el derecho de vender el inmueble solo tú (propia), si trabaja con varias inmobiliarias (compartida) o si no hay acuerdo firmado. Nos ayuda a saber qué tan segura es la disponibilidad y la comisión.' },
+    { q: '¿Me pueden quitar el cliente?', a: 'No. Tu postulación queda registrada y firmamos un acuerdo antes de presentar el inmueble. Nunca recibes el contacto del comprador de KYRELO, y KYRELO nunca pide el contacto del tuyo.' },
     { q: '¿Qué pasa si ya trabajo con otra inmobiliaria?', a: 'Puedes usar KYRELO como un canal más de oportunidades. Tú decides qué inmuebles postular y con qué alcance.' },
-    { q: '¿Los compradores son reales?', a: 'Sí. Cada requerimiento viene de un comprador verificado con presupuesto y zona definidos. No mostramos búsquedas infladas ni datos falsos.' },
+    { q: '¿Los compradores son reales?', a: 'Sí. Cada requerimiento viene de un comprador verificado por audio y calificación (banda A), con presupuesto y plazo confirmados. Si un requerimiento no está en banda A, no se publica.' },
   ];
   return (
     <section className="mt-12 border-t border-[#E0DDD2] pt-10">
@@ -919,7 +1271,7 @@ function FooterBroker() {
 function HablaBroker() {
   return (
     <a
-      href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un broker de ${APP.nombre} y tengo una duda:`)}`}
+      href={`https://wa.me/${APP.whatsapp}?text=${encodeURIComponent(`Hola, soy un agente de ${APP.nombre} y tengo una duda:`)}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Habla con nosotros por WhatsApp"
