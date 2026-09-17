@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -22,6 +22,14 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
   const [notaTranscripcion, setNotaTranscripcion] = useState<string | null>(null);
   const [editando, setEditando] = useState<Requerimiento | null>(null);
   const [eliminando, setEliminando] = useState<string | null>(null);
+
+  // Atajo desde la ficha del requerimiento: /clientes/<id>?tab=requerimientos&editar=<req>
+  useEffect(() => {
+    const pedido = new URLSearchParams(window.location.search).get("editar");
+    if (!pedido) return;
+    const r = requerimientos.find((x) => x.id === pedido);
+    if (r) setEditando(r);
+  }, [requerimientos]);
 
   async function eliminar(id: string) {
     if (!confirm("¿Eliminar este requerimiento?")) return;

@@ -225,13 +225,22 @@ export default function RequerimientoDetallePage() {
           </div>
         </div>
 
-        <button
-          onClick={buscarMatches}
-          disabled={buscando}
-          className="shrink-0 rounded-lg bg-bosque px-5 py-2.5 text-sm font-medium text-white transition hover:bg-bosque-oscuro disabled:opacity-60"
-        >
-          {buscando ? "La IA está evaluando…" : "✦ Buscar coincidencias con IA"}
-        </button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {/* El formulario vive en la ficha del comprador: este atajo lo abre directo */}
+          <Link
+            href={`/clientes/${req.clientes?.id}?tab=requerimientos&editar=${req.id}`}
+            className="rounded-lg border border-linea px-5 py-2.5 text-sm font-medium text-tinta transition hover:border-[#1A1A18]"
+          >
+            Editar requerimiento
+          </Link>
+          <button
+            onClick={buscarMatches}
+            disabled={buscando}
+            className="rounded-lg bg-bosque px-5 py-2.5 text-sm font-medium text-white transition hover:bg-bosque-oscuro disabled:opacity-60"
+          >
+            {buscando ? "La IA está evaluando…" : "✦ Buscar coincidencias con IA"}
+          </button>
+        </div>
       </div>
 
       {/* Puerta de publicación: solo salen al marketplace los
@@ -274,6 +283,27 @@ export default function RequerimientoDetallePage() {
       {req.preferencias && (
         <p className="mt-3 text-sm italic text-neutro">"{req.preferencias}"</p>
       )}
+
+      {/* Lo que el broker ve en su tarjeta. Si está vacío, se llena en «Editar requerimiento». */}
+      <div className="mt-5 rounded-xl border border-linea bg-superficie p-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-laton">
+          Condiciones que ve el broker
+        </p>
+        <div className="mt-3 grid gap-4 sm:grid-cols-3">
+          {[
+            ["Forma de pago", req.financiacion],
+            ["Plazo", req.plazo],
+            ["Nota para el broker", req.nota_broker],
+          ].map(([k, v]) => (
+            <div key={k as string}>
+              <p className="text-[10px] font-medium uppercase tracking-widest text-neutro">{k as string}</p>
+              <p className={`mt-0.5 text-sm ${v ? "text-tinta" : "text-[#B87333]"}`}>
+                {(v as string) || "Sin definir"}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {mensaje && (
         <p className="mt-4 rounded-lg bg-bosque-suave px-4 py-2.5 text-sm text-bosque">
