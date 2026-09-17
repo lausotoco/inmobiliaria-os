@@ -24,8 +24,8 @@ const C = {
 const BENEFICIOS = [
   ["Registro sin costo", "Unirte a KYRELO no tiene ningún cargo."],
   [
-    "Solo ganas si cierras, y ganas más al principio",
-    "En los compradores que te asignamos: 60% de la comisión para ti en tus tres primeros cierres, 50/50 desde el cuarto.\nEn los inmuebles que nosotros captamos: 50/50, con el material de venta incluido.",
+    "Solo ganas si cierras, y creces con cada cierre",
+    "En los compradores que te asignamos: 40% de la comisión para ti en tus tres primeros cierres y 50/50 desde el cuarto.\nEn los inmuebles que nosotros captamos: 50/50, con el material de venta incluido.",
   ],
   [
     "Te damos con qué vender",
