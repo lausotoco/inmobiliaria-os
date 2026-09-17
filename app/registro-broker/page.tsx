@@ -15,6 +15,7 @@ export default function RegistroBroker() {
   const [acepto, setAcepto] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [confirmarCorreo, setConfirmarCorreo] = useState(false);
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -31,9 +32,14 @@ export default function RegistroBroker() {
     }
     setCargando(true);
 
-    const { error: errAuth } = await supabase.auth.signUp({
+    // Los datos viajan en el registro: el perfil de broker se crea completo
+    // desde la base (trigger handle_new_user), aunque falle cualquier paso posterior.
+    const { data: alta, error: errAuth } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
+      options: {
+        data: { nombre: form.nombre, empresa: form.empresa || null, telefono: form.telefono },
+      },
     });
     if (errAuth) {
       setError(errAuth.message === 'User already registered'
@@ -43,16 +49,21 @@ export default function RegistroBroker() {
       return;
     }
 
+    // Si Supabase pide confirmar el correo, aún no hay sesión: se le avisa
+    // al broker y entra después desde /brokers.
+    if (!alta.session) {
+      setConfirmarCorreo(true);
+      setCargando(false);
+      return;
+    }
+
     const { error: errRpc } = await supabase.rpc('registrar_broker', {
       p_nombre: form.nombre,
       p_empresa: form.empresa,
       p_telefono: form.telefono,
     });
-    if (errRpc) {
-      setError('Tu cuenta se creó pero falta el perfil: ' + errRpc.message);
-      setCargando(false);
-      return;
-    }
+    // El perfil ya existe como broker gracias al trigger; este paso solo complementa.
+    if (errRpc) console.error('registrar_broker:', errRpc.message);
 
     // Evento de conversión para Meta Pixel
     if (typeof window !== 'undefined' && (window as any).fbq) {
@@ -119,6 +130,14 @@ export default function RegistroBroker() {
         </label>
 
         {error && <p className="text-xs text-[#1A1A18] mt-4 border-l border-[#1A1A18] pl-3">{error}</p>}
+
+        {confirmarCorreo && (
+          <div className="mt-6 rounded-xl border border-[#EBDBC8] bg-[#F6EFE4] px-5 py-4 text-[13px] leading-relaxed text-[#1A1A18]">
+            Tu cuenta quedó creada. Te enviamos un correo a <span className="font-semibold">{form.email}</span>:
+            ábrelo, confirma tu cuenta y luego{' '}
+            <a href="/brokers" className="underline underline-offset-4">inicia sesión aquí</a>.
+          </div>
+        )}
 
         <button
           onClick={registrar}
