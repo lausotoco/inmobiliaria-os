@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { APP } from '@/lib/config';
+import { vinetas, resumenPreferencias } from '@/lib/requerimientos-formato';
 
 const ENTRADA = '/brokers'; // punto único de entrada (login + registro)
 
@@ -201,27 +202,35 @@ export default function Oportunidades() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {resultados.map((t) => (
                 <article key={t.id} className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]">
-                  {/* Un requerimiento es una persona buscando, no un inmueble: sin foto de archivo */}
-                  <div className="relative aspect-[16/9] bg-[#EBDBC8]">
-                    <div className="absolute inset-0 flex items-center justify-center opacity-60"><IconoTipo tipo={t.tipo} /></div>
-                    <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-                      {t.urgencia && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">{t.urgencia}</span>}
-                      {t.tipo && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">{t.tipo}</span>}
+                  {/* El presupuesto manda: es lo primero que mira un agente */}
+                  <div className="bg-[#EBDBC8] px-5 py-4">
+                    <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                      <span className="flex flex-wrap gap-1.5">
+                        {t.urgencia && <span className="rounded-full bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">{t.urgencia}</span>}
+                        {t.tipo && <span className="rounded-full bg-white/80 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">{t.tipo}</span>}
+                      </span>
+                      <span className="rounded-full bg-[#1A1A18] px-2.5 py-1 text-[10px] text-[#F1EFE8]">#{t.codigo}</span>
                     </div>
-                    <span className="absolute right-3 top-3 rounded-full bg-[#1A1A18]/75 px-2.5 py-1 text-[10px] text-[#F1EFE8]">#{t.codigo}</span>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#993C1D]">Comprador verificado · Banda {t.banda || 'A'}</p>
+                    <p className="mt-1.5 text-[22px] font-semibold leading-none tracking-tight text-[#1A1A18]">{rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}</p>
+                    <p className="mt-1.5 text-[12px] text-[#5F5E5A]">{[t.tipo, [Array.isArray(t.zonas) ? t.zonas[0] : null, t.ciudad].filter(Boolean).join(' · ')].filter(Boolean).join(' en ') || 'Sabana de Bogotá'}</p>
                   </div>
                   <div className="p-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#B87333]">Comprador verificado · Banda {t.banda || 'A'}</p>
-                    <p className="text-[10px] text-[#5F5E5A]">presupuesto y plazo confirmados</p>
-                    <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">Presupuesto del cliente</p>
-                    <p className="mt-0.5 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">{rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}</p>
-                    <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">{[t.tipo, t.ciudad, t.financiacion].filter(Boolean).join(' · ') || 'Comprador verificado'}</p>
-                    <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
+                    <div className="flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
                       <div className="flex-1">{rango(t.area_min, t.area_max, ' m²') ?? '—'}</div>
                       <div className="flex-1 border-x border-[#E0DDD2]">{t.alcobas != null ? `${t.alcobas} alc.` : '—'}</div>
                       <div className="flex-1">{t.banos != null ? `${t.banos} baños` : '—'}</div>
                     </div>
-                    <div className="mt-4 flex items-center justify-between">
+                    {(t.financiacion || t.plazo) && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {t.financiacion && <span className="rounded-full border border-[#E0DDD2] px-3 py-1 text-[11px] text-[#1A1A18]">{t.financiacion}</span>}
+                        {t.plazo && <span className="rounded-full border border-[#E0DDD2] px-3 py-1 text-[11px] text-[#1A1A18]">{t.plazo}</span>}
+                      </div>
+                    )}
+                    {resumenPreferencias(t.preferencias) && (
+                      <p className="mt-3 text-[12px] leading-relaxed text-[#5F5E5A]">{resumenPreferencias(t.preferencias)}</p>
+                    )}
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                       <span className="flex items-center gap-3">
                         <Vigencia dias={t.dias_restantes} />
                         <button onClick={() => setDetalle(t)} className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">Ver detalles</button>
@@ -261,27 +270,61 @@ export default function Oportunidades() {
                 <p className="text-[12px] text-[#5F5E5A]">{[detalle.tipo, detalle.ciudad, `#${detalle.codigo}`].filter(Boolean).join(' · ')}</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 border-y border-[#E0DDD2] py-4 text-center">
+            <div className="mb-5 rounded-xl bg-[#F6EFE4] px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#993C1D]">Comprador verificado · Banda {detalle.banda || 'A'}</p>
+                  <p className="text-[10px] text-[#5F5E5A]">presupuesto y plazo confirmados</p>
+                </div>
+                <Vigencia dias={detalle.dias_restantes} />
+              </div>
+            </div>
+
+            <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Condiciones de compra</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {[
+                ['Forma de pago', detalle.financiacion],
+                ['Plazo', detalle.plazo],
+                ['Urgencia', detalle.urgencia],
+              ].map(([k, v]) => (
+                <div key={k as string} className="rounded-lg bg-[#F1EFE8] px-3 py-2">
+                  <p className="text-[9px] uppercase tracking-[0.1em] text-[#993C1D]">{k as string}</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-[#1A1A18]">{(v as string) || '—'}</p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-6 text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">El inmueble que busca</p>
+            <div className="mt-2 grid grid-cols-4 gap-3 border-b border-[#E0DDD2] pb-4">
               <Spec etiqueta="Área" valor={rango(detalle.area_min, detalle.area_max, ' m²')} />
               <Spec etiqueta="Alcobas" valor={detalle.alcobas} />
               <Spec etiqueta="Baños" valor={detalle.banos} />
-              <Spec etiqueta="Parqueaderos" valor={detalle.parqueaderos} />
-              <Spec etiqueta="Barrio" valor={detalle.barrio} />
-              <Spec etiqueta="Forma de pago" valor={detalle.financiacion} />
-              <Spec etiqueta="Vigencia" valor={detalle.dias_restantes != null ? (detalle.dias_restantes <= 0 ? 'Vence hoy' : `Vence en ${detalle.dias_restantes} días`) : null} />
+              <Spec etiqueta="Parq." valor={detalle.parqueaderos} />
             </div>
+
             {Array.isArray(detalle.zonas) && detalle.zonas.length > 0 && (
               <div className="mt-4">
                 <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Zonas de interés</p>
                 <p className="mt-1 text-[13px] text-[#1A1A18]">{detalle.zonas.join(', ')}</p>
               </div>
             )}
-            {detalle.preferencias && (
+
+            {vinetas(detalle.preferencias).length > 0 && (
               <div className="mt-4">
-                <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Lo que busca el cliente</p>
-                <p className="mt-1 text-[13px] leading-relaxed text-[#1A1A18]">{detalle.preferencias}</p>
+                <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Preferencias del cliente</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-[#1A1A18]">
+                  {vinetas(detalle.preferencias).map((x: string, i: number) => <li key={i}>{x}</li>)}
+                </ul>
               </div>
             )}
+
+            {detalle.nota_broker && (
+              <div className="mt-4 rounded-xl border border-[#EBDBC8] bg-[#F6EFE4] px-4 py-3">
+                <p className="text-[9px] uppercase tracking-[0.15em] text-[#993C1D]">Nota de KYRELO</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-[#1A1A18]">{detalle.nota_broker}</p>
+              </div>
+            )}
+
             <Link href={ENTRADA} className="mt-6 block rounded-full bg-[#1A1A18] py-3 text-center text-[14px] font-medium text-[#F1EFE8] hover:opacity-85 transition">
               Tengo un inmueble para este comprador
             </Link>

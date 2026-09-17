@@ -23,6 +23,8 @@ export type Cliente = {
 };
 
 export type Requerimiento = {
+  plazo?: string | null;          // "Máximo 2 meses" · lo ve el broker
+  nota_broker?: string | null;    // nota pública para brokers
   id: string;
   organization_id: string;
   cliente_id: string;
@@ -94,6 +96,18 @@ export type Propiedad = {
   foto_brokers_ruta?: string | null;
   publicada_brokers?: boolean;
   estado_captacion?: string | null;
+  fotos_brokers_rutas?: string[] | null;
+  precio_negociable?: boolean;
+  margen_negociacion?: string | null;
+  acepta_permuta?: boolean;
+  acepta_credito?: boolean;
+  acepta_subsidio?: boolean;
+  libre_gravamenes?: boolean;
+  nota_juridica?: string | null;
+  ocupacion?: string | null;
+  entrega?: string | null;
+  anio_construccion?: number | null;
+  descripcion_brokers?: string | null;
 };
 
 export type PropiedadImagen = {

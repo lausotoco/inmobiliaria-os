@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { APP } from '@/lib/config';
+import { vinetas, resumenPreferencias } from '@/lib/requerimientos-formato';
 
 const ESTADOS: Record<string, string> = {
   postulado: 'Postulado',
@@ -570,49 +571,57 @@ export default function PortalBroker() {
                         key={t.id}
                         className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]"
                       >
-                        {/* Un requerimiento es una persona buscando, no un inmueble: sin foto */}
-                        <div className="relative aspect-[16/9] bg-[#EBDBC8]">
-                          <div className="absolute inset-0 flex items-center justify-center opacity-60">
-                            <IconoTipo tipo={t.tipo} />
+                        {/* El presupuesto manda: es lo primero que mira un agente */}
+                        <div className="bg-[#EBDBC8] px-5 py-4">
+                          <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                            <span className="flex flex-wrap gap-1.5">
+                              {t.urgencia && (
+                                <span className="rounded-full bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">
+                                  {t.urgencia}
+                                </span>
+                              )}
+                              {t.tipo && (
+                                <span className="rounded-full bg-white/80 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">
+                                  {t.tipo}
+                                </span>
+                              )}
+                            </span>
+                            <span className="rounded-full bg-[#1A1A18] px-2.5 py-1 text-[10px] text-[#F1EFE8]">#{t.codigo}</span>
                           </div>
-                          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-                            {t.urgencia && (
-                              <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#993C1D]">
-                                {t.urgencia}
-                              </span>
-                            )}
-                            {t.tipo && (
-                              <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">
-                                {t.tipo}
-                              </span>
-                            )}
-                          </div>
-                          <span className="absolute right-3 top-3 rounded-full bg-[#1A1A18]/75 px-2.5 py-1 text-[10px] text-[#F1EFE8]">
-                            #{t.codigo}
-                          </span>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#993C1D]">
+                            Comprador verificado · Banda {t.banda || 'A'}
+                          </p>
+                          <p className="mt-1.5 text-[22px] font-semibold leading-none tracking-tight text-[#1A1A18]">
+                            {rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}
+                          </p>
+                          <p className="mt-1.5 text-[12px] text-[#5F5E5A]">
+                            {[t.tipo, zonaLinea].filter(Boolean).join(' en ') || 'Sabana de Bogotá'}
+                          </p>
                         </div>
 
                         <div className="p-5">
-                          <SelloVerificado banda={t.banda} />
-                          <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.1em] text-[#A8A69E]">Presupuesto del cliente</p>
-                          <p className="mt-0.5 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">
-                            {rangoPresupuestoFull(t.presupuesto_min, t.presupuesto_max)}
-                          </p>
-                          <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
-                            {[zonaLinea, t.financiacion].filter(Boolean).join(' · ') || 'Zona por definir'}
-                          </p>
-
-                          <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
-                            <div className="flex flex-1 items-center justify-center gap-1.5">
-                              {rango(t.area_min, t.area_max, ' m²') ?? '—'}
-                            </div>
-                            <div className="flex flex-1 items-center justify-center gap-1.5 border-x border-[#E0DDD2]">
-                              {t.alcobas != null ? `${t.alcobas} alc.` : '—'}
-                            </div>
-                            <div className="flex flex-1 items-center justify-center gap-1.5">
-                              {t.banos != null ? `${t.banos} baños` : '—'}
-                            </div>
+                          <div className="flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
+                            <div className="flex-1">{rango(t.area_min, t.area_max, ' m²') ?? '—'}</div>
+                            <div className="flex-1 border-x border-[#E0DDD2]">{t.alcobas != null ? `${t.alcobas} alc.` : '—'}</div>
+                            <div className="flex-1">{t.banos != null ? `${t.banos} baños` : '—'}</div>
                           </div>
+
+                          {(t.financiacion || t.plazo) && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {t.financiacion && (
+                                <span className="rounded-full border border-[#E0DDD2] px-3 py-1 text-[11px] text-[#1A1A18]">{t.financiacion}</span>
+                              )}
+                              {t.plazo && (
+                                <span className="rounded-full border border-[#E0DDD2] px-3 py-1 text-[11px] text-[#1A1A18]">{t.plazo}</span>
+                              )}
+                            </div>
+                          )}
+
+                          {resumenPreferencias(t.preferencias) && (
+                            <p className="mt-3 text-[12px] leading-relaxed text-[#5F5E5A]">
+                              {resumenPreferencias(t.preferencias)}
+                            </p>
+                          )}
 
                           <div className="mt-4 flex items-center justify-between">
                             <Vigencia dias={t.dias_restantes} />
@@ -662,40 +671,53 @@ export default function PortalBroker() {
                     </button>
                   </div>
 
-                  <div className="mb-5 flex items-center justify-between gap-3 rounded-xl bg-[#F6EFE4] px-4 py-3">
-                    <SelloVerificado banda={detalle.banda} />
-                    <Vigencia dias={detalle.dias_restantes} />
+                  <div className="mb-5 rounded-xl bg-[#F6EFE4] px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <SelloVerificado banda={detalle.banda} />
+                      <Vigencia dias={detalle.dias_restantes} />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-x-4 gap-y-4 border-t border-[#E0DDD2] pt-5 mb-5">
+                  <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Condiciones de compra</p>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {[
+                      ['Forma de pago', detalle.financiacion],
+                      ['Plazo', detalle.plazo],
+                      ['Urgencia', detalle.urgencia],
+                    ].map(([k, v]) => (
+                      <div key={k as string} className="rounded-lg bg-[#F1EFE8] px-3 py-2">
+                        <p className="text-[9px] uppercase tracking-[0.1em] text-[#993C1D]">{k as string}</p>
+                        <p className="mt-0.5 text-[13px] leading-snug text-[#1A1A18]">{(v as string) || '—'}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="mt-6 text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">El inmueble que busca</p>
+                  <div className="mt-2 grid grid-cols-4 gap-x-4 gap-y-4 border-b border-[#E0DDD2] pb-5">
+                    <Spec etiqueta="Área" valor={rango(detalle.area_min, detalle.area_max, ' m²')} />
                     <Spec etiqueta="Alcobas" valor={detalle.alcobas} />
                     <Spec etiqueta="Baños" valor={detalle.banos} />
-                    <Spec etiqueta="Parqueaderos" valor={detalle.parqueaderos} />
-                    <Spec etiqueta="Área" valor={rango(detalle.area_min, detalle.area_max, ' m²')} />
-                    <Spec etiqueta="Forma de pago" valor={detalle.financiacion} />
-                    <Spec etiqueta="Urgencia" valor={detalle.urgencia} />
-                    <Spec etiqueta="Barrio" valor={detalle.barrio} />
-                    <Spec etiqueta="Actualizado" valor={haceCuanto(detalle.updated_at).replace('Actualizado ', '')} />
+                    <Spec etiqueta="Parq." valor={detalle.parqueaderos} />
                   </div>
 
                   <Chips etiqueta="Zonas de preferencia" items={aLista(detalle.zonas)} />
                   <Chips etiqueta="Amenidades deseadas" items={aLista(detalle.amenidades)} />
 
-                  {(detalle.preferencias || detalle.observaciones) && (
+                  {vinetas(detalle.preferencias).length > 0 && (
                     <div className="mt-6">
-                      <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-3">
-                        Lo que busca el cliente
-                      </p>
-                      {detalle.preferencias && (
-                        <p className="text-[13px] leading-relaxed text-[#1A1A18] border-l-2 border-[#E0DDD2] pl-3 mb-2">
-                          {detalle.preferencias}
-                        </p>
-                      )}
-                      {detalle.observaciones && (
-                        <p className="text-[13px] leading-relaxed text-[#1A1A18] border-l-2 border-[#E0DDD2] pl-3">
-                          {detalle.observaciones}
-                        </p>
-                      )}
+                      <p className="text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Preferencias del cliente</p>
+                      <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-[#1A1A18]">
+                        {vinetas(detalle.preferencias).map((p: string, i: number) => (
+                          <li key={i}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {detalle.nota_broker && (
+                    <div className="mt-5 rounded-xl border border-[#EBDBC8] bg-[#F6EFE4] px-4 py-3">
+                      <p className="text-[9px] uppercase tracking-[0.15em] text-[#993C1D]">Nota de KYRELO</p>
+                      <p className="mt-1 text-[13px] leading-relaxed text-[#1A1A18]">{detalle.nota_broker}</p>
                     </div>
                   )}
 
@@ -739,17 +761,38 @@ export default function PortalBroker() {
             ) : (
               <div className="grid gap-5 sm:grid-cols-2">
                 {inmuebles.map((i) => {
-                  const foto = urlFoto(i.foto_brokers_ruta);
+                  const fotos: string[] = (i.fotos_preview ?? []).filter(Boolean);
                   const dias = diasHasta(i.fecha_vence);
+                  const comision = Number(i.comision_pct ?? 3);
+                  const tuParte = i.precio ? Number(i.precio) * (comision / 100) * Number(i.pct_comparte ?? 0.5) : null;
+                  const condiciones = [
+                    i.precio_negociable ? (i.margen_negociacion ? `Negociable · ${i.margen_negociacion}` : 'Precio negociable') : null,
+                    i.acepta_permuta ? 'Acepta permuta' : null,
+                    i.libre_gravamenes ? 'Libre de gravámenes' : null,
+                    i.acepta_credito ? 'Acepta crédito' : null,
+                    i.acepta_subsidio ? 'Acepta subsidio' : null,
+                    i.ocupacion,
+                    i.entrega ? `Entrega ${String(i.entrega).toLowerCase()}` : null,
+                  ].filter(Boolean) as string[];
                   return (
                     <article key={i.id} className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white">
-                      <div className="relative aspect-[4/3] bg-[#EBDBC8]">
-                        <div className="absolute inset-0 flex items-center justify-center opacity-60">
-                          <IconoTipo tipo={i.tipo} />
-                        </div>
-                        {foto && (
-                          <img src={foto} alt="" className="absolute inset-0 h-full w-full object-cover"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                      <div className="relative">
+                        {fotos.length > 0 ? (
+                          <div className={`grid gap-1 ${fotos.length === 1 ? '' : 'grid-cols-3'}`}>
+                            {fotos.slice(0, 3).map((ruta, idx) => (
+                              <img
+                                key={ruta}
+                                src={urlFoto(ruta) ?? ''}
+                                alt=""
+                                className={`w-full object-cover ${fotos.length === 1 ? 'aspect-[16/10]' : idx === 0 ? 'col-span-3 aspect-[16/10]' : 'aspect-[4/3]'}`}
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex aspect-[16/10] items-center justify-center bg-[#EBDBC8] opacity-60">
+                            <IconoTipo tipo={i.tipo} />
+                          </div>
                         )}
                         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
                           {i.tipo && (
@@ -765,23 +808,47 @@ export default function PortalBroker() {
                           </span>
                         )}
                       </div>
+
                       <div className="p-5">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#B87333]">
-                          Comparte {Math.round(Number(i.pct_comparte ?? 0.5) * 100)}% de comisión
-                        </p>
-                        <p className="mt-2 text-[16px] font-semibold leading-snug tracking-tight text-[#1A1A18]">
+                        <div className="rounded-xl bg-[#F6EFE4] px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#993C1D]">
+                            Comisión {comision}% · compartes {Math.round(Number(i.pct_comparte ?? 0.5) * 100)}%
+                          </p>
+                          {tuParte != null && (
+                            <p className="mt-0.5 text-[13px] text-[#1A1A18]">
+                              Para ti: <span className="font-semibold">{formatoCOPfull(tuParte)}</span> si cierras
+                            </p>
+                          )}
+                        </div>
+
+                        <p className="mt-4 text-[18px] font-semibold leading-none tracking-tight text-[#1A1A18]">
                           {formatoCOPfull(i.precio) ?? 'Precio por confirmar'}
                         </p>
-                        <p className="mt-0.5 truncate text-[12px] text-[#5F5E5A]">
+                        <p className="mt-1 truncate text-[12px] text-[#5F5E5A]">
                           {[i.municipio, i.sector].filter(Boolean).join(' · ') || 'Sabana de Bogotá'}
                           {i.administracion ? ` · Admón. ${formatoCOPfull(i.administracion)}` : ''}
+                          {i.estrato ? ` · Estrato ${i.estrato}` : ''}
                         </p>
+
                         <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
                           <div className="flex-1">{i.area ? `${Math.round(Number(i.area))} m²` : '—'}{i.area_lote ? ` · lote ${Math.round(Number(i.area_lote))}` : ''}</div>
                           <div className="flex-1 border-x border-[#E0DDD2]">{i.habitaciones != null ? `${i.habitaciones} alc.` : '—'}</div>
                           <div className="flex-1">{i.banos != null ? `${i.banos} baños` : '—'}{i.parqueaderos ? ` · ${i.parqueaderos} parq.` : ''}</div>
                         </div>
-                        <div className="mt-4 flex items-center justify-between gap-3">
+
+                        {condiciones.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {condiciones.slice(0, 4).map((c) => (
+                              <span key={c} className="rounded-full border border-[#E0DDD2] px-3 py-1 text-[11px] text-[#1A1A18]">{c}</span>
+                            ))}
+                          </div>
+                        )}
+
+                        {i.descripcion_brokers && (
+                          <p className="mt-3 line-clamp-2 text-[12px] leading-relaxed text-[#5F5E5A]">{i.descripcion_brokers}</p>
+                        )}
+
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                           {i.acceso_completo ? (
                             <>
                               <Vigencia dias={dias} />
@@ -790,15 +857,19 @@ export default function PortalBroker() {
                                 Ver ficha y kit
                               </button>
                             </>
-                          ) : i.asociacion_estado === 'solicitada' ? (
-                            <p className="text-[12px] text-[#5F5E5A]">Solicitud enviada. Te avisamos al revisarla.</p>
                           ) : (
                             <>
-                              <span className="text-[11px] text-[#A8A69E]">Sin dirección hasta asociarte</span>
-                              <button onClick={() => { setAsociando(i); setMensajeA(''); }}
-                                className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] hover:opacity-85 transition-opacity">
-                                Solicitar asociación
+                              <button onClick={() => setInmuebleAbierto(i)} className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">
+                                Ver ficha completa
                               </button>
+                              {i.asociacion_estado === 'solicitada' ? (
+                                <span className="text-[12px] text-[#5F5E5A]">Solicitud enviada</span>
+                              ) : (
+                                <button onClick={() => { setAsociando(i); setMensajeA(''); }}
+                                  className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] hover:opacity-85 transition-opacity">
+                                  Solicitar asociación
+                                </button>
+                              )}
                             </>
                           )}
                         </div>
@@ -812,40 +883,118 @@ export default function PortalBroker() {
             {inmuebleAbierto && (
               <div className="fixed inset-0 bg-[#1A1A18]/50 flex items-center justify-center px-6 z-50" onClick={() => setInmuebleAbierto(null)}>
                 <div className="bg-white w-full max-w-md p-7 max-h-[85vh] overflow-y-auto rounded-xl" onClick={(e) => e.stopPropagation()}>
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-[#B87333]">Asociación vigente</p>
-                  <h2 className="mt-1 text-[18px] tracking-tight text-[#1A1A18]">{inmuebleAbierto.titulo || 'Inmueble KYRELO'}</h2>
-                  <p className="mt-1 text-[12px] text-[#5F5E5A]">
-                    {[inmuebleAbierto.direccion, inmuebleAbierto.conjunto, inmuebleAbierto.municipio].filter(Boolean).join(' · ')}
-                  </p>
-                  <div className="mt-3"><Vigencia dias={diasHasta(inmuebleAbierto.fecha_vence)} /></div>
+                  {(() => {
+                    const inm = inmuebleAbierto;
+                    const comision = Number(inm.comision_pct ?? 3);
+                    const tuParte = inm.precio ? Number(inm.precio) * (comision / 100) * Number(inm.pct_comparte ?? 0.5) : null;
+                    const fotos: string[] = inm.acceso_completo && Array.isArray(inm.imagenes) && inm.imagenes.length > 0
+                      ? inm.imagenes
+                      : (inm.fotos_preview ?? []);
+                    return (
+                      <>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[9px] uppercase tracking-[0.2em] text-[#B87333]">
+                              {inm.acceso_completo ? 'Asociación vigente' : 'Inmueble de KYRELO'}
+                            </p>
+                            <h2 className="mt-1 text-[18px] tracking-tight text-[#1A1A18]">{inm.titulo || 'Inmueble KYRELO'}</h2>
+                            <p className="mt-1 text-[12px] text-[#5F5E5A]">
+                              {[inm.acceso_completo ? inm.direccion : null, inm.acceso_completo ? inm.conjunto : null, inm.municipio, inm.sector]
+                                .filter(Boolean).join(' · ')}
+                            </p>
+                          </div>
+                          <button onClick={() => setInmuebleAbierto(null)} aria-label="Cerrar" className="text-[#5F5E5A] hover:text-[#1A1A18]">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                          </button>
+                        </div>
 
-                  {Array.isArray(inmuebleAbierto.imagenes) && inmuebleAbierto.imagenes.length > 0 && (
-                    <div className="mt-5 grid grid-cols-3 gap-2">
-                      {inmuebleAbierto.imagenes.map((r: string) => (
-                        <a key={r} href={urlFoto(r) ?? '#'} target="_blank" rel="noreferrer">
-                          <img src={urlFoto(r) ?? ''} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                        {fotos.length > 0 && (
+                          <div className="mt-4 grid grid-cols-3 gap-2">
+                            {fotos.map((r: string) => (
+                              <a key={r} href={urlFoto(r) ?? '#'} target="_blank" rel="noreferrer">
+                                <img src={urlFoto(r) ?? ''} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
 
-                  {inmuebleAbierto.descripcion_publica && (
-                    <p className="mt-5 text-[13px] leading-relaxed text-[#1A1A18] border-l border-[#E0DDD2] pl-4">
-                      {inmuebleAbierto.descripcion_publica}
-                    </p>
-                  )}
+                        <div className="mt-5 rounded-xl bg-[#F6EFE4] px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#993C1D]">
+                            Comisión total {comision}% · compartes {Math.round(Number(inm.pct_comparte ?? 0.5) * 100)}%
+                          </p>
+                          {tuParte != null && (
+                            <p className="mt-0.5 text-[13px] text-[#1A1A18]">Para ti: <span className="font-semibold">{formatoCOPfull(tuParte)}</span> si cierras</p>
+                          )}
+                          {inm.acceso_completo && <div className="mt-1"><Vigencia dias={diasHasta(inm.fecha_vence)} /></div>}
+                        </div>
 
-                  <div className="mt-6 flex gap-2">
-                    {inmuebleAbierto.kit_url ? (
-                      <a href={inmuebleAbierto.kit_url} target="_blank" rel="noreferrer"
-                        className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 text-center hover:opacity-80 transition-opacity">
-                        Abrir kit de venta
-                      </a>
-                    ) : (
-                      <p className="flex-1 text-[12px] text-[#5F5E5A]">El kit de venta se está preparando.</p>
-                    )}
-                    <button onClick={() => setInmuebleAbierto(null)} className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2.5">Cerrar</button>
-                  </div>
+                        <p className="mt-5 text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">El inmueble</p>
+                        <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-4">
+                          <Spec etiqueta="Precio" valor={formatoCOPfull(inm.precio)} />
+                          <Spec etiqueta="Administración" valor={formatoCOPfull(inm.administracion)} />
+                          <Spec etiqueta="Estrato" valor={inm.estrato} />
+                          <Spec etiqueta="Área construida" valor={inm.area ? `${Math.round(Number(inm.area))} m²` : null} />
+                          <Spec etiqueta="Área lote" valor={inm.area_lote ? `${Math.round(Number(inm.area_lote))} m²` : null} />
+                          <Spec etiqueta="Año" valor={inm.anio_construccion} />
+                          <Spec etiqueta="Alcobas" valor={inm.habitaciones} />
+                          <Spec etiqueta="Baños" valor={inm.banos} />
+                          <Spec etiqueta="Parqueaderos" valor={inm.parqueaderos} />
+                        </div>
+
+                        <p className="mt-6 text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Condiciones del negocio</p>
+                        <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3">
+                          <Spec etiqueta="Precio" valor={inm.precio_negociable ? (inm.margen_negociacion ? `Negociable · ${inm.margen_negociacion}` : 'Negociable') : 'No negociable'} />
+                          <Spec etiqueta="Permuta" valor={inm.acepta_permuta ? 'Sí acepta' : 'No acepta'} />
+                          <Spec etiqueta="Crédito" valor={inm.acepta_credito ? 'Sí acepta' : 'Solo contado'} />
+                          <Spec etiqueta="Subsidio" valor={inm.acepta_subsidio ? 'Sí acepta' : null} />
+                          <Spec etiqueta="Ocupación" valor={inm.ocupacion} />
+                          <Spec etiqueta="Entrega" valor={inm.entrega} />
+                          <Spec etiqueta="Estado jurídico" valor={inm.libre_gravamenes ? 'Libre de gravámenes' : null} />
+                          <Spec etiqueta="Exclusividad" valor={inm.tiene_exclusividad ? 'KYRELO tiene exclusividad' : null} />
+                        </div>
+                        {inm.nota_juridica && (
+                          <p className="mt-3 text-[12px] leading-relaxed text-[#5F5E5A]">{inm.nota_juridica}</p>
+                        )}
+
+                        <Chips etiqueta="Amenidades" items={aLista(inm.amenidades)} />
+
+                        {inm.descripcion_brokers && (
+                          <p className="mt-5 border-l border-[#E0DDD2] pl-4 text-[13px] leading-relaxed text-[#1A1A18]">
+                            {inm.descripcion_brokers}
+                          </p>
+                        )}
+
+                        {!inm.acceso_completo && (
+                          <p className="mt-5 rounded-xl border border-[#EBDBC8] bg-[#F6EFE4] px-4 py-3 text-[12px] leading-relaxed text-[#5F5E5A]">
+                            La dirección, el conjunto, todas las fotos y el kit de venta se abren cuando KYRELO acepta tu asociación.
+                          </p>
+                        )}
+
+                        <div className="mt-6 flex gap-2">
+                          {inm.acceso_completo ? (
+                            inm.kit_url ? (
+                              <a href={inm.kit_url} target="_blank" rel="noreferrer"
+                                className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 text-center hover:opacity-80 transition-opacity">
+                                Abrir kit de venta
+                              </a>
+                            ) : (
+                              <p className="flex-1 text-[12px] text-[#5F5E5A]">El kit de venta se está preparando.</p>
+                            )
+                          ) : inm.asociacion_estado === 'solicitada' ? (
+                            <p className="flex-1 text-[12px] text-[#5F5E5A]">Solicitud enviada. Te avisamos al revisarla.</p>
+                          ) : (
+                            <button
+                              onClick={() => { setInmuebleAbierto(null); setAsociando(inm); setMensajeA(''); }}
+                              className="flex-1 rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-2.5 hover:opacity-80 transition-opacity"
+                            >
+                              Solicitar asociación
+                            </button>
+                          )}
+                          <button onClick={() => setInmuebleAbierto(null)} className="rounded-full border border-[#E0DDD2] text-[#5F5E5A] text-sm px-5 py-2.5">Cerrar</button>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}

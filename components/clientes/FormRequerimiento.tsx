@@ -7,6 +7,16 @@ import type { Requerimiento } from "@/lib/types";
 
 const TIPOS = ["apartamento", "casa", "lote", "oficina", "local", "bodega", "finca"];
 const URGENCIAS = ["inmediata", "1-3 meses", "+3 meses"];
+// Lo que el broker ve en la tarjeta: se escribe una sola vez, aquí.
+const FORMAS_PAGO = [
+  "Pago de contado",
+  "Crédito aprobado",
+  "Crédito en trámite",
+  "Venta previa de otro inmueble",
+  "Leasing habitacional",
+  "Subsidio + crédito",
+  "Mixto",
+];
 const ESTADOS = ["activo", "pausado", "cumplido", "cancelado"];
 const AMENIDADES_COMUNES = [
   "piscina", "gimnasio", "club house", "jacuzzi", "sauna", "turco",
@@ -163,6 +173,9 @@ export default function FormRequerimiento({
       tipo_inmueble: fd.get("tipo_inmueble") || null,
       amenidades: amenidades,
       preferencias: fd.get("preferencias") || null,
+      financiacion: fd.get("financiacion") || null,
+      plazo: fd.get("plazo") || null,
+      nota_broker: fd.get("nota_broker") || null,
       urgencia: fd.get("urgencia") || null,
       observaciones: fd.get("observaciones") || null,
       estado: fd.get("estado") ?? "activo",
@@ -407,24 +420,34 @@ export default function FormRequerimiento({
           </div>
         </fieldset>
 
-        {/* ── Preferencias (texto libre para la IA) ── */}
-        <label className={etiqueta}>
-          Preferencias (texto libre — la IA lo interpreta)
-          <textarea
-            name="preferencias"
-            rows={3}
-            defaultValue={base?.preferencias ?? ""}
-            className={`mt-1.5 ${campo}`}
-            placeholder="Cocina abierta, buena iluminación natural, acepta mascotas, cerca de colegios…"
-          />
-        </label>
-
-        {/* ── Urgencia ── */}
+        {/* ── Condiciones de compra: esto sale tal cual en la tarjeta del broker ── */}
         <fieldset>
           <legend className="mb-4 text-xs font-semibold uppercase tracking-widest text-laton">
-            Urgencia
+            Condiciones de compra
           </legend>
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-3">
+            <label className={etiqueta}>
+              Forma de pago
+              <select
+                name="financiacion"
+                defaultValue={base?.financiacion ?? ""}
+                className={`mt-1.5 ${campo}`}
+              >
+                <option value="">Sin definir</option>
+                {FORMAS_PAGO.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </label>
+            <label className={etiqueta}>
+              Plazo para comprar
+              <input
+                name="plazo"
+                defaultValue={base?.plazo ?? ""}
+                className={`mt-1.5 ${campo}`}
+                placeholder="Máximo 2 meses"
+              />
+            </label>
             <label className={etiqueta}>
               Urgencia
               <select
@@ -443,15 +466,42 @@ export default function FormRequerimiento({
           </div>
         </fieldset>
 
-        {/* ── Observaciones ── */}
+        {/* ── Preferencias: lo ven los brokers ── */}
         <label className={etiqueta}>
-          Observaciones
+          Preferencias del cliente (las ven los brokers)
+          <textarea
+            name="preferencias"
+            rows={3}
+            defaultValue={base?.preferencias ?? ""}
+            className={`mt-1.5 ${campo}`}
+            placeholder={"Escribe una por línea o empezando con guion:\n- Cocina con isla\n- Jardín privado\n- Casa independiente"}
+          />
+          <span className="mt-1 block text-xs font-normal normal-case tracking-normal text-neutro">
+            Cada línea o guion se muestra como una viñeta. No repitas aquí la forma de pago ni el plazo.
+          </span>
+        </label>
+
+        {/* ── Nota para el broker: también pública ── */}
+        <label className={etiqueta}>
+          Nota para el broker (opcional, la ven los brokers)
+          <textarea
+            name="nota_broker"
+            rows={2}
+            defaultValue={base?.nota_broker ?? ""}
+            className={`mt-1.5 ${campo}`}
+            placeholder="Ej: ya visitó dos conjuntos en Cajicá y los descartó por ruido."
+          />
+        </label>
+
+        {/* ── Observaciones: privadas ── */}
+        <label className={etiqueta}>
+          Observaciones internas (solo las ves tú)
           <textarea
             name="observaciones"
             rows={2}
             defaultValue={base?.observaciones ?? ""}
             className={`mt-1.5 ${campo}`}
-            placeholder="Cualquier detalle adicional…"
+            placeholder="Notas privadas del cliente. No se publican al marketplace."
           />
         </label>
 
