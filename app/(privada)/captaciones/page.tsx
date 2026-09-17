@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import TabsInventario from "@/components/propiedades/TabsInventario";
 import { createClient } from "@/lib/supabase/client";
 import { formatoCOP, codigoSabana } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
@@ -112,6 +113,7 @@ export default function CaptacionesPage() {
 
   return (
     <div>
+      <TabsInventario />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-medium">Captaciones</h1>

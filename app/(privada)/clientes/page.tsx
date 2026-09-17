@@ -24,6 +24,7 @@ export default function ClientesPage() {
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [filtroPrioridad, setFiltroPrioridad] = useState("todas");
   const [cargando, setCargando] = useState(true);
+  const [bandas, setBandas] = useState<Record<string, string>>({});
 
   useEffect(() => {
     cargar();
@@ -32,11 +33,17 @@ export default function ClientesPage() {
   async function cargar() {
     setCargando(true);
     const supabase = createClient();
-    const { data } = await supabase
-      .from("clientes")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: cal }] = await Promise.all([
+      supabase.from("clientes").select("*").order("created_at", { ascending: false }),
+      supabase.from("calificaciones").select("cliente_id, banda_final, banda_calculada"),
+    ]);
     setClientes(data ?? []);
+    const mapa: Record<string, string> = {};
+    (cal ?? []).forEach((c) => {
+      const b = c.banda_final ?? c.banda_calculada;
+      if (b) mapa[c.cliente_id] = b;
+    });
+    setBandas(mapa);
     setCargando(false);
   }
 
@@ -65,7 +72,7 @@ export default function ClientesPage() {
           <p className="text-sm font-medium uppercase tracking-widest text-laton">
             CRM
           </p>
-          <h1 className="mt-1 font-display text-3xl font-medium">Clientes</h1>
+          <h1 className="mt-1 font-display text-3xl font-medium">Compradores</h1>
         </div>
         <Link
           href="/clientes/nuevo"
@@ -156,6 +163,11 @@ export default function ClientesPage() {
                   {c.nombre}
                 </p>
                 <span className="flex shrink-0 gap-1.5">
+                  {bandas[c.id] && (
+                    <span className="rounded-full border border-[#B87333] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#B87333]">
+                      Banda {bandas[c.id]}
+                    </span>
+                  )}
                   <span
                     className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                       ESTILO_PRIORIDAD[c.prioridad] ?? ESTILO_PRIORIDAD.media

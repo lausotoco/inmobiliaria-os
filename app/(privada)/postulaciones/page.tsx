@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import BandejaAsociaciones from '@/components/marketplace/BandejaAsociaciones';
 
 const PIPELINE = [
   'postulado', 'validado', 'acuerdo_firmado', 'presentado',
@@ -43,7 +44,7 @@ function linkWhatsApp(tel?: string | null) {
 
 export default function MarketplaceControl() {
   const supabase = createClient();
-  const [tab, setTab] = useState<'resumen' | 'pendientes' | 'proceso' | 'rechazadas'>('resumen');
+  const [tab, setTab] = useState<'resumen' | 'pendientes' | 'proceso' | 'rechazadas' | 'asociaciones'>('resumen');
   const [resumen, setResumen] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -181,7 +182,7 @@ export default function MarketplaceControl() {
 
   return (
     <div className="min-h-screen bg-[#F1EFE8] px-8 py-10">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-2">Marketplace</p>
+      <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-2">Red de agentes</p>
       <h1 className="text-2xl tracking-tight text-[#1A1A18] mb-8">Centro de control</h1>
 
       <div className="flex gap-6 border-b border-[#E0DDD2] mb-10 overflow-x-auto">
@@ -190,6 +191,7 @@ export default function MarketplaceControl() {
           { k: 'pendientes', l: `Pendientes${pendientes.length ? ` (${pendientes.length})` : ''}` },
           { k: 'proceso', l: 'En proceso' },
           { k: 'rechazadas', l: 'Rechazadas' },
+          { k: 'asociaciones', l: 'Asociaciones' },
         ].map((t) => (
           <button
             key={t.k}
@@ -205,6 +207,9 @@ export default function MarketplaceControl() {
         <p className="text-sm text-[#5F5E5A]">Cargando…</p>
       ) : (
         <>
+          {/* ============ ASOCIACIONES ============ */}
+          {tab === 'asociaciones' && <BandejaAsociaciones />}
+
           {/* ============ RESUMEN ============ */}
           {tab === 'resumen' && (
             <>

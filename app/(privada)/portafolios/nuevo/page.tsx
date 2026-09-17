@@ -35,6 +35,10 @@ export default function NuevoPortafolioPage() {
       .order("nombre");
     setClientes(data ?? []);
     setCargando(false);
+    // Desde la ficha del comprador llega ?cliente=<id>: queda elegido de una
+    const pre = new URLSearchParams(window.location.search).get("cliente");
+    const elegido = pre ? (data ?? []).find((c) => c.id === pre) : null;
+    if (elegido) elegirCliente(elegido);
   }
 
   async function elegirCliente(c: Cliente) {

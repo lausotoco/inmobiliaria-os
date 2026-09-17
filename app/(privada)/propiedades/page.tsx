@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import TabsInventario from "@/components/propiedades/TabsInventario";
 import { createClient } from "@/lib/supabase/client";
 import { formatoCOP, codigoSabana } from "@/lib/utils";
 import Badge from "@/components/ui/Badge";
@@ -128,6 +129,7 @@ export default function PropiedadesPage() {
 
   return (
     <div>
+      <TabsInventario />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-widest text-laton">

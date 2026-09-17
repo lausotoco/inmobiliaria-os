@@ -7,19 +7,13 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { APP } from "@/lib/config";
 
+// Menú condensado: cada comprador se trabaja completo desde su ficha
+// (/clientes/[id]: requerimiento, calificación, portafolios, enviadas, notas).
 const ENLACES_AGENTE = [
-  { href: "/", etiqueta: "Inicio" },
   { href: "/dashboard", etiqueta: "Dashboard" },
-  { href: "/compradores", etiqueta: "Compradores" },
-  { href: "/clientes", etiqueta: "Clientes" },
-  { href: "/requerimientos", etiqueta: "Requerimientos" },
+  { href: "/clientes", etiqueta: "Compradores" },
   { href: "/propiedades", etiqueta: "Propiedades" },
-  { href: "/captaciones", etiqueta: "Captaciones" },
-  { href: "/portafolios", etiqueta: "Portafolios" },
-  { href: "/postulaciones", etiqueta: "Marketplace" },
-  { href: "/asociaciones", etiqueta: "Asociaciones" },
-  { href: "/agenda", etiqueta: "Agenda" },
-  { href: "/tareas", etiqueta: "Tareas" },
+  { href: "/postulaciones", etiqueta: "Red de agentes" },
   { href: "/comisiones", etiqueta: "Comisiones" },
   { href: "/documentos", etiqueta: "Documentos" },
   { href: "/configuracion/score", etiqueta: "Configuración" },
@@ -66,7 +60,11 @@ export default function Sidebar({ email }: { email: string }) {
   const nav = (
     <nav className="flex flex-1 flex-col gap-0.5 px-6">
       {ENLACES.map((e) => {
-        const activo = e.href === "/" ? pathname === "/" : pathname.startsWith(e.href);
+        const activo =
+          pathname.startsWith(e.href) ||
+          (e.href === "/propiedades" && pathname.startsWith("/captaciones")) ||
+          (e.href === "/clientes" && (pathname.startsWith("/compradores") || pathname.startsWith("/requerimientos") || pathname.startsWith("/portafolios"))) ||
+          (e.href === "/postulaciones" && pathname.startsWith("/asociaciones"));
         return (
           <Link
             key={e.href}

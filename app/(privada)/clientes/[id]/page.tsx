@@ -10,9 +10,19 @@ import FormCliente from "@/components/clientes/FormCliente";
 import TabRequerimientos from "@/components/clientes/TabRequerimientos";
 import TabNotas from "@/components/clientes/TabNotas";
 import TabPropiedadesEnviadas from "@/components/clientes/TabPropiedadesEnviadas";
+import TabPortafolios from "@/components/clientes/TabPortafolios";
+import FichaCalificacion from "@/components/compradores/FichaCalificacion";
 import type { Cliente, Requerimiento, Conversacion } from "@/lib/types";
 
-const TABS = ["requerimientos", "enviadas", "notas", "editar"] as const;
+// Una sola ficha por comprador: requerimiento, calificación, portafolios,
+// enviadas y notas. Se puede abrir en una pestaña con ?tab=<nombre>.
+const TABS = ["requerimientos", "calificacion", "portafolios", "enviadas", "notas", "editar"] as const;
+const ESTILO_BANDA: Record<string, string> = {
+  A: "border-[#1A1A18] bg-[#1A1A18] text-white",
+  B: "border-[#1A1A18]/25 text-[#1A1A18]",
+  C: "border-linea text-neutro",
+  D: "border-[#D5BBB5] text-[#8E3B31]",
+};
 type Tab = (typeof TABS)[number];
 
 export default function ClienteDetallePage() {
@@ -24,6 +34,13 @@ export default function ClienteDetallePage() {
   const [requerimientos, setRequerimientos] = useState<Requerimiento[]>([]);
   const [conversaciones, setConversaciones] = useState<Conversacion[]>([]);
   const [tab, setTab] = useState<Tab>("requerimientos");
+  const [banda, setBanda] = useState<string | null>(null);
+
+  // Pestaña inicial desde la URL (?tab=calificacion, ?tab=portafolios…)
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t && (TABS as readonly string[]).includes(t)) setTab(t as Tab);
+  }, []);
   const [cargando, setCargando] = useState(true);
   const [eliminando, setEliminando] = useState(false);
 
@@ -35,8 +52,13 @@ export default function ClienteDetallePage() {
     setCargando(true);
     const supabase = createClient();
 
-    const [clienteRes, reqRes, convRes] = await Promise.all([
+    const [clienteRes, calRes, reqRes, convRes] = await Promise.all([
       supabase.from("clientes").select("*").eq("id", id).single(),
+      supabase
+        .from("calificaciones")
+        .select("banda_final, banda_calculada")
+        .eq("cliente_id", id)
+        .maybeSingle(),
       supabase
         .from("requerimientos")
         .select("*")
@@ -50,6 +72,7 @@ export default function ClienteDetallePage() {
     ]);
 
     setCliente(clienteRes.data);
+    setBanda(calRes.data?.banda_final ?? calRes.data?.banda_calculada ?? null);
     setRequerimientos(reqRes.data ?? []);
     setConversaciones(convRes.data ?? []);
     setCargando(false);
@@ -106,12 +129,23 @@ export default function ClienteDetallePage() {
         href="/clientes"
         className="text-sm text-neutro transition hover:text-tinta"
       >
-        ← Clientes
+        ← Compradores
       </Link>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-medium">{cliente.nombre}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-3xl font-medium">{cliente.nombre}</h1>
+            <button
+              onClick={() => setTab("calificacion")}
+              title="Ver o cambiar la calificación"
+              className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] transition hover:opacity-80 ${
+                banda ? ESTILO_BANDA[banda] ?? "border-linea text-neutro" : "border-linea text-neutro"
+              }`}
+            >
+              {banda ? `Banda ${banda}` : "Sin calificar"}
+            </button>
+          </div>
           <div className="mt-3 space-y-2">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="mr-1 text-[10px] font-medium uppercase tracking-widest text-neutro">
@@ -214,11 +248,15 @@ export default function ClienteDetallePage() {
           >
             {t === "requerimientos"
               ? `Requerimientos (${requerimientos.length})`
-              : t === "enviadas"
-                ? "Propiedades enviadas"
-                : t === "notas"
-                  ? `Notas (${conversaciones.length})`
-                  : "Editar"}
+              : t === "calificacion"
+                ? "Calificación"
+                : t === "portafolios"
+                  ? "Portafolios"
+                  : t === "enviadas"
+                    ? "Propiedades enviadas"
+                    : t === "notas"
+                      ? `Notas (${conversaciones.length})`
+                      : "Editar"}
           </button>
         ))}
       </div>
@@ -230,6 +268,12 @@ export default function ClienteDetallePage() {
             clienteId={id}
             requerimientos={requerimientos}
           />
+        )}
+
+        {tab === "calificacion" && <FichaCalificacion clienteId={id} embebida />}
+
+        {tab === "portafolios" && (
+          <TabPortafolios clienteId={id} whatsapp={cliente.whatsapp} />
         )}
 
         {tab === "enviadas" && <TabPropiedadesEnviadas clienteId={id} />}
