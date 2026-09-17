@@ -248,38 +248,36 @@ const SERVICIOS = [
     icono: <IconoRequerimientos />,
     titulo: "Requerimientos",
     texto:
-      "Recibimos y validamos lo que buscan compradores y arrendatarios: presupuesto, zona, características. Solo entregamos a nuestros brokers aliados requerimientos reales, filtrados y listos para gestionar.",
+      "Recibimos y verificamos lo que busca cada comprador: presupuesto, zona y características. Solo entregamos a nuestros brokers aliados compradores calificados, reales y listos para avanzar.",
   },
   {
     icono: <IconoCaptacion />,
     titulo: "Captación",
     texto:
-      "Ayudamos a propietarios a poner su inmueble en el mercado de forma profesional, ya sea para venta o arriendo, conectándolo directamente con la red de brokers de KYRELO.",
+      "Captamos el inmueble del propietario, producimos su material de venta y lo abrimos a la red: el broker que traiga al comprador comparte la comisión 50/50 con KYRELO.",
   },
   {
     icono: <IconoCierre />,
     titulo: "Cierre asistido",
     texto:
-      "Acompañamos el proceso desde que se cruza el requerimiento con el inmueble hasta que la transacción se concreta, reduciendo el tiempo y la fricción para todas las partes.",
+      "Acompañamos desde el acuerdo firmado hasta la escritura: visita, promesa, banco y notaría. Reducimos el tiempo y la fricción para todas las partes.",
   },
 ];
 
 const PASOS = [
-  ["Recibimos el requerimiento", "Un comprador o arrendatario nos cuenta exactamente qué busca."],
-  ["Validamos la información", "Confirmamos presupuesto, zona y condiciones antes de mover el requerimiento."],
-  ["Lo publicamos en la plataforma", "El requerimiento validado queda visible para toda la red de brokers aliados, quienes pueden enviar sus propuestas."],
-  ["Seleccionamos las mejores propuestas", "El cliente recibe las mejores opciones de los brokers y arranca su recorrido de visitas."],
-  ["Acompañamos el cierre", "Seguimos el proceso hasta que la transacción se concreta."],
+  ["Recibimos el requerimiento", "Un comprador nos cuenta exactamente qué busca: zona, presupuesto y características."],
+  ["Verificamos y calificamos", "Confirmamos presupuesto, plazo y forma de pago. Solo publicamos los compradores que pasan la verificación."],
+  ["Lo publicamos a la red", "El comprador verificado queda visible 30 días para los brokers aliados, siempre de forma anónima."],
+  ["Los brokers postulan", "Cada broker propone su inmueble. El comprador recibe una selección personalizada y nos dice qué le interesó."],
+  ["Acompañamos hasta la escritura", "Acuerdo firmado, visita, promesa, banco y notaría. La comisión se comparte solo cuando el negocio se cierra."],
 ];
 
-const ZONAS = ["Bogotá (zona norte)", "Chía", "Cajicá", "Cota", "La Calera", "Zipaquirá"];
+const ZONAS = ["Bogotá (zona norte)", "Chía", "Cajicá", "Cota", "Sopó"];
 
-const EQUIPO = [
-  ["R", "Equipo de Requerimientos", "Reciben, validan y organizan lo que buscan compradores y arrendatarios."],
-  ["C", "Equipo de Captación", "Trabajan directamente con propietarios para poner sus inmuebles en el mercado."],
-  ["B", "Alianzas con Brokers", "Conectan cada requerimiento y cada inmueble con el broker correcto."],
-  ["T", "Tecnología y Datos", "Construyen y mantienen la plataforma que centraliza todo el proceso."],
-  ["M", "Mercadeo", "Comunican la marca y posicionan a KYRELO frente a brokers, propietarios y compradores."],
+const PRINCIPIOS = [
+  ["01", "Verificamos antes de publicar", "Ningún comprador llega a la red sin que confirmemos su presupuesto, su plazo y su forma de pago. Preferimos publicar menos y que cada uno sea real."],
+  ["02", "El comprador no se comparte por fuera", "Los datos del comprador nunca salen de KYRELO. El broker trabaja el negocio con nosotros, con un acuerdo firmado antes de la primera visita."],
+  ["03", "Solo cobramos cuando se cierra", "Registrarse y postular es gratis. La comisión se comparte el día de la escritura, nunca antes."],
 ];
 
 /* ── Bloque envoltorio con scroll-reveal ── */
@@ -452,9 +450,9 @@ export default function LandingKyrelo({
             className={`ky-reveal ${montado ? "in" : ""} mx-auto mt-8 max-w-xl text-[16px] leading-[1.7] sm:text-[18px]`}
             style={{ color: C.piedra, transitionDelay: "420ms" }}
           >
-            Centralizamos los requerimientos reales de compradores y arrendatarios,
-            y los conectamos con brokers e inmobiliarias listos para cerrar. También
-            captamos y vendemos inmuebles directamente.
+            Verificamos compradores de vivienda en la Sabana de Bogotá y los conectamos
+            con los brokers e inmobiliarias que tienen el inmueble. Y captamos inmuebles
+            que nuestra red vende con el material listo. Solo cobramos cuando se cierra.
           </p>
 
           {/* CTAs */}
@@ -467,7 +465,7 @@ export default function LandingKyrelo({
               className="ky-btn inline-flex items-center justify-center rounded-full px-8 py-3.5 text-[14px] font-semibold text-white"
               style={{ background: C.cobre }}
             >
-              Ver requerimientos activos
+              Ver compradores verificados
             </a>
             <a
               href={wa("Hola KYRELO, quiero vender o arrendar mi inmueble.")}
@@ -479,6 +477,17 @@ export default function LandingKyrelo({
               Quiero vender o arrendar mi inmueble
             </a>
           </div>
+
+          {/* Entrada directa para brokers: es el registro que más importa hoy */}
+          <p
+            className={`ky-reveal ${montado ? "in" : ""} mt-5 text-[13px]`}
+            style={{ color: C.piedra, transitionDelay: "640ms" }}
+          >
+            ¿Eres broker o inmobiliaria?{" "}
+            <a href="/brokers" className="font-semibold underline underline-offset-4" style={{ color: C.grafito }}>
+              Crea tu cuenta gratis
+            </a>
+          </p>
         </div>
 
         {/* Indicador de scroll que "respira" */}
@@ -513,13 +522,14 @@ export default function LandingKyrelo({
                   Para brokers e inmobiliarias
                 </p>
                 <h3 className="mt-3 text-[20px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
-                  Tienes inmuebles. Aquí están los compradores.
+                  Tienes inmuebles o compradores. Aquí está lo que te falta.
                 </h3>
                 <ul className="mt-5 space-y-3">
                   {[
-                    "Ve requerimientos reales de compradores verificados en la Sabana.",
-                    "Postula tus inmuebles a los que encajan, gratis.",
-                    "Solo compartes comisión cuando cierras. Nunca pagas por registrarte.",
+                    "Compradores verificados y calificados: presupuesto, plazo y forma de pago confirmados.",
+                    "Postula tu inmueble con el enlace a tus fotos. El comprador nunca sale de KYRELO, ni tú del negocio.",
+                    "¿Tienes comprador y no inmueble? Asóciate a los inmuebles que captamos: fotos, video, ficha y textos listos, y reparto 50/50.",
+                    "Registro gratis. Compartes comisión solo cuando cierras.",
                   ].map((t) => (
                     <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
                       <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
@@ -527,13 +537,20 @@ export default function LandingKyrelo({
                     </li>
                   ))}
                 </ul>
-                <div className="mt-auto pt-7">
+                <div className="mt-auto flex flex-wrap gap-3 pt-7">
                   <a
                     href="/oportunidades"
                     className="ky-btn inline-flex items-center justify-center rounded-full px-7 py-3 text-[14px] font-semibold text-white"
                     style={{ background: C.grafito }}
                   >
-                    Ver requerimientos activos
+                    Ver compradores verificados
+                  </a>
+                  <a
+                    href="/brokers"
+                    className="ky-btn inline-flex items-center justify-center rounded-full border px-7 py-3 text-[14px] font-medium"
+                    style={{ borderColor: C.grafito, color: C.grafito }}
+                  >
+                    Crear cuenta gratis
                   </a>
                 </div>
               </div>
@@ -550,9 +567,9 @@ export default function LandingKyrelo({
                 </h3>
                 <ul className="mt-5 space-y-3">
                   {[
-                    "Captamos tu inmueble y lo presentamos a compradores reales.",
-                    "Lo movemos dentro de nuestra red de brokers de la Sabana.",
-                    "Te acompañamos en todo el proceso, hasta la firma.",
+                    "Captamos tu inmueble con mandato y producimos su material de venta: fotos, video, ficha y textos.",
+                    "Lo movemos dentro de toda la red de brokers de la Sabana, en venta o en arriendo.",
+                    "Del acuerdo en adelante el papeleo es nuestro: promesa, banco, notaría y escrituración.",
                   ].map((t) => (
                     <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
                       <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
@@ -586,8 +603,8 @@ export default function LandingKyrelo({
                 <ul className="mt-5 space-y-3">
                   {[
                     "Cuéntanos qué buscas: zona, presupuesto y tipo de inmueble.",
-                    "Conectamos tu búsqueda con toda la red de brokers de la Sabana.",
-                    "Te presentamos opciones que encajan, sin que busques por tu cuenta.",
+                    "Verificamos tu búsqueda y toda la red de brokers de la Sabana busca por ti.",
+                    "Recibes una selección personalizada y nos dices qué te gustó. Sin costo para ti.",
                   ].map((t) => (
                     <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
                       <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
@@ -621,7 +638,7 @@ export default function LandingKyrelo({
                 <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Chía</span>
                 <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Cajicá</span>
                 <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Cota</span>
-                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>La Calera</span>
+                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Sopó</span>
                 <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Bogotá norte</span>
               </div>
             </div>
@@ -656,7 +673,9 @@ export default function LandingKyrelo({
               publicando en cinco portales distintos, cada comprador repitiendo la misma
               búsqueda con diez agentes diferentes. KYRELO invierte esa lógica. En vez de
               que el broker busque el inmueble, el requerimiento del cliente llega a él,
-              ya validado y listo para avanzar.
+              ya verificado y listo para avanzar. Y cuando el inmueble es nuestro, el
+              broker que trae al comprador recibe el material de venta listo y la mitad
+              de la comisión.
             </p>
           </Revelar>
         </div>
@@ -687,8 +706,7 @@ export default function LandingKyrelo({
               </h2>
               <p className="mt-6 max-w-md text-[16px] leading-[1.8]" style={{ color: C.piedra }}>
                 Actualmente operamos en Bogotá zona norte y la sabana norte: Chía, Cajicá,
-                Cota, La Calera y Zipaquirá. Nuestra cobertura se irá expandiendo a otras
-                zonas del país.
+                Cota y Sopó. Nuestra cobertura se irá expandiendo a otras zonas del país.
               </p>
             </div>
           </Revelar>
@@ -723,17 +741,17 @@ export default function LandingKyrelo({
               className="text-[11px] font-semibold uppercase"
               style={{ color: C.cobre, letterSpacing: "0.26em" }}
             >
-              Equipo
+              Cómo trabajamos
             </p>
             <h2
               className="ky-display mt-5 max-w-xl text-[32px] leading-[1.1] sm:text-[44px]"
               style={{ letterSpacing: "-0.025em" }}
             >
-              Detrás de cada cierre.
+              Tres reglas que no negociamos.
             </h2>
           </Revelar>
           <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {EQUIPO.map(([inicial, rol, texto], i) => (
+            {PRINCIPIOS.map(([inicial, rol, texto], i) => (
               <Revelar key={rol} delay={i * 90}>
                 <article
                   className="ky-card flex h-full gap-5 rounded-2xl border bg-white p-7"
@@ -774,15 +792,24 @@ export default function LandingKyrelo({
               El mercado ya se está organizando.{" "}
               <span style={{ color: C.cobre }}>¿Entras ahora o después?</span>
             </h2>
-            <a
-              href={wa("Hola KYRELO, quiero hablar con ustedes.")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ky-btn mt-10 inline-flex items-center justify-center rounded-full px-9 py-4 text-[15px] font-semibold"
-              style={{ background: C.cobre, color: "#fff" }}
-            >
-              Habla con nosotros
-            </a>
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a
+                href="/brokers"
+                className="ky-btn inline-flex items-center justify-center rounded-full px-9 py-4 text-[15px] font-semibold"
+                style={{ background: C.cobre, color: "#fff" }}
+              >
+                Crear mi cuenta de broker
+              </a>
+              <a
+                href={wa("Hola KYRELO, quiero hablar con ustedes.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ky-btn inline-flex items-center justify-center rounded-full border px-9 py-4 text-[15px] font-medium"
+                style={{ borderColor: "rgba(255,255,255,0.35)", color: "#fff" }}
+              >
+                Habla con nosotros
+              </a>
+            </div>
           </div>
         </Revelar>
       </section>

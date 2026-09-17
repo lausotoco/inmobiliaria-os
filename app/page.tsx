@@ -6,7 +6,7 @@ import LandingKyrelo from "@/components/landing/LandingKyrelo";
 export const metadata: Metadata = {
   title: "KYRELO — Menos búsqueda. Más cierre.",
   description:
-    "Centralizamos los requerimientos reales de compradores y arrendatarios y los conectamos con brokers e inmobiliarias listos para cerrar. Bogotá y sabana norte.",
+    "Compradores verificados de vivienda en la Sabana de Bogotá, conectados con brokers e inmobiliarias. Captamos inmuebles y compartimos la comisión con la red.",
   robots: { index: true, follow: true },
 };
 
