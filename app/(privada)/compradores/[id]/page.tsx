@@ -174,6 +174,54 @@ export default function FichaCompradorPage() {
     cargar();
   }
 
+  /* ── Calificación manual sin formulario: Laura pone la banda directo.
+        Queda marcada como override, con razón e historial, y el motor
+        la respeta si después se llena el formulario. ── */
+  async function calificarAMano() {
+    if (!bandaManual) {
+      setError("Elige una banda.");
+      return;
+    }
+    if (!razon.trim()) {
+      setError("Escribe la razón: queda en el historial del comprador.");
+      return;
+    }
+    setGuardando(true);
+    setError(null);
+
+    const { data: sesion } = await supabase.auth.getUser();
+    const { data: nueva, error: err } = await supabase
+      .from("calificaciones")
+      .insert({
+        cliente_id: id,
+        banda_final: bandaManual,
+        razon_override: razon.trim(),
+        override_por: sesion.user?.id ?? null,
+        override_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+
+    if (err || !nueva) {
+      setError(err?.message ?? "No se pudo guardar.");
+      setGuardando(false);
+      return;
+    }
+
+    await supabase.from("calificacion_historial").insert({
+      calificacion_id: nueva.id,
+      cliente_id: id,
+      score: null,
+      banda_calculada: null,
+      banda_final: bandaManual,
+      motivo: `calificación manual: ${razon.trim()}`,
+    });
+
+    setGuardando(false);
+    setRazon("");
+    cargar();
+  }
+
   /* ── Sellos de tiempo: lo que alimenta el bloque de comportamiento ── */
   async function sellar(campo: "contactado_at" | "respondio_at") {
     if (!lead) return;
@@ -201,17 +249,62 @@ export default function FichaCompradorPage() {
 
   if (!c) {
     return (
-      <div className="mt-12 text-center">
-        <p className="text-neutro">
+      <div className="mx-auto mt-12 max-w-lg">
+        <p className="text-center text-neutro">
           {nombre ? `${nombre} todavía no está calificado.` : "Comprador no encontrado."}
         </p>
         {nombre && (
-          <Link
-            href={`/compradores/${id}/editar`}
-            className="mt-4 inline-block rounded-lg bg-bosque px-5 py-2.5 text-sm font-medium text-white"
-          >
-            Calificarlo ahora
-          </Link>
+          <>
+            <div className="mt-4 text-center">
+              <Link
+                href={`/compradores/${id}/editar`}
+                className="inline-block rounded-lg bg-bosque px-5 py-2.5 text-sm font-medium text-white"
+              >
+                Calificarlo con el formulario
+              </Link>
+            </div>
+
+            {/* Calificación manual: sin formulario, con razón obligatoria */}
+            <div className="mt-8 rounded-xl border border-linea bg-superficie p-5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-laton">
+                O ponle la banda a mano
+              </p>
+              <p className="mt-2 text-sm text-neutro">
+                Queda como calificación manual. Si después llenas el formulario, el motor
+                calcula su puntaje pero respeta la banda que pusiste.
+              </p>
+              <div className="mt-3 flex gap-1.5">
+                {BANDAS.map((b) => (
+                  <button
+                    key={b}
+                    onClick={() => setBandaManual(b)}
+                    className={`flex-1 rounded-lg border py-2 text-sm font-semibold transition ${
+                      bandaManual === b
+                        ? ESTILO_BANDA[b]
+                        : "border-linea text-neutro hover:border-bosque"
+                    }`}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={razon}
+                onChange={(e) => setRazon(e.target.value)}
+                rows={3}
+                placeholder="¿Por qué esta banda? (obligatorio, queda en el historial)"
+                className="mt-3 w-full rounded-lg border border-linea bg-fondo px-3 py-2.5 text-sm text-tinta outline-none focus:border-bosque"
+              />
+              {error && <p className="mt-2 text-sm text-[#8E3B31]">{error}</p>}
+              <button
+                onClick={calificarAMano}
+                disabled={guardando}
+                className="mt-3 w-full rounded-lg bg-bosque py-2.5 text-sm font-medium text-white transition hover:bg-bosque-oscuro disabled:opacity-60"
+              >
+                {guardando ? "Guardando…" : "Guardar banda manual"}
+              </button>
+            </div>
+          </>
         )}
       </div>
     );
@@ -358,11 +451,17 @@ export default function FichaCompradorPage() {
           {/* Override */}
           <div className="rounded-xl border border-linea bg-superficie p-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-laton">
-              Banda final
+              Banda final · calificación manual
             </p>
             <p className="mt-2 text-sm text-neutro">
-              Calculada: <span className="text-tinta">{c.banda_calculada}</span>
-              {difiere && " · la cambiaste a mano"}
+              {c.banda_calculada ? (
+                <>
+                  Calculada por el motor: <span className="text-tinta">{c.banda_calculada}</span>
+                  {difiere && " · la cambiaste a mano"}
+                </>
+              ) : (
+                "Sin cálculo del motor: banda puesta a mano."
+              )}
             </p>
 
             <div className="mt-3 flex gap-1.5">
