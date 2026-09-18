@@ -184,12 +184,22 @@ export default function FormRequerimiento({
     const supabase = createClient();
 
     if (esEdicion) {
-      const { error: err } = await supabase
+      // .select() devuelve las filas realmente modificadas: si vuelve vacío,
+      // la base rechazó el cambio en silencio y hay que avisar, no fingir éxito.
+      const { data: filas, error: err } = await supabase
         .from("requerimientos")
         .update(datos)
-        .eq("id", requerimiento.id);
+        .eq("id", requerimiento.id)
+        .select("id");
       if (err) {
         setError(err.message);
+        setGuardando(false);
+        return;
+      }
+      if (!filas || filas.length === 0) {
+        setError(
+          "No se guardó: la base de datos no permitió actualizar este requerimiento. Recarga la página e inténtalo otra vez; si sigue pasando, avísame."
+        );
         setGuardando(false);
         return;
       }

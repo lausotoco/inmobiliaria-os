@@ -13,9 +13,10 @@ import type { Requerimiento } from "@/lib/types";
 type Props = {
   clienteId: string;
   requerimientos: Requerimiento[];
+  onCambio?: () => void;
 };
 
-export default function TabRequerimientos({ clienteId, requerimientos }: Props) {
+export default function TabRequerimientos({ clienteId, requerimientos, onCambio }: Props) {
   const router = useRouter();
   const [mostrarForm, setMostrarForm] = useState(false);
   const [datosAudio, setDatosAudio] = useState<Partial<Requerimiento> | null>(null);
@@ -37,6 +38,7 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
     const supabase = createClient();
     await supabase.from("requerimientos").delete().eq("id", id);
     setEliminando(null);
+    onCambio?.();
     router.refresh();
   }
 
@@ -55,7 +57,10 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
         <FormRequerimiento
           clienteId={clienteId}
           requerimiento={editando}
-          onGuardado={() => setEditando(null)}
+          onGuardado={() => {
+            setEditando(null);
+            onCambio?.();
+          }}
         />
       </div>
     );
@@ -111,6 +116,7 @@ export default function TabRequerimientos({ clienteId, requerimientos }: Props) 
             setMostrarForm(false);
             setDatosAudio(null);
             setNotaTranscripcion(null);
+            onCambio?.();
             router.refresh();
           }}
         />

@@ -267,6 +267,7 @@ export default function ClienteDetallePage() {
           <TabRequerimientos
             clienteId={id}
             requerimientos={requerimientos}
+            onCambio={cargar}
           />
         )}
 
