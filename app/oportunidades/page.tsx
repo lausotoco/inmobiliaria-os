@@ -70,13 +70,30 @@ export default function Oportunidades() {
   const [zonaFiltro, setZonaFiltro] = useState('');
   const [detalle, setDetalle] = useState<any | null>(null);
   const listaRef = useRef<HTMLDivElement | null>(null);
+  // Inmuebles que KYRELO ya captó: se pueden ver sin cuenta. La cuenta
+  // solo hace falta para solicitar la asociación.
+  const [inmuebles, setInmuebles] = useState<any[]>([]);
+  const inmueblesRef = useRef<HTMLDivElement | null>(null);
+  const [inmuebleAbierto, setInmuebleAbierto] = useState<any | null>(null);
 
   useEffect(() => {
     supabase.rpc('marketplace_publico').then(({ data }) => {
       setItems(Array.isArray(data) ? data : []);
       setCargando(false);
     });
+    supabase.rpc('inmuebles_kyrelo_publico').then(({ data }) => {
+      setInmuebles(Array.isArray(data) ? data : []);
+    });
   }, []); // eslint-disable-line
+
+  function irAInmuebles() {
+    inmueblesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function urlFoto(ruta?: string | null) {
+    if (!ruta) return null;
+    return supabase.storage.from('propiedades').getPublicUrl(ruta).data.publicUrl;
+  }
 
   const zonasDisponibles = useMemo(() => {
     const m = new Map<string, string>();
@@ -220,14 +237,16 @@ export default function Oportunidades() {
           </div>
 
           <div className="mt-7 flex flex-wrap items-center gap-4">
-            <Link
-              href={ENTRADA}
+            <button
+              onClick={irAInmuebles}
               className="rounded-full bg-[#B87333] px-7 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
             >
-              Ver inmuebles disponibles
-            </Link>
+              {inmuebles.length > 0
+                ? `Ver ${inmuebles.length} inmueble${inmuebles.length === 1 ? '' : 's'} disponible${inmuebles.length === 1 ? '' : 's'}`
+                : 'Ver inmuebles disponibles'}
+            </button>
             <span className="text-[13px] text-[#F1EFE8]/70">
-              Gratis. Solo compartes comisión al cerrar.
+              Míralos sin cuenta. Solo la necesitas para asociarte.
             </span>
           </div>
         </div>
@@ -289,6 +308,94 @@ export default function Oportunidades() {
               ))}
             </div>
           </>
+        )}
+
+        {/* ════════ INMUEBLES DE KYRELO (visibles sin cuenta) ════════ */}
+        {inmuebles.length > 0 && (
+          <section ref={inmueblesRef} className="mt-14 scroll-mt-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#B87333]">
+              Inmuebles de KYRELO
+            </p>
+            <h2
+              className="mt-2 text-[24px] leading-tight text-[#1A1A18] sm:text-[30px]"
+              style={{ fontFamily: 'Fraunces, Georgia, serif', letterSpacing: '-0.02em' }}
+            >
+              Estos ya los captamos. Véndelos tú.
+            </h2>
+            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-[#5F5E5A]">
+              Con mandato firmado y material de venta listo. La dirección y el conjunto se abren
+              cuando aceptamos tu asociación; para pedirla necesitas cuenta, que es gratis.
+            </p>
+
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {inmuebles.map((i) => {
+                const fotos: string[] = (i.fotos_preview ?? []).filter(Boolean);
+                const comision = Number(i.comision_pct ?? 3);
+                const tuParte = i.precio ? Number(i.precio) * (comision / 100) * Number(i.pct_comparte ?? 0.5) : null;
+                return (
+                  <article key={i.id} className="overflow-hidden rounded-2xl border border-[#E0DDD2] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-[#CFC9BB]">
+                    <div className="relative">
+                      {fotos.length > 0 ? (
+                        <div className={`grid gap-1 ${fotos.length === 1 ? '' : 'grid-cols-3'}`}>
+                          {fotos.slice(0, 3).map((ruta, idx) => (
+                            <img
+                              key={ruta}
+                              src={urlFoto(ruta) ?? ''}
+                              alt=""
+                              className={`w-full object-cover ${fotos.length === 1 ? 'aspect-[16/10]' : idx === 0 ? 'col-span-3 aspect-[16/10]' : 'aspect-[4/3]'}`}
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex aspect-[16/10] items-center justify-center bg-[#EBDBC8] opacity-60">
+                          <IconoTipo tipo={i.tipo} />
+                        </div>
+                      )}
+                      <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                        {i.tipo && <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-medium capitalize text-[#1A1A18]">{i.tipo}</span>}
+                        {i.tiene_exclusividad && (
+                          <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#B87333]">Exclusividad KYRELO</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="rounded-xl bg-[#F6EFE4] px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#993C1D]">
+                          Comisión {comision}% · compartes {Math.round(Number(i.pct_comparte ?? 0.5) * 100)}%
+                        </p>
+                        {tuParte != null && (
+                          <p className="mt-0.5 text-[13px] text-[#1A1A18]">
+                            Para ti: <span className="font-semibold">{formatoCOPfull(tuParte)}</span> si cierras
+                          </p>
+                        )}
+                      </div>
+                      <p className="mt-4 text-[18px] font-semibold leading-none tracking-tight text-[#1A1A18]">
+                        {formatoCOPfull(i.precio) ?? 'Precio por confirmar'}
+                      </p>
+                      <p className="mt-1 truncate text-[12px] text-[#5F5E5A]">
+                        {[i.municipio, i.sector].filter(Boolean).join(' · ') || 'Sabana de Bogotá'}
+                        {i.administracion ? ` · Admón. ${formatoCOPfull(i.administracion)}` : ''}
+                      </p>
+                      <div className="mt-4 flex items-stretch border-y border-[#E0DDD2] py-2.5 text-center text-[12px] text-[#1A1A18]">
+                        <div className="flex-1">{i.area ? `${Math.round(Number(i.area))} m²` : '—'}</div>
+                        <div className="flex-1 border-x border-[#E0DDD2]">{i.habitaciones != null ? `${i.habitaciones} alc.` : '—'}</div>
+                        <div className="flex-1">{i.banos != null ? `${i.banos} baños` : '—'}</div>
+                      </div>
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                        <button onClick={() => setInmuebleAbierto(i)} className="text-[12px] text-[#5F5E5A] underline underline-offset-4 hover:text-[#1A1A18]">
+                          Ver ficha
+                        </button>
+                        <Link href={ENTRADA} className="rounded-full bg-[#1A1A18] px-5 py-2.5 text-[13px] font-medium text-[#F1EFE8] transition-opacity hover:opacity-85">
+                          Solicitar asociación
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* Banner registro */}
@@ -374,6 +481,83 @@ export default function Oportunidades() {
               Tengo un inmueble para este comprador
             </Link>
             <p className="mt-2 text-center text-[11px] text-[#A8A69E]">Regístrate gratis para postular</p>
+          </div>
+        </div>
+      )}
+
+      {/* Ficha del inmueble de KYRELO: todo menos lo que lo identifica */}
+      {inmuebleAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1A1A18]/40 px-6" onClick={() => setInmuebleAbierto(null)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-7 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[9px] uppercase tracking-[0.2em] text-[#B87333]">Inmueble de KYRELO</p>
+                <h2 className="mt-1 text-[18px] tracking-tight text-[#1A1A18]">{inmuebleAbierto.titulo || 'Inmueble KYRELO'}</h2>
+                <p className="mt-1 text-[12px] text-[#5F5E5A]">{[inmuebleAbierto.municipio, inmuebleAbierto.sector].filter(Boolean).join(' · ')}</p>
+              </div>
+              <button onClick={() => setInmuebleAbierto(null)} aria-label="Cerrar" className="text-[#5F5E5A] hover:text-[#1A1A18]">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </div>
+
+            {Array.isArray(inmuebleAbierto.fotos_preview) && inmuebleAbierto.fotos_preview.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {inmuebleAbierto.fotos_preview.map((r: string) => (
+                  <img key={r} src={urlFoto(r) ?? ''} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                ))}
+              </div>
+            )}
+
+            <div className="mt-5 rounded-xl bg-[#F6EFE4] px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#993C1D]">
+                Comisión {Number(inmuebleAbierto.comision_pct ?? 3)}% · compartes {Math.round(Number(inmuebleAbierto.pct_comparte ?? 0.5) * 100)}%
+              </p>
+              {inmuebleAbierto.precio && (
+                <p className="mt-0.5 text-[13px] text-[#1A1A18]">
+                  Para ti: <span className="font-semibold">{formatoCOPfull(Number(inmuebleAbierto.precio) * (Number(inmuebleAbierto.comision_pct ?? 3) / 100) * Number(inmuebleAbierto.pct_comparte ?? 0.5))}</span> si cierras
+                </p>
+              )}
+            </div>
+
+            <p className="mt-5 text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">El inmueble</p>
+            <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-4">
+              <Spec etiqueta="Precio" valor={formatoCOPfull(inmuebleAbierto.precio)} />
+              <Spec etiqueta="Administración" valor={formatoCOPfull(inmuebleAbierto.administracion)} />
+              <Spec etiqueta="Estrato" valor={inmuebleAbierto.estrato} />
+              <Spec etiqueta="Área construida" valor={inmuebleAbierto.area ? `${Math.round(Number(inmuebleAbierto.area))} m²` : null} />
+              <Spec etiqueta="Área lote" valor={inmuebleAbierto.area_lote ? `${Math.round(Number(inmuebleAbierto.area_lote))} m²` : null} />
+              <Spec etiqueta="Año" valor={inmuebleAbierto.anio_construccion} />
+              <Spec etiqueta="Alcobas" valor={inmuebleAbierto.habitaciones} />
+              <Spec etiqueta="Baños" valor={inmuebleAbierto.banos} />
+              <Spec etiqueta="Parqueaderos" valor={inmuebleAbierto.parqueaderos} />
+            </div>
+
+            <p className="mt-6 text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A]">Condiciones del negocio</p>
+            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3">
+              <Spec etiqueta="Precio" valor={inmuebleAbierto.precio_negociable ? (inmuebleAbierto.margen_negociacion ? `Negociable · ${inmuebleAbierto.margen_negociacion}` : 'Negociable') : 'No negociable'} />
+              <Spec etiqueta="Permuta" valor={inmuebleAbierto.acepta_permuta ? 'Sí acepta' : 'No acepta'} />
+              <Spec etiqueta="Crédito" valor={inmuebleAbierto.acepta_credito ? 'Sí acepta' : 'Solo contado'} />
+              <Spec etiqueta="Subsidio" valor={inmuebleAbierto.acepta_subsidio ? 'Sí acepta' : null} />
+              <Spec etiqueta="Ocupación" valor={inmuebleAbierto.ocupacion} />
+              <Spec etiqueta="Entrega" valor={inmuebleAbierto.entrega} />
+              <Spec etiqueta="Estado jurídico" valor={inmuebleAbierto.libre_gravamenes ? 'Libre de gravámenes' : null} />
+              <Spec etiqueta="Exclusividad" valor={inmuebleAbierto.tiene_exclusividad ? 'KYRELO tiene exclusividad' : null} />
+            </div>
+
+            {inmuebleAbierto.descripcion_brokers && (
+              <p className="mt-5 border-l border-[#E0DDD2] pl-4 text-[13px] leading-relaxed text-[#1A1A18]">
+                {inmuebleAbierto.descripcion_brokers}
+              </p>
+            )}
+
+            <p className="mt-5 rounded-xl border border-[#EBDBC8] bg-[#F6EFE4] px-4 py-3 text-[12px] leading-relaxed text-[#5F5E5A]">
+              La dirección, el conjunto, todas las fotos y el kit de venta se abren cuando KYRELO acepta tu asociación.
+            </p>
+
+            <Link href={ENTRADA} className="mt-5 block rounded-full bg-[#1A1A18] py-3 text-center text-[14px] font-medium text-[#F1EFE8] transition hover:opacity-85">
+              Solicitar asociación
+            </Link>
+            <p className="mt-2 text-center text-[11px] text-[#A8A69E]">Crear cuenta es gratis y toma un minuto</p>
           </div>
         </div>
       )}
