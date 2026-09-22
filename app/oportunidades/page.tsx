@@ -188,6 +188,51 @@ export default function Oportunidades() {
         </div>
       </section>
 
+      {/* ════════ INMUEBLES DE KYRELO ════════
+          El foco sigue siendo el comprador, pero el agente tiene que
+          enterarse de que también puede vender lo que KYRELO ya captó. */}
+      <section className="bg-[#1A1A18] px-6 py-12 sm:px-8 sm:py-14">
+        <div className="mx-auto max-w-5xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#EBDBC8]">
+            Inmuebles de KYRELO
+          </p>
+          <h2
+            className="mt-3 text-[28px] leading-[1.15] text-[#F1EFE8] sm:text-[34px]"
+            style={{ fontFamily: 'Fraunces, Georgia, serif', letterSpacing: '-0.02em' }}
+          >
+            ¿Quieres vender nuestros inmuebles?{' '}
+            <span className="text-[#B87333]">Hazlo. Sin compromiso.</span>
+          </h2>
+          <p className="mt-4 max-w-2xl text-[15px] leading-[1.65] text-[#F1EFE8]/80">
+            Ya están captados, con mandato firmado y el material de venta listo. Tú pones el
+            comprador, nosotros ponemos el inmueble, el material y el papeleo. Reparto 50/50.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            {['No sales a captar', 'Fotos, video y ficha listos', 'Sin exclusividad ni cuota'].map((t) => (
+              <span
+                key={t}
+                className="rounded-full border border-[#F1EFE8]/25 px-4 py-2 text-[12px] text-[#F1EFE8]"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <Link
+              href={ENTRADA}
+              className="rounded-full bg-[#B87333] px-7 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Ver inmuebles disponibles
+            </Link>
+            <span className="text-[13px] text-[#F1EFE8]/70">
+              Gratis. Solo compartes comisión al cerrar.
+            </span>
+          </div>
+        </div>
+      </section>
+
       <main ref={listaRef} className="mx-auto max-w-5xl px-6 py-10 sm:px-8">
         {cargando ? (
           <p className="py-10 text-center text-sm text-[#5F5E5A]">Cargando compradores…</p>
