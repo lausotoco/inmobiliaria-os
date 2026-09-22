@@ -208,7 +208,8 @@ export default function PortalBroker() {
   const [inmuebleAbierto, setInmuebleAbierto] = useState<any | null>(null);
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [zonaFiltro, setZonaFiltro] = useState('');
-  const [mostrarResultados, setMostrarResultados] = useState(false);
+  // El agente entra y ve los compradores de una: el buscador solo filtra.
+  const [mostrarResultados, setMostrarResultados] = useState(true);
   const [formP, setFormP] = useState({
     titulo: '', precio: '', area: '', habitaciones: '', banos: '', parqueaderos: '',
     administracion: '', estrato: '', descripcion: '', amenidades: '',
@@ -425,6 +426,9 @@ export default function PortalBroker() {
     setTab('panel');
   }
 
+  const enProceso = mias.filter(
+    (p) => p.estado !== 'rechazado' && p.estado !== 'comision_repartida'
+  ).length;
   const cierres = Number(perfil?.cierres ?? 0);
   const pctAgente = cierres < 3 ? 40 : 50;
   const asociaciones = inmuebles.filter((i) => i.asociacion_id);
@@ -456,7 +460,7 @@ export default function PortalBroker() {
 
       {tab === 'buscar' && (
         <section className="relative bg-[#1A1A18] overflow-hidden">
-          <div className="relative px-8 py-14 sm:py-20 max-w-3xl mx-auto text-center">
+          <div className="relative px-8 py-10 sm:py-12 max-w-3xl mx-auto text-center">
             <p className="text-[10px] uppercase tracking-[0.24em] text-[#EBDBC8] mb-3">
               {APP.nombre} · Compradores verificados
             </p>
@@ -510,7 +514,7 @@ export default function PortalBroker() {
               onClick={verTodo}
               className="mt-4 text-[12px] text-[#F1EFE8]/80 underline underline-offset-4 hover:text-[#F1EFE8] transition-colors"
             >
-              o ver todos los requerimientos disponibles
+              Quitar filtros y ver todos
             </button>
           </div>
         </section>
@@ -538,12 +542,44 @@ export default function PortalBroker() {
         {/* ============ COMPRADORES ============ */}
         {tab === 'buscar' && (
           <>
-            {!mostrarResultados ? (
-              <>
-                <ComoFunciona />
-                <FAQBrokers />
-              </>
-            ) : cargando ? (
+            {/* Los tres caminos del agente, de un vistazo */}
+            <div className="mb-4 grid gap-3 sm:grid-cols-3">
+              {[
+                { k: 'buscar', etiqueta: 'Compradores activos', valor: String(tarjetas.length), color: '#1A1A18', pie: 'verificados y vigentes' },
+                { k: 'inmuebles', etiqueta: 'Inmuebles de KYRELO', valor: String(inmuebles.length), color: '#B87333', pie: 'con material listo · 50/50' },
+                { k: 'panel', etiqueta: 'Tus postulaciones', valor: String(enProceso), color: '#1A1A18', pie: 'en proceso' },
+              ].map((c) => (
+                <button
+                  key={c.k}
+                  onClick={() => setTab(c.k as Tab)}
+                  className="rounded-2xl border border-[#E0DDD2] bg-white p-4 text-left transition hover:border-[#CFC9BB]"
+                >
+                  <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#A8A69E]">{c.etiqueta}</p>
+                  <p className="mt-1 text-[26px] leading-none tracking-tight" style={{ fontFamily: 'Fraunces, serif', color: c.color }}>
+                    {c.valor}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[#5F5E5A]">{c.pie}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Que nadie se pierda los inmuebles que KYRELO ya captó */}
+            <div className="mb-8 flex flex-wrap items-center gap-4 rounded-2xl bg-[#1A1A18] px-5 py-4">
+              <div className="min-w-[220px] flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#EBDBC8]">Inmuebles de KYRELO</p>
+                <p className="mt-1 text-[14px] leading-relaxed text-[#F1EFE8]">
+                  ¿Tienes comprador y no inmueble? Vende los nuestros: material listo y 50/50.
+                </p>
+              </div>
+              <button
+                onClick={() => setTab('inmuebles')}
+                className="shrink-0 rounded-full bg-[#B87333] px-6 py-2.5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Ver los inmuebles
+              </button>
+            </div>
+
+            {cargando ? (
               <p className="text-sm text-[#5F5E5A]">Buscando compradores…</p>
             ) : resultados.length === 0 ? (
               <div className="text-center py-10">
