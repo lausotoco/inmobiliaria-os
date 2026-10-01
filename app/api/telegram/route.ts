@@ -256,6 +256,26 @@ export async function POST(req: NextRequest) {
       const data: string = cb.data ?? "";
       await tg("answerCallbackQuery", { callback_query_id: cb.id });
 
+      // Checklist de pendientes: cada toque marca o desmarca la tarea.
+      // No guarda nada en la base: el estado vive en los mismos botones.
+      if (data.startsWith("chk:")) {
+        type Boton = { text: string; callback_data?: string };
+        const filas: Boton[][] = cb.message?.reply_markup?.inline_keyboard ?? [];
+        const nuevas = filas.map((fila) =>
+          fila.map((b) =>
+            b.callback_data === data
+              ? { ...b, text: b.text.startsWith("✅") ? b.text.replace(/^✅/, "⬜️") : b.text.replace(/^⬜️/, "✅") }
+              : b
+          )
+        );
+        await tg("editMessageReplyMarkup", {
+          chat_id: chatId,
+          message_id: cb.message?.message_id,
+          reply_markup: { inline_keyboard: nuevas },
+        });
+        return NextResponse.json({ ok: true });
+      }
+
       if (data.startsWith("descartar:")) {
         const reqId = data.split(":")[1];
         const { data: r } = await db
