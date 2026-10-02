@@ -30,7 +30,7 @@ function rangoM(a?: number | null, b?: number | null) {
 }
 const pesos = (n: number) => "$" + Math.round(n).toLocaleString("es-CO");
 
-function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?: string }) {
+export function EnVivo({ tipo, titulo, compacto = false, max = 3 }: { tipo: NonNullable<Servicio["vivo"]>; titulo?: string; compacto?: boolean; max?: number }) {
   const [items, setItems] = useState<any[] | null>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   useEffect(() => {
     const sb = createClient();
@@ -50,7 +50,7 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
           </span>
           {titulo ?? "En vivo"}
         </p>
-        <span className="text-[11px]" style={{ color: "rgba(241,239,232,.55)" }}>Información real, actualizada</span>
+        <span className="hidden text-[11px] sm:inline" style={{ color: "rgba(241,239,232,.55)" }}>Información real, actualizada</span>
       </div>
 
       {items === null && <p className="mt-6 text-[13px]" style={{ color: "rgba(241,239,232,.6)" }}>Cargando…</p>}
@@ -60,10 +60,10 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
         </p>
       )}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`mt-5 grid grid-cols-1 gap-3 ${compacto ? "" : "sm:grid-cols-2 lg:grid-cols-3"}`}>
         {tipo === "requerimientos" &&
-          items?.slice(0, 3).map((t, i) => (
-            <div key={t.id ?? i} className="pf-vivo rounded-2xl p-4" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${i * 120}ms` }}>
+          items?.slice(0, max).map((t, i) => (
+            <div key={t.id ?? i} className="pf-vivo min-w-0 rounded-2xl p-4" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${i * 120}ms` }}>
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[9.5px] font-semibold uppercase" style={{ color: "#D9A36A", letterSpacing: "0.16em" }}>Comprador verificado</p>
                 {t.codigo && <span className="rounded-full px-2 py-0.5 text-[10px]" style={{ background: "rgba(241,239,232,.1)" }}>#{t.codigo}</span>}
@@ -76,11 +76,11 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
           ))}
 
         {tipo === "inmuebles" &&
-          items?.slice(0, 3).map((i, k) => {
+          items?.slice(0, max).map((i, k) => {
             const f = foto((i.fotos_preview ?? []).filter(Boolean)[0]);
             const parte = i.precio ? Number(i.precio) * (Number(i.comision_pct ?? 3) / 100) * Number(i.pct_comparte ?? 0.5) : null;
             return (
-              <div key={i.id ?? k} className="pf-vivo flex gap-4 rounded-2xl p-3" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${k * 120}ms` }}>
+              <div key={i.id ?? k} className="pf-vivo min-w-0 flex gap-4 rounded-2xl p-3" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${k * 120}ms` }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {f ? <img src={f} alt="" className="h-20 w-24 shrink-0 rounded-xl object-cover" /> : <div className="h-20 w-24 shrink-0 rounded-xl" style={{ background: "rgba(241,239,232,.08)" }} />}
                 <div className="min-w-0">
@@ -98,8 +98,8 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
           })}
 
         {tipo === "catalogo" &&
-          items?.slice(0, 3).map((p, k) => (
-            <a key={p.slug ?? k} href={`/inmuebles/${p.slug}`} className="pf-vivo flex gap-4 rounded-2xl p-3 transition-colors hover:bg-white/10" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${k * 120}ms` }}>
+          items?.slice(0, max).map((p, k) => (
+            <a key={p.slug ?? k} href={`/inmuebles/${p.slug}`} className="pf-vivo min-w-0 flex gap-4 rounded-2xl p-3 transition-colors hover:bg-white/10" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${k * 120}ms` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {p.imagen ? <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/propiedades/${p.imagen}`} alt="" className="h-20 w-24 shrink-0 rounded-xl object-cover" /> : <div className="h-20 w-24 shrink-0 rounded-xl" style={{ background: "rgba(241,239,232,.08)" }} />}
               <div className="min-w-0">

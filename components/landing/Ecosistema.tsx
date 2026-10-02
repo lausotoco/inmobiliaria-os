@@ -12,12 +12,13 @@ import { C, LogoMarca, type Marca } from "@/components/sitio/marca";
 
 const serif = { fontFamily: '"Fraunces", Georgia, serif' };
 
-const MARCAS: { marca: Exclude<Marca, "general">; nombre: string; titulo: string; texto: string; para: string; href: string; boton: string }[] = [
+const MARCAS: { marca: Exclude<Marca, "general">; nombre: string; titulo: string; texto: string; incluye: string[]; para: string; href: string; boton: string }[] = [
   {
     marca: "inmobiliaria",
     nombre: "KYRELO Inmobiliaria",
     titulo: "Compra, vende o arrienda tu vivienda.",
-    texto: "Te buscamos el inmueble que necesitas o le encontramos comprador al tuyo, solo con personas que de verdad pueden comprar.",
+    texto: "Trabajamos solo con personas que de verdad pueden comprar.",
+    incluye: ["Te buscamos inmueble a tu medida", "Vendemos tu inmueble", "Arrendamos tu inmueble"],
     para: "Para compradores y propietarios",
     href: "/inmobiliaria",
     boton: "Conocer más",
@@ -25,17 +26,19 @@ const MARCAS: { marca: Exclude<Marca, "general">; nombre: string; titulo: string
   {
     marca: "plataforma",
     nombre: "KYRELO Plataforma",
-    titulo: "Compradores para agentes y oficinas.",
-    texto: "Publicamos lo que buscan nuestros compradores para que agentes y oficinas les ofrezcan sus inmuebles.",
+    titulo: "Una red para que agentes y oficinas vendan más.",
+    texto: "Trabajas con nosotros sin dejar tu oficina ni tus clientes.",
+    incluye: ["Ver compradores que ya revisamos", "Ofrecerles tus inmuebles", "Vender los inmuebles que ya tenemos"],
     para: "Para agentes y oficinas inmobiliarias",
-    href: "/plataforma",
-    boton: "Ver compradores",
+    href: "/para/agentes",
+    boton: "Conocer más",
   },
   {
     marca: "marketing",
     nombre: "KYRELO Marketing",
     titulo: "Videos y publicidad para vender más rápido.",
-    texto: "Editamos videos, hacemos recorridos en 3D y movemos los inmuebles con publicidad en redes.",
+    texto: "Tú grabas con tu celular; nosotros hacemos el resto.",
+    incluye: ["Videos y recorridos en 3D", "Publicidad en redes", "Imagen de tu oficina o lanzamiento de tu proyecto"],
     para: "Para agentes, oficinas y constructoras",
     href: "/marketing",
     boton: "Conocer más",
@@ -59,11 +62,27 @@ export default function Ecosistema() {
   // La K muestra sola cada marca: K → Inmobiliaria → Plataforma → Marketing → K…
   useEffect(() => {
     if (!visible || hover !== null) return;
+    // En celular la K sigue a la tarjeta que se ve (no cambia sola)
+    if (window.innerWidth < 768) { setHover(0); return; }
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(() => setAuto((a) => (a >= 2 ? -1 : a + 1)), 2200);
     return () => clearInterval(t);
   }, [visible, hover]);
 
+  const carrusel = useRef<HTMLDivElement | null>(null);
+  const esCelular = () => typeof window !== "undefined" && window.innerWidth < 768;
+  function alDeslizar() {
+    const el = carrusel.current;
+    if (!el || !esCelular()) return;
+    const ancho = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? el.clientWidth;
+    setHover(Math.max(0, Math.min(2, Math.round(el.scrollLeft / (ancho + 16)))));
+  }
+  function irA(i: number) {
+    const el = carrusel.current;
+    const card = el?.children[i] as HTMLElement | undefined;
+    if (el && card) el.scrollTo({ left: card.offsetLeft - 24, behavior: "smooth" });
+    setHover(i);
+  }
   const activa = hover ?? auto;
   const logoActivo: Marca = activa >= 0 ? MARCAS[activa].marca : "general";
   const xs = [167, 500, 833];
@@ -128,17 +147,18 @@ export default function Ecosistema() {
         {/* La rama (celular) */}
         <div className="mx-auto mt-2 h-10 w-px md:hidden" style={{ background: `repeating-linear-gradient(${C.cobre} 0 6px, transparent 6px 12px)` }} />
 
-        {/* Las tres marcas */}
-        <div className="grid gap-5 md:grid-cols-3">
+        {/* Las tres marcas (en celular se deslizan de lado) */}
+        <div ref={carrusel} onScroll={alDeslizar}
+          className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden">
           {MARCAS.map((m, i) => (
             <a
               key={m.marca}
               href={m.href}
               onMouseEnter={() => setHover(i)}
-              onMouseLeave={() => setHover(null)}
+              onMouseLeave={() => { if (!esCelular()) setHover(null); }}
               onFocus={() => setHover(i)}
               onBlur={() => setHover(null)}
-              className={`ec-col group flex flex-col rounded-3xl border bg-white p-7 ${activa === i ? "on" : ""}`}
+              className={`ec-col group flex w-[84%] shrink-0 snap-center flex-col rounded-3xl border bg-white p-6 sm:p-7 md:w-auto ${activa === i ? "on" : ""}`}
               style={{ borderColor: C.linea, transitionDelay: visible ? `${300 + i * 150}ms, ${300 + i * 150}ms, 0ms, 0ms` : "0ms" }}
             >
               <div className="flex items-center gap-3.5">
@@ -148,13 +168,29 @@ export default function Ecosistema() {
                 <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.18em" }}>{m.nombre}</p>
               </div>
               <h3 className="mt-6 text-[24px] leading-snug" style={serif}>{m.titulo}</h3>
-              <p className="mt-3 text-[15px] leading-relaxed" style={{ color: C.piedra }}>{m.texto}</p>
+              <p className="mt-2 text-[15px] leading-relaxed" style={{ color: C.piedra }}>{m.texto}</p>
+              <ul className="mt-5 space-y-2.5">
+                {m.incluye.map((x) => (
+                  <li key={x} className="flex items-start gap-2.5 text-[14.5px] leading-snug">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] text-white" style={{ background: C.cobre }}>✓</span>
+                    {x}
+                  </li>
+                ))}
+              </ul>
               <p className="mt-5 inline-flex self-start rounded-full px-3.5 py-1.5 text-[12.5px] font-medium" style={{ background: "#EFEBE2" }}>{m.para}</p>
               <span className="mt-auto inline-flex items-center gap-2 pt-7 text-[14.5px] font-semibold">
                 {m.boton}
                 <span className="flex h-7 w-7 items-center justify-center rounded-full text-[13px] text-white transition-transform group-hover:translate-x-1" style={{ background: C.cobre }}>→</span>
               </span>
             </a>
+          ))}
+        </div>
+
+        {/* Puntos del deslizador (celular) */}
+        <div className="mt-5 flex justify-center gap-2 md:hidden">
+          {MARCAS.map((m, i) => (
+            <button key={m.marca} type="button" aria-label={m.nombre} onClick={() => irA(i)}
+              className="h-2 rounded-full transition-all duration-300" style={{ width: activa === i ? 26 : 8, background: activa === i ? C.cobre : "#D9D3C6" }} />
           ))}
         </div>
 

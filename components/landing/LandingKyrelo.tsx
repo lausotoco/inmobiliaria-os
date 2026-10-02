@@ -2,8 +2,8 @@
 
 /* ============================================================
    KYRELO — Página pública (Home)
-   Secciones: Hero · Las tres marcas · Qué es KYRELO · Así trabajamos
-              · Cobertura · Principios · CTA final
+   Secciones: Hero (¿quién eres?) · Qué es KYRELO (la K y sus tres
+              marcas) · Cómo trabajamos · Hoy en KYRELO · Cierre
    Regla: la portada no habla de cobros. Cada marca explica el suyo
    en su página (Plataforma no cobra por adelantado; Marketing es
    un servicio pago). Así no se mezclan los dos mensajes.
@@ -19,6 +19,7 @@ import { APP } from "@/lib/config";
 import { CabeceraSitio, PieSitio } from "@/components/sitio/Sitio";
 import Constelacion from "./Constelacion";
 import Ecosistema from "./Ecosistema";
+import { CierreInicio, HoyEnKyrelo, Metodo } from "./SeccionesInicio";
 
 /* ── Paleta de marca ── */
 const C = {
@@ -59,34 +60,6 @@ function useReveal<T extends HTMLElement>(threshold = 0.2) {
     return () => obs.disconnect();
   }, [threshold]);
   return { ref, visible };
-}
-
-/* ── Íconos geométricos (simples, de línea, sin clipart) ── */
-function IconoRequerimientos() {
-  return (
-    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="20" cy="20" r="14" />
-      <circle cx="20" cy="20" r="6" />
-      <circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-function IconoCaptacion() {
-  return (
-    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M20 6 L34 30 H6 Z" />
-      <line x1="20" y1="6" x2="20" y2="30" />
-    </svg>
-  );
-}
-function IconoCierre() {
-  return (
-    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M8 14 L20 20 L8 26" />
-      <path d="M32 14 L20 20 L32 26" />
-      <circle cx="20" cy="20" r="2" fill="currentColor" stroke="none" />
-    </svg>
-  );
 }
 
 /* ── Fondo animado: red de nodos con parallax al mover el mouse ── */
@@ -210,79 +183,7 @@ function RedDeNodos() {
   );
 }
 
-/* ── Contador animado (count-up) al entrar al viewport ── */
-function Contador({ objetivo = 5 }: { objetivo?: number }) {
-  const { ref, visible } = useReveal<HTMLDivElement>(0.5);
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (!visible) return;
-    let raf = 0;
-    const inicio = performance.now();
-    const dur = 1100;
-    const tick = (t: number) => {
-      const p = Math.min((t - inicio) / dur, 1);
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
-      setN(Math.round(eased * objetivo));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [visible, objetivo]);
-  return (
-    <div ref={ref} className="text-center">
-      <p
-        className="font-display text-[64px] leading-none sm:text-[80px]"
-        style={{ color: C.grafito, letterSpacing: "-0.03em" }}
-      >
-        {n}
-        <span style={{ color: C.cobre }}> zonas</span>
-      </p>
-      <p
-        className="mt-3 text-[11px] font-semibold uppercase"
-        style={{ color: C.piedra, letterSpacing: "0.22em" }}
-      >
-        Bogotá zona norte y sabana norte
-      </p>
-    </div>
-  );
-}
-
 /* ── Datos de contenido ── */
-const SERVICIOS = [
-  {
-    icono: <IconoRequerimientos />,
-    titulo: "Requerimientos",
-    texto:
-      "Recibimos y verificamos lo que busca cada comprador: presupuesto, zona y características. Solo entregamos a nuestros brokers aliados compradores calificados, reales y listos para avanzar.",
-  },
-  {
-    icono: <IconoCaptacion />,
-    titulo: "Captación",
-    texto:
-      "Captamos el inmueble del propietario, producimos su material de venta y lo abrimos a la red: el broker que traiga al comprador comparte la comisión 50/50 con KYRELO.",
-  },
-  {
-    icono: <IconoCierre />,
-    titulo: "Cierre asistido",
-    texto:
-      "Acompañamos desde el acuerdo firmado hasta la escritura: visita, promesa, banco y notaría. Reducimos el tiempo y la fricción para todas las partes.",
-  },
-];
-
-const PASOS = [
-  ["Hablamos con el comprador", "Qué busca, dónde, con qué presupuesto y para cuándo."],
-  ["Buscamos el inmueble", "Entre nuestros inmuebles y los de agentes y oficinas de confianza, sin publicar sus datos."],
-  ["Acompañamos hasta firmar", "Visitas, promesa, banco y notaría."],
-];
-
-const ZONAS = ["Bogotá (zona norte)", "Chía", "Cajicá", "Cota", "Sopó"];
-
-const PRINCIPIOS = [
-  ["01", "Verificamos antes de publicar", "Antes de mostrar un comprador, confirmamos que puede comprar: presupuesto, forma de pago y para cuándo."],
-  ["02", "Cuidamos los datos de las personas", "Los datos de nuestros compradores no se publican ni se entregan. Todo se acuerda por escrito antes de la primera visita."],
-  ["03", "Información clara", "Cada inmueble se muestra con lo que importa: precio real, si está disponible y si los papeles están en orden."],
-];
-
 /* ── Bloque envoltorio con scroll-reveal ── */
 function Revelar({
   children,
@@ -444,191 +345,13 @@ export default function LandingKyrelo({
       {/* ════════ QUÉ ES KYRELO: la K y sus tres marcas ════════ */}
       <Ecosistema />
 
-      {/* ════════ ASÍ TRABAJAMOS (3 pasos, reveal secuencial) ════════ */}
-      <ComoFunciona />
-
-      {/* ════════ COBERTURA ════════ */}
-      <section
-        className="border-t px-6 py-24 sm:px-10 sm:py-32"
-        style={{ borderColor: C.linea }}
-      >
-        <div className="mx-auto grid max-w-5xl gap-14 md:grid-cols-2 md:items-center">
-          <Revelar>
-            <div>
-              <p
-                className="text-[11px] font-semibold uppercase"
-                style={{ color: C.cobre, letterSpacing: "0.26em" }}
-              >
-                Dónde operamos
-              </p>
-              <h2
-                className="ky-display mt-5 text-[32px] leading-[1.1] sm:text-[44px]"
-                style={{ letterSpacing: "-0.025em" }}
-              >
-                Cobertura
-              </h2>
-              <p className="mt-6 max-w-md text-[16px] leading-[1.8]" style={{ color: C.piedra }}>
-                Actualmente operamos en Bogotá zona norte y la sabana norte: Chía, Cajicá,
-                Cota y Sopó. Nuestra cobertura se irá expandiendo a otras zonas del país.
-              </p>
-            </div>
-          </Revelar>
-          <Revelar delay={120}>
-            <div className="flex flex-col items-start gap-6">
-              {/* Mapa editorial de cobertura */}
-              <div className="w-full rounded-2xl border bg-white p-5 sm:p-7" style={{ borderColor: C.linea }}>
-                <MapaCobertura />
-              </div>
-              {/* Listado de zonas de cobertura */}
-              <div className="grid w-full grid-cols-2 gap-x-8 gap-y-3.5 sm:grid-cols-3">
-                {ZONAS.map((z) => (
-                  <div key={z} className="flex items-center gap-2.5">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
-                    <span className="text-[14px]" style={{ color: C.grafito }}>{z}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Revelar>
-        </div>
-      </section>
-
-      {/* ════════ EQUIPO (5 roles, sin nombres ni fotos) ════════ */}
-      <section
-        className="border-t px-6 py-24 sm:px-10 sm:py-32"
-        style={{ borderColor: C.linea }}
-      >
-        <div className="mx-auto max-w-5xl">
-          <Revelar>
-            <p
-              className="text-[11px] font-semibold uppercase"
-              style={{ color: C.cobre, letterSpacing: "0.26em" }}
-            >
-              Cómo trabajamos
-            </p>
-            <h2
-              className="ky-display mt-5 max-w-xl text-[32px] leading-[1.1] sm:text-[44px]"
-              style={{ letterSpacing: "-0.025em" }}
-            >
-              Lo que siempre cumplimos.
-            </h2>
-          </Revelar>
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {PRINCIPIOS.map(([inicial, rol, texto], i) => (
-              <Revelar key={rol} delay={i * 90}>
-                <article
-                  className="ky-card flex h-full gap-5 rounded-2xl border bg-white p-7"
-                  style={{ borderColor: C.linea }}
-                >
-                  <div
-                    className="ky-ico ky-display flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-[20px]"
-                    style={{ borderColor: C.linea, color: C.grafito }}
-                  >
-                    {inicial}
-                  </div>
-                  <div>
-                    <h3 className="text-[15px] font-semibold" style={{ letterSpacing: "-0.01em" }}>
-                      {rol}
-                    </h3>
-                    <p className="mt-2 text-[14px] leading-[1.65]" style={{ color: C.piedra }}>
-                      {texto}
-                    </p>
-                  </div>
-                </article>
-              </Revelar>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════ CTA FINAL ════════ */}
-      <section
-        className="border-t px-6 py-28 sm:px-10 sm:py-36"
-        style={{ borderColor: C.linea, background: C.grafito }}
-      >
-        <Revelar>
-          <div className="mx-auto max-w-2xl text-center">
-            <h2
-              className="ky-display text-[34px] leading-[1.12] text-white sm:text-[52px]"
-              style={{ letterSpacing: "-0.025em" }}
-            >
-              Cuéntanos qué necesitas.{" "}
-              <span style={{ color: C.cobre }}>Te ayudamos.</span>
-            </h2>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
-                href={wa("Hola KYRELO, quiero hablar con ustedes.")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ky-btn inline-flex items-center justify-center rounded-full px-9 py-4 text-[15px] font-semibold"
-                style={{ background: C.cobre, color: "#fff" }}
-              >
-                Escríbenos
-              </a>
-              <a
-                href="#marcas"
-                className="ky-btn inline-flex items-center justify-center rounded-full border px-9 py-4 text-[15px] font-medium"
-                style={{ borderColor: "rgba(255,255,255,0.35)", color: "#fff" }}
-              >
-                Conoce las tres marcas
-              </a>
-            </div>
-          </div>
-        </Revelar>
-      </section>
+      {/* ════════ CÓMO TRABAJAMOS · HOY EN KYRELO · ¿QUIÉN ERES? ════════ */}
+      <Metodo />
+      <HoyEnKyrelo />
+      <CierreInicio />
 
       <PieSitio />
     </main>
-  );
-}
-
-/* ── Sección "Cómo funciona" con reveal secuencial de los 5 pasos ── */
-function ComoFunciona() {
-  const { ref, visible } = useReveal<HTMLDivElement>(0.2);
-  return (
-    <section className="border-t px-6 py-24 sm:px-10 sm:py-32" style={{ borderColor: C.linea }}>
-      <div className="mx-auto max-w-3xl">
-        <Revelar>
-          <p
-            className="text-[11px] font-semibold uppercase"
-            style={{ color: C.cobre, letterSpacing: "0.26em" }}
-          >
-            Cómo funciona
-          </p>
-          <h2
-            className="ky-display mt-5 text-[32px] leading-[1.1] sm:text-[44px]"
-            style={{ letterSpacing: "-0.025em" }}
-          >
-            Así trabajamos, en tres pasos.
-          </h2>
-        </Revelar>
-
-        <div ref={ref} className={`ky-steps mt-14 ${visible ? "in" : ""}`}>
-          {PASOS.map(([titulo, texto], i) => (
-            <div
-              key={titulo}
-              className="ky-step flex gap-6 border-t py-8"
-              style={{ borderColor: C.linea, transitionDelay: `${i * 400}ms` }}
-            >
-              <span
-                className="ky-display shrink-0 text-[26px] leading-none"
-                style={{ color: C.cobre, letterSpacing: "-0.02em", minWidth: "2.2rem" }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <h3 className="text-[18px] font-semibold" style={{ letterSpacing: "-0.01em" }}>
-                  {titulo}
-                </h3>
-                <p className="mt-2 text-[15px] leading-[1.7]" style={{ color: C.piedra }}>
-                  {texto}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -662,46 +385,5 @@ function HablaFlotante() {
       </svg>
       Habla con nosotros
     </a>
-  );
-}
-
-/* ── Mapa editorial de cobertura: mapamundi de puntos con Colombia iluminada ── */
-const MUNDO = {
-  W: 104, H: 52,
-  rows: ["0", "0", "dffdfc000000", "5003fff98080000", "fe01000003ff004080000", "ffffffffffffffffffffffffff", "2031ffffffffffffffe", "fffffffffffb8060e18bffffc0", "19fffffffffde00080c1fffdf0", "60ffffffffdc40003c3ffe0c0", "21fffffffffca000fefff8000", "3ffffffffff4000dffff8000", "ffffffffff80017ffff0000", "27fffffb0e9e0000ffff0000", "11fffffbf54e00007fff0000", "197ffffff07400003ffe0000", "27fffffc0fe00001ffc0000", "7ffffbfffe000011f00000", "7fffe3bfff000010f00000", "1fff1fbfff800010e00000", "f8e1f7fff800084c00000", "706077fff80000e000000", "d0401ffff800008000000", "10407ffff0003b0000000", "220003ffce001f00000000", "310001ff80003f00000000", "4720000ff80007f60000000", "308400007f8003ffe0000000", "4410000007f0003ffe0000000", "c000000ff0001ffc0000000", "27000006ff8001ffc0000000", "3f8000023f0001ff00000000", "ffe000023f0000ff00000000", "ffe000001f00003f00000000", "ffe000001e00003f80000000", "f8e000000e00001f80000000", "700000000000000f80000000", "40000000000000000380000000", "20400000000000000180000000", "1c0000000", "c0000000", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"] as string[],
-  col: [[30, 23], [30.5, 23], [29.5, 23.5], [30, 23.5], [30.5, 23.5], [29.5, 24], [30, 24], [30.5, 24], [31, 24], [31.5, 24], [32, 24], [29.5, 24.5], [30, 24.5], [30.5, 24.5], [31, 24.5], [31.5, 24.5], [32, 24.5], [29.5, 25], [30, 25], [30.5, 25], [31, 25], [31.5, 25], [32, 25], [29.5, 25.5], [30, 25.5], [30.5, 25.5], [31, 25.5], [31.5, 25.5], [30.5, 26], [31, 26], [31.5, 26], [31.5, 26.5]] as [number, number][],
-  bog: [30.6, 24.6] as [number, number],
-};
-
-function MapaCobertura() {
-  const S = 6;
-  const pts: [number, number][] = [];
-  MUNDO.rows.forEach((hex, y) => {
-    for (let i = 0; i < hex.length; i++) {
-      const nib = parseInt(hex[hex.length - 1 - i], 16);
-      for (let b = 0; b < 4; b++) if (nib & (1 << b)) pts.push([i * 4 + b, y]);
-    }
-  });
-  const bx = MUNDO.bog[0] * S, by = MUNDO.bog[1] * S;
-  return (
-    <svg
-      viewBox={`0 0 ${MUNDO.W * S} ${MUNDO.H * S}`}
-      className="h-auto w-full"
-      role="img"
-      aria-label="Mapamundi de puntos con Colombia iluminada en cobre"
-    >
-      {pts.map(([x, y], i) => (
-        <circle key={i} cx={x * S + S / 2} cy={y * S + S / 2} r={1.8} fill="#D9D5C9" />
-      ))}
-      {MUNDO.col.map(([x, y], i) => (
-        <circle key={`c${i}`} cx={x * S + S / 2} cy={y * S + S / 2} r={2.2} fill={C.cobre} />
-      ))}
-      <circle cx={bx} cy={by} r={4} fill={C.cobre} />
-      <circle cx={bx} cy={by} r={4} fill="none" stroke={C.cobre} strokeWidth={1.4}>
-        <animate attributeName="r" values="4;16" dur="2.8s" repeatCount="indefinite" />
-        <animate attributeName="stroke-opacity" values="0.6;0" dur="2.8s" repeatCount="indefinite" />
-      </circle>
-      <text x={bx + 14} y={by + 4} fontSize="13" fontWeight={600} fill={C.grafito}>Colombia</text>
-    </svg>
   );
 }
