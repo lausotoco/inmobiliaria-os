@@ -3,7 +3,7 @@
 /* ============================================================
    KYRELO — Página pública (Home)
    Secciones: Hero (¿quién eres?) · Qué es KYRELO (la K y sus tres
-              marcas) · Cómo trabajamos · Hoy en KYRELO · Cierre
+              marcas) · Hoy en KYRELO · Cierre
    Regla: la portada no habla de cobros. Cada marca explica el suyo
    en su página (Plataforma no cobra por adelantado; Marketing es
    un servicio pago). Así no se mezclan los dos mensajes.
@@ -19,7 +19,7 @@ import { APP } from "@/lib/config";
 import { CabeceraSitio, PieSitio } from "@/components/sitio/Sitio";
 import Constelacion from "./Constelacion";
 import Ecosistema from "./Ecosistema";
-import { CierreInicio, HoyEnKyrelo, Metodo } from "./SeccionesInicio";
+import { CierreInicio, HoyEnKyrelo } from "./SeccionesInicio";
 
 /* ── Paleta de marca ── */
 const C = {
@@ -346,7 +346,6 @@ export default function LandingKyrelo({
       <Ecosistema />
 
       {/* ════════ CÓMO TRABAJAMOS · HOY EN KYRELO · ¿QUIÉN ERES? ════════ */}
-      <Metodo />
       <HoyEnKyrelo />
       <CierreInicio />
 
