@@ -8,9 +8,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CabeceraSitio, PieSitio } from "@/components/sitio/Sitio";
-import { C, LogoMarca, wa } from "@/components/sitio/marca";
+import { C, wa } from "@/components/sitio/marca";
 import { PERFILES, buscarPerfil, type PerfilId } from "@/lib/perfiles";
 import { ESTILOS_GRAFICOS, GraficoPerfil } from "./Graficos";
+import Servicios from "./Servicios";
 
 const serif = { fontFamily: '"Fraunces", Georgia, serif' };
 
@@ -53,7 +54,6 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
   const p = buscarPerfil(id)!;
   const [montado, setMontado] = useState(false);
   useEffect(() => { const t = setTimeout(() => setMontado(true), 60); return () => clearTimeout(t); }, []);
-  const pasos = useVisible<HTMLDivElement>(0.25);
   const otros = PERFILES.filter((o) => o.id !== id);
 
   return (
@@ -63,7 +63,7 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
         .pf-rev { opacity: 0; transform: translateY(24px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
         .pf-rev.in { opacity: 1; transform: none; }
         .pf-btn { transition: transform .3s ease, opacity .3s ease; } .pf-btn:hover { transform: translateY(-1px); opacity: .92; }
-        .pf-tachar { background-image: linear-gradient(currentColor, currentColor); background-size: 0% 1.5px; background-repeat: no-repeat; background-position: 0 55%; transition: background-size .9s cubic-bezier(.16,1,.3,1) .35s; }
+          .pf-tachar { -webkit-box-decoration-break: clone; box-decoration-break: clone; background-image: linear-gradient(currentColor, currentColor); background-size: 0% 1.5px; background-repeat: no-repeat; background-position: 0 55%; transition: background-size .9s cubic-bezier(.16,1,.3,1) .35s; }
         .pf-rev.in .pf-tachar { background-size: 100% 1.5px; }
         .pf-linea { transform-origin: left; transform: scaleX(0); transition: transform 2.2s cubic-bezier(.16,1,.3,1); }
         .pf-pasos.in .pf-linea { transform: scaleX(1); }
@@ -93,8 +93,11 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
             <p className="mt-6 max-w-xl text-[17px] leading-[1.7] sm:text-[19px]" style={{ color: C.piedra }}>
               {p.bajada}
             </p>
-            <div className="mt-9">
+            <div className="mt-9 flex flex-wrap items-center gap-5">
               <Boton cta={p.cta} />
+              <a href="#servicios" className="text-[15px] font-semibold underline underline-offset-4">
+                Ver los servicios ↓
+              </a>
             </div>
           </div>
           <div
@@ -105,6 +108,9 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
           </div>
         </div>
       </section>
+
+      {/* ═══ Servicios (lo principal) ═══ */}
+      <Servicios perfil={p} />
 
       {/* ═══ Lo que cambia ═══ */}
       <section className="border-t px-6 py-20 sm:px-10 sm:py-28" style={{ borderColor: C.linea }}>
@@ -119,7 +125,7 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
             {p.cambios.map(([antes, ahora], i) => (
               <Aparece key={antes} delay={i * 110}>
                 <div className="grid items-center gap-3 rounded-2xl border bg-white p-5 sm:grid-cols-[1fr_auto_1fr] sm:gap-6 sm:p-6" style={{ borderColor: C.linea }}>
-                  <p className="pf-tachar text-[15px] sm:text-[16px]" style={{ color: "#8A8880" }}>{antes}</p>
+                  <p className="text-[15px] sm:text-[16px]" style={{ color: "#8A8880" }}><span className="pf-tachar">{antes}</span></p>
                   <span className="hidden text-[20px] sm:block" style={{ color: C.cobre }}>→</span>
                   <p className="flex items-center gap-3 text-[16px] font-semibold sm:text-[17px]">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: C.cobre }}>
@@ -131,59 +137,7 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
               </Aparece>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ═══ Cómo funciona ═══ */}
-      <section className="px-6 py-20 sm:px-10 sm:py-28" style={{ background: C.grafito, color: C.hueso }}>
-        <div className="mx-auto max-w-6xl">
-          <p className="text-[11px] font-semibold uppercase" style={{ color: "#D9A36A", letterSpacing: "0.26em" }}>Cómo funciona</p>
-          <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[44px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
-            En {p.pasos.length} pasos.
-          </h2>
-          <div ref={pasos.ref} className={`pf-pasos relative mt-14 ${pasos.visible ? "in" : ""}`}>
-            <div className="absolute left-0 right-0 top-[22px] hidden h-[2px] lg:block" style={{ background: "rgba(241,239,232,.15)" }}>
-              <div className="pf-linea h-full w-full" style={{ background: C.cobre }} />
-            </div>
-            <div className={`grid gap-8 ${p.pasos.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
-              {p.pasos.map(([t, d], i) => (
-                <div key={t} className="pf-paso relative" style={{ transitionDelay: `${200 + i * 260}ms` }}>
-                  <span
-                    className="pf-num relative z-10 flex h-11 w-11 items-center justify-center rounded-full border text-[15px] font-semibold"
-                    style={{ borderColor: "rgba(241,239,232,.4)", background: C.grafito, transitionDelay: `${300 + i * 260}ms` }}
-                  >
-                    {i + 1}
-                  </span>
-                  <h3 className="mt-5 text-[19px] leading-snug" style={serif}>{t}</h3>
-                  <p className="mt-2 text-[14.5px] leading-relaxed" style={{ color: "rgba(241,239,232,.68)" }}>{d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ Quién te acompaña + promesas ═══ */}
-      <section className="px-6 py-20 sm:px-10 sm:py-28">
-        <div className="mx-auto max-w-6xl">
-          <Aparece>
-            <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.26em" }}>Quién te acompaña</p>
-          </Aparece>
-          <div className={`mt-8 grid gap-6 ${p.marcas.length > 1 ? "md:grid-cols-2" : ""}`}>
-            {p.marcas.map((m, i) => (
-              <Aparece key={m.marca} delay={i * 120}>
-                <a href={m.href} className="pf-otro flex h-full items-start gap-6 rounded-2xl border bg-white p-7" style={{ borderColor: C.linea }}>
-                  <LogoMarca marca={m.marca} className="h-16 w-16 shrink-0" />
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: C.cobre }}>KYRELO {m.marca[0].toUpperCase() + m.marca.slice(1)}</p>
-                    <p className="mt-2 text-[19px] leading-snug" style={serif}>{m.texto}</p>
-                    <p className="mt-4 text-[14px] font-semibold">{m.boton} →</p>
-                  </div>
-                </a>
-              </Aparece>
-            ))}
-          </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {p.promesas.map((t, i) => (
               <Aparece key={t} delay={i * 100}>
                 <div className="flex items-center gap-3 rounded-2xl px-6 py-5" style={{ background: "#E9E5DA" }}>
@@ -195,6 +149,7 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
           </div>
         </div>
       </section>
+
 
       {/* ═══ Cierre ═══ */}
       <section className="px-6 py-24 text-center sm:px-10" style={{ background: C.grafito }}>
