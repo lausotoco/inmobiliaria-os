@@ -63,7 +63,7 @@ const wa = (msg: string) =>
   `https://wa.me/${APP.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
 
 const SUBTITULO =
-  "Tú no recorres 400 anuncios. Nos dices qué necesitas, publicamos tu requerimiento en nuestra red de brokers de la Sabana, y te presentamos solo lo que existe de verdad — incluyendo propiedades que no están en ningún portal.";
+  "Tú no recorres 400 anuncios. Nos dices qué necesitas, publicamos tu requerimiento en nuestra red de agentes y oficinas de la Sabana, y te presentamos solo lo que existe de verdad — incluyendo propiedades que no están en ningún portal.";
 
 /* ── Fondo decorativo: constelación estática ──────────────────
    La home usa un canvas animado (RedDeNodos). Aquí va una versión
@@ -520,7 +520,7 @@ function Formulario({ municipio }: { municipio: Municipio }) {
 /* ── Tres razones ──────────────────────────────────────────── */
 const RAZONES_BASE: [string, string][] = [
   [
-    "Te respondemos en menos de 5 minutos",
+    "Te respondemos hoy mismo",
     "Nada de formularios que caen en el vacío. Nos escribes y hablamos hoy mismo.",
   ],
 ];
@@ -572,12 +572,12 @@ const PASOS: [string, string][] = [
     "Sesenta segundos, sin registro y sin crear ninguna cuenta.",
   ],
   [
-    "Hablamos quince minutos por videollamada",
-    "Entendemos el detalle de lo que necesitas y tu presupuesto real.",
+    "Entendemos lo que necesitas",
+    "Confirmamos contigo la zona, el presupuesto y el plazo antes de buscar.",
   ],
   [
     "Publicamos tu requerimiento de forma anónima",
-    "Los brokers de la Sabana nos presentan lo que tienen. Tu nombre y tus datos nunca se publican.",
+    "Los agentes y oficinas de la Sabana nos presentan lo que tienen. Tu nombre y tus datos nunca se publican.",
   ],
   [
     "Visitas solo lo que sí te sirve",

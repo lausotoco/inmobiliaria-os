@@ -1,13 +1,14 @@
 "use client";
 
 /* ============================================================
-   KYRELO — Página pública de BROKERS (/brokers)
-   Explica el negocio a brokers e inmobiliarias y les permite
+   KYRELO Plataforma (/plataforma y /brokers, misma página)
+   Explica la red a agentes y oficinas y les permite
    registrarse o iniciar sesión. Al iniciar sesión entran directo
    a sus requerimientos (/broker).
    ============================================================ */
 
-import Image from "next/image";
+import { CabeceraSitio } from "@/components/sitio/Sitio";
+import { LogoMarca } from "@/components/sitio/marca";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -34,7 +35,7 @@ const BENEFICIOS = [
   ["Nosotros hacemos el papeleo", "Del acuerdo en adelante: promesa, banco, notaría y escrituración."],
   [
     "No es competencia, es red",
-    "Varias oficinas e inmobiliarias operan dentro de KYRELO al mismo tiempo. Entre más requerimientos puedas atender, más cierres puedes lograr.",
+    "La red está abierta a agentes y oficinas de la Sabana al mismo tiempo. Entre más requerimientos puedas atender, más cierres puedes lograr.",
   ],
 ];
 
@@ -68,38 +69,30 @@ export default function BrokersPage() {
     >
       <style>{`.bk-serif{font-family:"Fraunces",Georgia,serif;}`}</style>
 
-      {/* Header con retorno a la home */}
-      <header
-        className="flex items-center justify-between border-b px-6 py-3.5 sm:px-10"
-        style={{ borderColor: C.linea }}
-      >
-        <a href="/" className="flex items-center gap-2.5">
-          <Image src="/kyrelo-isotipo.png" alt="KYRELO" width={64} height={64} className="h-8 w-8 rounded-[7px]" />
-          <span className="bk-serif text-[18px]" style={{ letterSpacing: "0.04em" }}>KYRELO</span>
-        </a>
-        <a href="/" className="text-[13px] font-medium" style={{ color: C.piedra }}>
-          Volver al inicio
-        </a>
-      </header>
+      {/* Cabecera del sitio: esta página es KYRELO Plataforma */}
+      <CabeceraSitio activa="/plataforma" />
 
       <div className="mx-auto grid max-w-6xl gap-16 px-6 py-16 sm:px-10 sm:py-24 lg:grid-cols-2 lg:items-start lg:gap-20">
         {/* ── Columna izquierda: propuesta para el broker ── */}
         <div>
-          <p
-            className="text-[11px] font-semibold uppercase"
-            style={{ color: C.cobre, letterSpacing: "0.28em" }}
-          >
-            Para brokers e inmobiliarias
-          </p>
+          <div className="flex items-center gap-4">
+            <LogoMarca marca="plataforma" className="h-12 w-12" />
+            <p
+              className="text-[11px] font-semibold uppercase"
+              style={{ color: C.cobre, letterSpacing: "0.28em" }}
+            >
+              KYRELO Plataforma · Agentes y oficinas
+            </p>
+          </div>
           <h1
             className="bk-serif mt-5 text-[42px] leading-[1.05] sm:text-[58px]"
             style={{ letterSpacing: "-0.03em" }}
           >
-            Más requerimientos.{" "}
-            <span style={{ color: C.cobre }}>Más cierres.</span>
+            Compradores verificados{" "}
+            <span style={{ color: C.cobre }}>para tu inventario.</span>
           </h1>
           <p className="mt-5 text-[17px]" style={{ color: C.piedra }}>
-            Regístrate gratis.
+            Registro gratis. No pagas nada por adelantado: ganas al cierre.
           </p>
 
           {/* Cómo funciona para ti */}
@@ -150,7 +143,7 @@ export default function BrokersPage() {
             Inicia sesión
           </h2>
           <p className="mt-1.5 text-[13px]" style={{ color: C.piedra }}>
-            Si ya tienes cuenta de broker, entra aquí.
+            Si ya tienes cuenta en la red, entra aquí.
           </p>
 
           <form onSubmit={iniciarSesion} className="mt-8">

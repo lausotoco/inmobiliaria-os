@@ -13,6 +13,9 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rutas: MetadataRoute.Sitemap = [
     { url: BASE, changeFrequency: "weekly", priority: 1 },
+    { url: `${BASE}/inmobiliaria`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${BASE}/plataforma`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE}/marketing`, changeFrequency: "monthly", priority: 0.8 },
     {
       url: `${BASE}/inmuebles`,
       changeFrequency: "daily",

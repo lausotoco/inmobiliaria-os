@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatoCOP } from "@/lib/utils";
 import { APP } from "@/lib/config";
+import { CabeceraSitio } from "@/components/sitio/Sitio";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default async function InmueblesPage() {
         fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
+      <CabeceraSitio activa="/inmobiliaria" />
       <div className="mx-auto max-w-5xl px-6 sm:px-8">
         {/* ── Cabecera editorial ── */}
         <header className="pb-14 pt-20 sm:pt-28">

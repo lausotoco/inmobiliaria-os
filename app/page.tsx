@@ -4,9 +4,9 @@ import LandingKyrelo from "@/components/landing/LandingKyrelo";
 
 // La home pública SÍ debe indexarse en Google (la app privada no)
 export const metadata: Metadata = {
-  title: "KYRELO — Menos búsqueda. Más cierre.",
+  title: "KYRELO · El ecosistema inmobiliario de la Sabana",
   description:
-    "Compradores verificados de vivienda en la Sabana de Bogotá, conectados con brokers e inmobiliarias. Captamos inmuebles y compartimos la comisión con la red.",
+    "Inmobiliaria, plataforma de compradores verificados y marketing inmobiliario para agentes, oficinas y constructoras en Chía, Cajicá, Cota, Sopó y Bogotá norte.",
   robots: { index: true, follow: true },
 };
 

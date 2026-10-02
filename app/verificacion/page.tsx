@@ -54,33 +54,17 @@ export default function Page() {
         <div>
           <H2>Antes de publicar tu requerimiento</H2>
           <p className="mt-2">
-            Un requerimiento no se publica solo por llenar un formulario. Antes hablamos
-            contigo unos quince minutos por videollamada y comprobamos tres cosas:
+            Un requerimiento no se publica solo por llenar un formulario. Antes confirmamos
+            contigo tu presupuesto, tu forma de pago, la zona que buscas y el plazo. Si algo
+            no cuadra, no se publica. Y si el presupuesto no alcanza para lo que buscas, te lo
+            decimos desde el principio, no tres meses después.
           </p>
-          <ul className="mt-3 list-disc space-y-2 pl-5">
-            <li>
-              <strong>Que la búsqueda sea real.</strong> Que estés buscando de verdad y no
-              explorando precios, y que la decisión de compra dependa de ti o de personas
-              que también están en la conversación.
-            </li>
-            <li>
-              <strong>Que el presupuesto sea consistente.</strong> Hablamos de cuánto tienes
-              disponible, cuánto piensas financiar y con qué banco estás hablando. Si el
-              presupuesto no alcanza para lo que buscas, te lo decimos en esa llamada, no
-              tres meses después.
-            </li>
-            <li>
-              <strong>Que el requerimiento sea específico.</strong> Municipio, zona, tipo de
-              vivienda, área, habitaciones y plazo. Un requerimiento vago no le sirve a
-              ningún broker y termina desperdiciando el tiempo de todos.
-            </li>
-          </ul>
         </div>
 
         <div>
           <H2>Qué se publica y qué no</H2>
           <p className="mt-2">
-            Cuando publicamos tu requerimiento en nuestra red, los brokers ven únicamente lo
+            Cuando publicamos tu requerimiento en nuestra red, los agentes y oficinas ven únicamente lo
             que necesitan para saber si tienen algo: municipio, zona, rango de presupuesto,
             tipo de vivienda, habitaciones y plazo.
           </p>
@@ -89,7 +73,7 @@ export default function Page() {
               Tu nombre, tu teléfono y tu correo no se publican, no se comparten y no se
               venden.
             </strong>{" "}
-            Ningún broker recibe tus datos de contacto. Si alguno tiene algo que encaja, nos
+            Ningún agente recibe tus datos de contacto. Si alguno tiene algo que encaja, nos
             lo presenta a nosotros y nosotros hablamos contigo.
           </p>
         </div>

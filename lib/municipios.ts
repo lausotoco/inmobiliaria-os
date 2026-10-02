@@ -71,7 +71,8 @@ export const MUNICIPIOS: Municipio[] = [
     preposicion: "en",
     rangoDesde: "$800 millones",
     prellenado: "La Calera",
-    activo: true,
+    // Fuera de la cobertura pública (Chía, Cajicá, Cota, Sopó y Bogotá norte)
+    activo: false,
   },
   {
     slug: "zipaquira",
@@ -80,7 +81,8 @@ export const MUNICIPIOS: Municipio[] = [
     preposicion: "en",
     // Sin cifra a propósito: otro segmento de precio.
     prellenado: "Zipaquirá",
-    activo: true,
+    // Fuera de la cobertura pública (Chía, Cajicá, Cota, Sopó y Bogotá norte)
+    activo: false,
   },
   {
     slug: "sabana-norte",
@@ -115,7 +117,7 @@ export function tituloSeo(m: Municipio): string {
 }
 
 export function descripcionSeo(m: Municipio): string {
-  return `Dile a KYRELO qué casa buscas ${m.preposicion} ${m.nombreEnFrase} y nosotros la encontramos. Casas en conjunto cerrado y campestres en la Sabana Norte. Respuesta por WhatsApp en minutos.`;
+  return `Dile a KYRELO qué casa buscas ${m.preposicion} ${m.nombreEnFrase} y nosotros la encontramos. Casas en conjunto cerrado y campestres en la Sabana Norte. Te respondemos por WhatsApp hoy mismo.`;
 }
 
 /* ── Opciones del formulario ──────────────────────────────
@@ -126,8 +128,6 @@ export const OPCIONES_MUNICIPIO = [
   "Cajicá",
   "Cota",
   "Sopó",
-  "La Calera",
-  "Zipaquirá",
   "Varios",
 ];
 

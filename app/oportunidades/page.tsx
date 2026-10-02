@@ -133,14 +133,14 @@ export default function Oportunidades() {
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Link href="/" className="leading-tight">
             <p className="text-[15px] font-bold tracking-tight text-[#1A1A18]">{APP.nombre}</p>
-            <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E]">Red de brokers</p>
+            <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E]">Red de agentes y oficinas</p>
           </Link>
           <div className="flex items-center gap-3">
             <Link href={ENTRADA} className="text-[12px] text-[#5F5E5A] hover:text-[#1A1A18] transition">
               Iniciar sesión
             </Link>
             <Link href={ENTRADA} className="rounded-full bg-[#1A1A18] px-4 py-2 text-[12px] font-semibold text-[#F1EFE8] hover:opacity-85 transition">
-              Únete como broker
+              Únete a la red
             </Link>
           </div>
         </div>
@@ -596,7 +596,7 @@ function VacioAlerta({ zona }: { zona: string }) {
         {zona ? `No hay compradores en ${zona} ahora mismo` : 'No hay compradores con esos filtros'}
       </p>
       <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-[#5F5E5A]">
-        Llegan nuevos cada semana. Regístrate como broker y guarda esta búsqueda: te avisamos cuando entre un comprador que encaje.
+        Llegan nuevos cada semana. Regístrate en la red y guarda esta búsqueda: te avisamos cuando entre un comprador que encaje.
       </p>
       <Link href="/brokers" className="mt-6 inline-block rounded-full bg-[#1A1A18] px-6 py-3 text-[13px] font-medium text-[#F1EFE8] hover:opacity-85 transition">
         Crear cuenta y guardar alerta

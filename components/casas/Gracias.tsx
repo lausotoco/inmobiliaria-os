@@ -140,7 +140,7 @@ export default function Gracias({ mensajeCrudo }: { mensajeCrudo: string | null 
           </a>
 
           <p className="mt-8 text-[12.5px] leading-[1.6]" style={{ color: C.piedra }}>
-            Te respondemos hoy mismo, en menos de 5 minutos en horario hábil. Buscar
+            Te respondemos hoy mismo en horario hábil. Buscar
             contigo no tiene ningún costo para ti.
           </p>
         </div>

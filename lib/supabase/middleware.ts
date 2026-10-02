@@ -43,6 +43,11 @@ export async function updateSession(request: NextRequest) {
   const esPublica =
     path === "/" ||
     path === "/brokers" ||
+    // Páginas de las tres marcas del ecosistema y sus videos
+    path === "/inmobiliaria" ||
+    path === "/plataforma" ||
+    path === "/marketing" ||
+    path.startsWith("/reels/") ||
     path === "/login" ||
     path === "/registro-broker" ||
     path === "/recuperar" ||

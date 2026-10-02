@@ -2,8 +2,11 @@
 
 /* ============================================================
    KYRELO — Página pública (Home)
-   Secciones: Hero · Qué es KYRELO · Servicios · Cómo funciona
-              · Cobertura · Equipo · CTA final
+   Secciones: Hero · Las tres marcas · Qué es KYRELO · Así trabajamos
+              · Cobertura · Principios · CTA final
+   Regla: la portada no habla de cobros. Cada marca explica el suyo
+   en su página (Plataforma no cobra por adelantado; Marketing es
+   un servicio pago). Así no se mezclan los dos mensajes.
    Estética: grafito #1A1A18 + cobre #B87333 sobre hueso #F1EFE8
    Tipografía: Fraunces (titulares) · Inter (cuerpo)
    Animaciones: red de nodos (canvas) + parallax, scroll-reveal
@@ -11,9 +14,10 @@
                 fade+zoom del hero al hacer scroll.
    ============================================================ */
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { APP } from "@/lib/config";
+import { CabeceraSitio, PieSitio } from "@/components/sitio/Sitio";
+import { LogoMarca, type Marca } from "@/components/sitio/marca";
 
 /* ── Paleta de marca ── */
 const C = {
@@ -265,19 +269,45 @@ const SERVICIOS = [
 ];
 
 const PASOS = [
-  ["Recibimos el requerimiento", "Un comprador nos cuenta exactamente qué busca: zona, presupuesto y características."],
-  ["Verificamos y calificamos", "Confirmamos presupuesto, plazo y forma de pago. Solo publicamos los compradores que pasan la verificación."],
-  ["Lo publicamos a la red", "El comprador verificado queda visible 30 días para los brokers aliados, siempre de forma anónima."],
-  ["Los brokers postulan", "Cada broker propone su inmueble. El comprador recibe una selección personalizada y nos dice qué le interesó."],
-  ["Acompañamos hasta la escritura", "Acuerdo firmado, visita, promesa, banco y notaría. La comisión se comparte solo cuando el negocio se cierra."],
+  ["Conocemos al comprador", "Qué busca, en qué zona, con qué presupuesto y para cuándo. Confirmado con el propio comprador."],
+  ["Buscamos el inmueble", "Con nuestro inventario y con la red de agentes y oficinas aliadas, siempre sin exponer sus datos."],
+  ["Acompañamos hasta la escritura", "Visita, promesa, banco y notaría, con todo acordado por escrito antes de empezar."],
+];
+
+/* Las tres marcas del ecosistema (la portada no habla de cobros) */
+const MARCAS: { marca: Marca; nombre: string; titular: string; linea: string; boton: string; href: string }[] = [
+  {
+    marca: "inmobiliaria",
+    nombre: "Inmobiliaria",
+    titular: "Primero el comprador. Después el inmueble.",
+    linea: "Venta y arriendo de vivienda premium en la Sabana, con compradores que ya conocemos.",
+    boton: "Vender o arrendar",
+    href: "/inmobiliaria",
+  },
+  {
+    marca: "plataforma",
+    nombre: "Plataforma",
+    titular: "Compradores verificados.",
+    linea: "Conectados con agentes y oficinas aliadas de Chía, Cajicá, Cota, Sopó y Bogotá norte.",
+    boton: "Ver compradores",
+    href: "/plataforma",
+  },
+  {
+    marca: "marketing",
+    nombre: "Marketing",
+    titular: "Cada inmueble, mejor presentado.",
+    linea: "Reels, recorridos 3D y pauta para agentes, oficinas y constructoras.",
+    boton: "Agenda una reunión",
+    href: "/marketing",
+  },
 ];
 
 const ZONAS = ["Bogotá (zona norte)", "Chía", "Cajicá", "Cota", "Sopó"];
 
 const PRINCIPIOS = [
   ["01", "Verificamos antes de publicar", "Ningún comprador llega a la red sin que confirmemos su presupuesto, su plazo y su forma de pago. Preferimos publicar menos y que cada uno sea real."],
-  ["02", "El comprador no se comparte por fuera", "Los datos del comprador nunca salen de KYRELO. El broker trabaja el negocio con nosotros, con un acuerdo firmado antes de la primera visita."],
-  ["03", "Solo cobramos cuando se cierra", "Registrarse y postular es gratis. La comisión se comparte el día de la escritura, nunca antes."],
+  ["02", "El comprador no se comparte por fuera", "Los datos del comprador nunca salen de KYRELO. Quien trabaja el negocio con nosotros firma un acuerdo antes de la primera visita."],
+  ["03", "Información completa", "Cada inmueble se presenta con lo que importa: precio de hoy, disponibilidad y papeles en orden. Sin adjetivos que no dicen nada."],
 ];
 
 /* ── Bloque envoltorio con scroll-reveal ── */
@@ -372,34 +402,8 @@ export default function LandingKyrelo({
         }
       `}</style>
 
-      {/* ════════ HEADER (barra fina, opcional) ════════ */}
-      <header
-        className="sticky top-0 z-30 flex items-center justify-between border-b px-6 py-3.5 backdrop-blur-sm sm:px-10"
-        style={{ borderColor: C.linea, background: "rgba(241,239,232,0.82)" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <Image
-            src="/kyrelo-isotipo.png"
-            alt="KYRELO"
-            width={64}
-            height={64}
-            className="h-8 w-8 rounded-[7px]"
-          />
-          <span
-            className="ky-display text-[18px]"
-            style={{ letterSpacing: "0.04em" }}
-          >
-            KYRELO
-          </span>
-        </div>
-        <a
-          href={loggedIn ? panelHref : "/login"}
-          className="text-[13px] font-medium"
-          style={{ color: C.piedra }}
-        >
-          {loggedIn ? "Ir a mi panel" : "Entrar"}
-        </a>
-      </header>
+      {/* ════════ CABECERA con el menú de las tres marcas ════════ */}
+      <CabeceraSitio loggedIn={loggedIn} panelHref={panelHref} />
 
       <HablaFlotante />
 
@@ -419,7 +423,7 @@ export default function LandingKyrelo({
             className={`ky-reveal ${montado ? "in" : ""} text-[11px] font-semibold uppercase`}
             style={{ color: C.cobre, letterSpacing: "0.3em" }}
           >
-            Real estate colectivo · Bogotá y sabana norte
+            El ecosistema inmobiliario de la Sabana
           </p>
 
           {/* Titular: entra línea por línea */}
@@ -450,9 +454,8 @@ export default function LandingKyrelo({
             className={`ky-reveal ${montado ? "in" : ""} mx-auto mt-8 max-w-xl text-[16px] leading-[1.7] sm:text-[18px]`}
             style={{ color: C.piedra, transitionDelay: "420ms" }}
           >
-            Verificamos compradores de vivienda en la Sabana de Bogotá y los conectamos
-            con los brokers e inmobiliarias que tienen el inmueble. Y captamos inmuebles
-            que nuestra red vende con el material listo. Solo cobramos cuando se cierra.
+            Primero conocemos al comprador; después buscamos el inmueble. Alrededor de
+            esa idea trabajan tres marcas: Inmobiliaria, Plataforma y Marketing.
           </p>
 
           {/* CTAs */}
@@ -461,31 +464,29 @@ export default function LandingKyrelo({
             style={{ transitionDelay: "560ms" }}
           >
             <a
-              href="/oportunidades"
+              href="/casas/sabana-norte"
               className="ky-btn inline-flex items-center justify-center rounded-full px-8 py-3.5 text-[14px] font-semibold text-white"
               style={{ background: C.cobre }}
             >
-              Ver compradores verificados
+              Busco inmueble
             </a>
             <a
-              href={wa("Hola KYRELO, quiero vender o arrendar mi inmueble.")}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/inmobiliaria"
               className="ky-btn inline-flex items-center justify-center rounded-full border px-8 py-3.5 text-[14px] font-medium"
               style={{ borderColor: C.grafito, color: C.grafito }}
             >
-              Quiero vender o arrendar mi inmueble
+              Vendo o arriendo
             </a>
           </div>
 
-          {/* Entrada directa para brokers: es el registro que más importa hoy */}
+          {/* Tercera puerta: agentes, oficinas y constructoras eligen su marca abajo */}
           <p
             className={`ky-reveal ${montado ? "in" : ""} mt-5 text-[13px]`}
             style={{ color: C.piedra, transitionDelay: "640ms" }}
           >
-            ¿Eres broker o inmobiliaria?{" "}
-            <a href="/brokers" className="font-semibold underline underline-offset-4" style={{ color: C.grafito }}>
-              Crea tu cuenta gratis
+            ¿Eres agente, oficina o constructora?{" "}
+            <a href="#marcas" className="font-semibold underline underline-offset-4" style={{ color: C.grafito }}>
+              Mira cómo trabajamos contigo
             </a>
           </p>
         </div>
@@ -502,144 +503,57 @@ export default function LandingKyrelo({
         </div>
       </section>
 
-      {/* ════════ CON QUIÉN TRABAJAMOS: 3 TARGETS ════════ */}
-      <section className="px-6 py-20 sm:px-10 sm:py-28" style={{ borderTop: `1px solid ${C.linea}` }}>
+      {/* ════════ LAS TRES MARCAS ════════ */}
+      <section id="marcas" className="scroll-mt-20 px-6 py-20 sm:px-10 sm:py-28" style={{ borderTop: `1px solid ${C.linea}` }}>
         <div className="mx-auto max-w-6xl">
           <Revelar className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: C.cobre }}>
-              ¿Con quién trabajamos?
+              Un solo ecosistema
             </p>
             <h2 className="mt-3 text-[26px] leading-tight sm:text-[32px]" style={{ fontFamily: "Fraunces, serif" }}>
-              Tres formas de trabajar con nosotros
+              Tres marcas para comprar y vender vivienda
             </h2>
           </Revelar>
 
           <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {/* Brokers e inmobiliarias */}
-            <Revelar>
-              <div className="flex h-full flex-col rounded-2xl border bg-white p-7" style={{ borderColor: C.linea }}>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
-                  Para brokers e inmobiliarias
-                </p>
-                <h3 className="mt-3 text-[20px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
-                  Tienes inmuebles o compradores. Aquí está lo que te falta.
-                </h3>
-                <ul className="mt-5 space-y-3">
-                  {[
-                    "Compradores verificados y calificados: presupuesto, plazo y forma de pago confirmados.",
-                    "Postula tu inmueble con el enlace a tus fotos. El comprador nunca sale de KYRELO, ni tú del negocio.",
-                    "¿Tienes comprador y no inmueble? Asóciate a los inmuebles que captamos: fotos, video, ficha y textos listos, y reparto 50/50.",
-                    "Registro gratis. Compartes comisión solo cuando cierras.",
-                  ].map((t) => (
-                    <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
-                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-auto flex flex-wrap gap-3 pt-7">
-                  <a
-                    href="/oportunidades"
-                    className="ky-btn inline-flex items-center justify-center rounded-full px-7 py-3 text-[14px] font-semibold text-white"
-                    style={{ background: C.grafito }}
+            {MARCAS.map((m, i) => (
+              <Revelar key={m.marca} delay={i * 100}>
+                <a
+                  href={m.href}
+                  className="ky-card group flex h-full flex-col rounded-2xl border bg-white p-7"
+                  style={{ borderColor: C.linea }}
+                >
+                  <LogoMarca marca={m.marca} className="h-16 w-16" />
+                  <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: C.cobre }}>
+                    KYRELO {m.nombre}
+                  </p>
+                  <h3 className="mt-3 text-[22px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
+                    {m.titular}
+                  </h3>
+                  <p className="mt-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
+                    {m.linea}
+                  </p>
+                  <span
+                    className="mt-auto inline-flex pt-7 text-[14px] font-semibold underline-offset-4 group-hover:underline"
+                    style={{ color: C.grafito }}
                   >
-                    Ver compradores verificados
-                  </a>
-                  <a
-                    href="/brokers"
-                    className="ky-btn inline-flex items-center justify-center rounded-full border px-7 py-3 text-[14px] font-medium"
-                    style={{ borderColor: C.grafito, color: C.grafito }}
-                  >
-                    Crear cuenta gratis
-                  </a>
-                </div>
-              </div>
-            </Revelar>
-
-            {/* Propietarios */}
-            <Revelar delay={100}>
-              <div className="flex h-full flex-col rounded-2xl border bg-white p-7" style={{ borderColor: C.linea }}>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
-                  Para propietarios
-                </p>
-                <h3 className="mt-3 text-[20px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
-                  Quieres vender o arrendar. Nosotros lo cerramos.
-                </h3>
-                <ul className="mt-5 space-y-3">
-                  {[
-                    "Captamos tu inmueble con mandato y producimos su material de venta: fotos, video, ficha y textos.",
-                    "Lo movemos dentro de toda la red de brokers de la Sabana, en venta o en arriendo.",
-                    "Del acuerdo en adelante el papeleo es nuestro: promesa, banco, notaría y escrituración.",
-                  ].map((t) => (
-                    <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
-                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-auto pt-7">
-                  <a
-                    href={wa("Hola KYRELO, quiero vender o arrendar mi inmueble.")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ky-btn inline-flex items-center justify-center rounded-full border px-7 py-3 text-[14px] font-medium"
-                    style={{ borderColor: C.grafito, color: C.grafito }}
-                  >
-                    Quiero vender o arrendar
-                  </a>
-                </div>
-              </div>
-            </Revelar>
-
-            {/* Compradores / quienes buscan inmueble */}
-            <Revelar delay={200}>
-              <div className="flex h-full flex-col rounded-2xl border bg-white p-7" style={{ borderColor: C.linea }}>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.cobre }}>
-                  Para quienes buscan inmueble
-                </p>
-                <h3 className="mt-3 text-[20px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
-                  Buscas casa o apartamento. Te lo encontramos.
-                </h3>
-                <ul className="mt-5 space-y-3">
-                  {[
-                    "Cuéntanos qué buscas: zona, presupuesto y tipo de inmueble.",
-                    "Verificamos tu búsqueda y toda la red de brokers de la Sabana busca por ti.",
-                    "Recibes una selección personalizada y nos dices qué te gustó. Sin costo para ti.",
-                  ].map((t) => (
-                    <li key={t} className="flex items-start gap-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
-                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-auto pt-7">
-                  {/* Va a la landing de captación, no directo a WhatsApp: así
-                      el requerimiento llega estructurado y queda guardado con
-                      su atribución, igual que el que viene de un anuncio. */}
-                  <a
-                    href="/casas/sabana-norte"
-                    className="ky-btn inline-flex items-center justify-center rounded-full border px-7 py-3 text-[14px] font-medium"
-                    style={{ borderColor: C.grafito, color: C.grafito }}
-                  >
-                    Estoy buscando inmueble
-                  </a>
-                </div>
-              </div>
-            </Revelar>
+                    {m.boton} →
+                  </span>
+                </a>
+              </Revelar>
+            ))}
           </div>
 
-          {/* Prueba social */}
+          {/* Cobertura */}
           <Revelar delay={80}>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 rounded-2xl px-8 py-6 text-center" style={{ background: C.hueso, border: `1px solid ${C.linea}` }}>
               <p className="text-[13px]" style={{ color: C.piedra }}>
-                Brokers e inmobiliarias de la Sabana ya operan dentro de KYRELO.
+                Trabajamos en vivienda de la Sabana norte y Bogotá norte.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Chía</span>
-                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Cajicá</span>
-                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Cota</span>
-                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Sopó</span>
-                <span className="text-[13px] font-medium" style={{ color: C.grafito }}>Bogotá norte</span>
+                {["Chía", "Cajicá", "Cota", "Sopó", "Bogotá norte"].map((z) => (
+                  <span key={z} className="text-[13px] font-medium" style={{ color: C.grafito }}>{z}</span>
+                ))}
               </div>
             </div>
           </Revelar>
@@ -669,19 +583,20 @@ export default function LandingKyrelo({
               style={{ color: C.piedra }}
             >
               El mercado inmobiliario colombiano ha sido, históricamente, un mercado
-              fragmentado: cada broker buscando inventario por su cuenta, cada propietario
+              fragmentado: cada agente buscando inventario por su cuenta, cada propietario
               publicando en cinco portales distintos, cada comprador repitiendo la misma
-              búsqueda con diez agentes diferentes. KYRELO invierte esa lógica. En vez de
-              que el broker busque el inmueble, el requerimiento del cliente llega a él,
-              ya verificado y listo para avanzar. Y cuando el inmueble es nuestro, el
-              broker que trae al comprador recibe el material de venta listo y la mitad
-              de la comisión.
+              búsqueda con diez agentes diferentes. KYRELO invierte esa lógica: primero
+              conocemos al comprador, qué busca, con qué presupuesto y para cuándo, y
+              después buscamos el inmueble. Sobre esa idea construimos un ecosistema: una
+              inmobiliaria que cierra negocios propios, una plataforma que conecta
+              compradores verificados con agentes y oficinas, y un equipo de marketing que
+              presenta mejor cada inmueble.
             </p>
           </Revelar>
         </div>
       </section>
 
-      {/* ════════ CÓMO FUNCIONA (5 pasos, reveal secuencial) ════════ */}
+      {/* ════════ ASÍ TRABAJAMOS (3 pasos, reveal secuencial) ════════ */}
       <ComoFunciona />
 
       {/* ════════ COBERTURA ════════ */}
@@ -789,80 +704,32 @@ export default function LandingKyrelo({
               className="ky-display text-[34px] leading-[1.12] text-white sm:text-[52px]"
               style={{ letterSpacing: "-0.025em" }}
             >
-              El mercado ya se está organizando.{" "}
-              <span style={{ color: C.cobre }}>¿Entras ahora o después?</span>
+              Primero el comprador.{" "}
+              <span style={{ color: C.cobre }}>Después el inmueble.</span>
             </h2>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
-                href="/brokers"
-                className="ky-btn inline-flex items-center justify-center rounded-full px-9 py-4 text-[15px] font-semibold"
-                style={{ background: C.cobre, color: "#fff" }}
-              >
-                Crear mi cuenta de broker
-              </a>
               <a
                 href={wa("Hola KYRELO, quiero hablar con ustedes.")}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="ky-btn inline-flex items-center justify-center rounded-full px-9 py-4 text-[15px] font-semibold"
+                style={{ background: C.cobre, color: "#fff" }}
+              >
+                Escríbenos
+              </a>
+              <a
+                href="#marcas"
                 className="ky-btn inline-flex items-center justify-center rounded-full border px-9 py-4 text-[15px] font-medium"
                 style={{ borderColor: "rgba(255,255,255,0.35)", color: "#fff" }}
               >
-                Habla con nosotros
+                Conoce las tres marcas
               </a>
             </div>
           </div>
         </Revelar>
       </section>
 
-      {/* ════════ FOOTER (mínimo, opcional) ════════ */}
-      <footer
-        className="flex flex-col gap-6 px-6 py-10 sm:px-10"
-        style={{ background: C.grafito, borderTop: `1px solid rgba(255,255,255,0.08)` }}
-      >
-        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-2.5">
-            <Image
-              src="/kyrelo-isotipo.png"
-              alt="KYRELO"
-              width={64}
-              height={64}
-              className="h-7 w-7 rounded-[6px]"
-            />
-            <span className="ky-display text-[15px] text-white" style={{ letterSpacing: "0.04em" }}>
-              KYRELO
-            </span>
-          </div>
-
-          {/* Contacto: Instagram + WhatsApp/teléfono */}
-          <div className="flex flex-wrap items-center gap-x-7 gap-y-3">
-            <a
-              href="https://www.instagram.com/kyrelocorp"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[13px] transition-opacity hover:opacity-70"
-              style={{ color: "rgba(255,255,255,0.72)" }}
-            >
-              Instagram · @kyrelocorp
-            </a>
-            <a
-              href={wa("Hola KYRELO, quiero más información.")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[13px] transition-opacity hover:opacity-70"
-              style={{ color: "rgba(255,255,255,0.72)" }}
-            >
-              WhatsApp · +57 311 801 8295
-            </a>
-          </div>
-        </div>
-
-        <p
-          className="border-t pt-6 text-[12px]"
-          style={{ color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.08)" }}
-        >
-          Menos búsqueda. Más cierre. · © {new Date().getFullYear()} KYRELO
-        </p>
-      </footer>
+      <PieSitio />
     </main>
   );
 }
@@ -884,7 +751,7 @@ function ComoFunciona() {
             className="ky-display mt-5 text-[32px] leading-[1.1] sm:text-[44px]"
             style={{ letterSpacing: "-0.025em" }}
           >
-            Del requerimiento al cierre, en cinco pasos.
+            Así trabajamos, en tres pasos.
           </h2>
         </Revelar>
 

@@ -77,10 +77,10 @@ export default function RegistroBroker() {
     <div className="min-h-screen bg-[#F1EFE8] flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm">
         <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-3">
-          {APP.marca} · Red de brokers
+          {APP.marca} · Red de agentes y oficinas
         </p>
         <h1 className="text-2xl tracking-tight text-[#1A1A18] mb-1" style={{ fontFamily: 'Fraunces, serif' }}>
-          Crea tu cuenta de broker
+          Crea tu cuenta en la red
         </h1>
         <p className="text-sm text-[#5F5E5A] mb-8 leading-relaxed">
           Gratis. Accede a compradores verificados y postula tus inmuebles. Solo compartes comisión cuando cierras.
