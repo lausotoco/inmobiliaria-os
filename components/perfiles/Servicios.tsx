@@ -50,13 +50,13 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
           </span>
           {titulo ?? "En vivo"}
         </p>
-        <span className="text-[11px]" style={{ color: "rgba(241,239,232,.55)" }}>Datos reales de la plataforma</span>
+        <span className="text-[11px]" style={{ color: "rgba(241,239,232,.55)" }}>Información real, actualizada</span>
       </div>
 
       {items === null && <p className="mt-6 text-[13px]" style={{ color: "rgba(241,239,232,.6)" }}>Cargando…</p>}
       {items !== null && items.length === 0 && (
         <p className="mt-6 text-[14px] leading-relaxed" style={{ color: "rgba(241,239,232,.75)" }}>
-          Se publican nuevos cada semana. Escríbenos y te avisamos cuando entre uno que encaje.
+          Cada semana llegan nuevos. Escríbenos y te avisamos cuando haya uno para ti.
         </p>
       )}
 
@@ -88,7 +88,7 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
                   <p className="text-[18px] leading-tight" style={serif}>{i.precio ? pesos(Number(i.precio)) : "Precio a consultar"}</p>
                   {parte && (
                     <p className="mt-1 text-[12.5px]">
-                      <span style={{ color: "rgba(241,239,232,.65)" }}>Tu parte si cierras: </span>
+                      <span style={{ color: "rgba(241,239,232,.65)" }}>Ganas si se vende: </span>
                       <span className="font-semibold" style={{ color: "#D9A36A" }}>{pesos(parte)}</span>
                     </p>
                   )}
@@ -103,7 +103,7 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {p.imagen ? <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/propiedades/${p.imagen}`} alt="" className="h-20 w-24 shrink-0 rounded-xl object-cover" /> : <div className="h-20 w-24 shrink-0 rounded-xl" style={{ background: "rgba(241,239,232,.08)" }} />}
               <div className="min-w-0">
-                <p className="truncate text-[12px]" style={{ color: "rgba(241,239,232,.7)" }}>{[p.barrio, p.ciudad].filter(Boolean).join(" · ")}</p>
+                <p className="truncate text-[12px]" style={{ color: "rgba(241,239,232,.7)" }}>{[p.barrio, p.ciudad].filter(Boolean).join(" · ") || p.titulo}</p>
                 <p className="text-[18px] leading-tight" style={serif}>{p.precio ? pesos(Number(p.precio)) : "Precio a consultar"}</p>
                 <p className="mt-1 text-[12px]" style={{ color: "rgba(241,239,232,.65)" }}>
                   {[p.area ? `${p.area} m²` : null, p.habitaciones ? `${p.habitaciones} hab` : null].filter(Boolean).join(" · ")}
@@ -117,18 +117,18 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
 }
 
 /* ── Armador del plan (solo cantidades) ──────────────────── */
-const UNO: Record<string, string> = { reels: "reel", recorridos: "recorrido", piezas: "pieza", "campañas": "campaña", animaciones: "animación" };
+const UNO: Record<string, string> = { videos: "video", recorridos: "recorrido", piezas: "pieza", "campañas": "campaña", animaciones: "animación" };
 function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
   const [cant, setCant] = useState<Record<string, number>>(() => Object.fromEntries(piezas.map((p) => [p.id, p.cantidad])));
   const total = piezas.reduce((a, p) => a + cant[p.id], 0);
   const resumen = piezas.filter((p) => cant[p.id] > 0).map((p) => `${cant[p.id]} ${cant[p.id] === 1 ? (UNO[p.unidad] ?? p.unidad) : p.unidad}`);
   const frase = resumen.length > 1 ? `${resumen.slice(0, -1).join(", ")} y ${resumen[resumen.length - 1]}` : resumen[0] ?? "";
-  const mensaje = `Hola KYRELO, soy ${quien}. Me interesa un plan de KYRELO Marketing con ${frase} al mes. ¿Me lo cotizan?`;
+  const mensaje = `Hola KYRELO, soy ${quien}. Quiero un plan con ${frase} al mes. ¿Cuánto cuesta?`;
 
   return (
     <div className="rounded-3xl border bg-white p-5 sm:p-6" style={{ borderColor: C.linea }}>
       <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.2em" }}>Arma tu plan del mes</p>
-      <p className="mt-1 text-[13px]" style={{ color: C.piedra }}>Mueve las cantidades. Te lo cotizamos por mensaje.</p>
+      <p className="mt-1 text-[13px]" style={{ color: C.piedra }}>Elige cuántos quieres de cada uno. Te enviamos el precio por WhatsApp.</p>
       <div className="mt-5 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
       <div className="space-y-5">
         {piezas.map((p) => (
@@ -156,7 +156,7 @@ function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
       </div>
       <a href={wa(mensaje)} target="_blank" rel="noopener noreferrer"
         className="mt-4 flex items-center justify-center rounded-full px-6 py-3.5 text-[14.5px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.cobre }}>
-        Cotizar este plan por WhatsApp
+        Pedir el precio por WhatsApp
       </a>
       </div>
       </div>
@@ -287,7 +287,7 @@ export default function Servicios({ perfil }: { perfil: Perfil }) {
                 </span>
                 <span className="min-w-0">
                   <span className="block text-[17px] font-semibold leading-snug">«{frase}»</span>
-                  <span className="mt-0.5 block text-[13px]" style={{ color: on ? "#D9A36A" : C.piedra }}>{NOMBRE_MARCA[x.marca]} · {x.nombre}</span>
+                  <span className="mt-0.5 block text-[13.5px]" style={{ color: on ? "#D9A36A" : C.piedra }}>{x.corto}</span>
                 </span>
               </button>
             );

@@ -96,7 +96,7 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
             <div className="mt-9 flex flex-wrap items-center gap-5">
               <Boton cta={p.cta} />
               <a href="#servicios" className="text-[15px] font-semibold underline underline-offset-4">
-                Ver los servicios ↓
+                Ver cómo te ayudamos ↓
               </a>
             </div>
           </div>

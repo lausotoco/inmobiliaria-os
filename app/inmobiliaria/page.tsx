@@ -26,16 +26,16 @@ function urlImagen(ruta: string) {
 }
 
 const PROPIETARIOS = [
-  "Conocemos a los compradores antes de publicar: tu inmueble llega a quien ya busca algo así.",
-  "Producimos su material de venta: fotos, video, ficha y textos, con información completa.",
-  "Solo visitan quienes pueden comprar.",
-  "Del acuerdo en adelante, el papeleo es nuestro: promesa, banco, notaría y escrituración.",
+  "Ya conocemos personas que buscan inmuebles como el tuyo.",
+  "Hacemos las fotos, el video y la ficha de tu inmueble.",
+  "Solo te visitan quienes de verdad pueden comprar.",
+  "Nos encargamos de los trámites: promesa, banco y notaría.",
 ];
 
 const COMPRADORES = [
-  "Nos dices qué buscas: zona, presupuesto, tipo de inmueble y plazo.",
-  "Buscamos con nuestro inventario y con la red de agentes y oficinas aliadas.",
-  "Visitas solo lo que sí te sirve, con el precio de hoy y los papeles revisados. Sin costo para ti.",
+  "Nos dices qué buscas y con qué presupuesto.",
+  "Buscamos entre nuestros inmuebles y los de agentes y oficinas de confianza.",
+  "Visitas solo lo que te sirve, con precios y papeles revisados. Sin costo para ti.",
 ];
 
 export default async function InmobiliariaPage() {
@@ -62,7 +62,7 @@ export default async function InmobiliariaPage() {
             Primero el comprador. <i style={{ color: C.cobre }}>Después el inmueble.</i>
           </h1>
           <p className="mt-7 max-w-2xl text-[17px] leading-[1.7] sm:text-[19px]" style={{ color: C.piedra }}>
-            Venta y arriendo de vivienda premium en la Sabana, con compradores que ya conocemos.
+            Vendemos y arrendamos casas y apartamentos en la Sabana, a personas que ya sabemos que pueden comprar.
           </p>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <a
@@ -89,8 +89,8 @@ export default async function InmobiliariaPage() {
       <section className="border-t px-6 py-20 sm:px-10 sm:py-28" style={{ borderColor: C.linea }}>
         <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2">
           {[
-            ["Para propietarios", "Vendes o arriendas frente a compradores serios.", PROPIETARIOS],
-            ["Para compradores", "Te buscamos el inmueble que encaja contigo.", COMPRADORES],
+            ["Si quieres vender o arrendar", "Te traemos compradores serios.", PROPIETARIOS],
+            ["Si quieres comprar", "Te buscamos el inmueble que necesitas.", COMPRADORES],
           ].map(([eb, titulo, items]) => (
             <article key={eb as string} className="rounded-2xl border bg-white p-7 sm:p-9" style={{ borderColor: C.linea }}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: C.cobre }}>
@@ -129,7 +129,7 @@ export default async function InmobiliariaPage() {
                   Inmuebles disponibles
                 </p>
                 <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[42px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
-                  Captados y revisados por KYRELO.
+                  Inmuebles que ya revisamos.
                 </h2>
               </div>
               <Link href="/inmuebles" className="text-[14px] font-semibold underline underline-offset-4">

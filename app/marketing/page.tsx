@@ -21,29 +21,29 @@ const MSG = "Hola KYRELO, quiero agendar una reunión sobre KYRELO Marketing.";
 const PUBLICOS = [
   {
     eb: "Para agentes",
-    titulo: "Tus inmuebles captados, presentados como se venden.",
-    texto: "Reels editados con los videos que grabas en tu celular, recorridos animados y piezas listas para pauta.",
+    titulo: "Haz que tus inmuebles se vean mejor.",
+    texto: "Editamos los videos que grabas con tu celular, hacemos recorridos animados y piezas para publicidad en redes.",
     video: "/reels/marketing-agentes",
   },
   {
     eb: "Para oficinas",
-    titulo: "Tú eliges qué inmuebles potenciar.",
-    texto: "Producimos el material de los inmuebles que elijas y la marca de tu oficina: el equipo, el día a día y los cierres.",
+    titulo: "Tú eliges qué inmuebles impulsar.",
+    texto: "Hacemos los videos y la publicidad de los inmuebles que elijas, y cuidamos la imagen de tu oficina.",
     video: "/reels/marketing-oficinas",
   },
   {
     eb: "Para constructoras",
-    titulo: "El lanzamiento empieza en el plano.",
-    texto: "Lote y torre en 3D, campaña de preventa y material para la sala de ventas, antes de la primera piedra.",
+    titulo: "Vende tu proyecto desde el plano.",
+    texto: "Mostramos el lote y la torre en 3D, lanzamos la preventa en redes y hacemos el material de la sala de ventas.",
     video: null,
   },
 ];
 
 const PASOS = [
-  ["Reunión de 20 minutos", "Nos cuentas qué inmuebles o qué proyecto quieres mover y cómo lo muestras hoy."],
-  ["Eliges qué potenciar", "Armamos el plan a la medida, con las piezas que de verdad necesitas."],
-  ["Producimos con tus videos", "Grabas con tu celular; nosotros editamos, animamos y preparamos la pauta."],
-  ["Pauta y reporte cada mes", "Medimos alcance y conversaciones, y ajustamos lo que sigue."],
+  ["Nos reunimos 20 minutos", "Nos cuentas qué inmuebles o qué proyecto quieres vender."],
+  ["Armamos tu plan", "Solo con lo que de verdad necesitas."],
+  ["Tú grabas, nosotros editamos", "Hacemos los videos, los recorridos y la publicidad."],
+  ["Te mostramos los resultados", "Cada mes ves cuántas personas lo vieron y cuántas te escribieron."],
 ];
 
 export default function MarketingPage() {
@@ -68,8 +68,8 @@ export default function MarketingPage() {
             <i style={{ color: C.cobre }}>presentan mejor.</i>
           </h1>
           <p className="mt-7 max-w-2xl text-[17px] leading-[1.7] sm:text-[19px]" style={{ color: C.piedra }}>
-            KYRELO produce el material y la pauta de tus inmuebles con los videos que grabas en tu celular. Para
-            agentes, oficinas inmobiliarias y constructoras.
+            Tú grabas con tu celular. Nosotros hacemos los videos, los recorridos y la publicidad de tus
+            inmuebles. Para agentes, oficinas inmobiliarias y constructoras.
           </p>
           <a
             href={wa(MSG)}
@@ -165,11 +165,11 @@ export default function MarketingPage() {
             className="mt-5 max-w-2xl text-[28px] leading-[1.15] sm:text-[38px]"
             style={{ fontFamily: '"Fraunces", Georgia, serif', letterSpacing: "-0.02em" }}
           >
-            Ningún interesado de tu pauta se pierde.
+            No pierdas a nadie que te escribe.
           </h2>
           <p className="mt-5 max-w-2xl text-[16px] leading-[1.75]" style={{ color: "rgba(241,239,232,0.75)" }}>
-            Si alguien que escribe por tu pauta no encaja con tu inventario, con tu autorización y la del comprador
-            pasa a la red de KYRELO. Si ese negocio se cierra, tu oficina gana como referidora.
+            Si te escribe alguien por tu publicidad y no tienes lo que busca, con tu permiso y el de esa persona
+            se lo pasamos a la red de KYRELO. Si termina comprando, tu oficina también gana.
           </p>
         </div>
       </section>
@@ -180,7 +180,7 @@ export default function MarketingPage() {
           className="mx-auto max-w-2xl text-[32px] leading-[1.12] sm:text-[46px]"
           style={{ fontFamily: '"Fraunces", Georgia, serif', letterSpacing: "-0.025em" }}
         >
-          Cuéntanos qué quieres mover. <i style={{ color: C.cobre }}>Lo presentamos mejor.</i>
+          Cuéntanos qué quieres vender. <i style={{ color: C.cobre }}>Te ayudamos a que se vea mejor.</i>
         </h2>
         <a
           href={wa(MSG)}
@@ -192,7 +192,7 @@ export default function MarketingPage() {
           Agenda una reunión
         </a>
         <p className="mt-5 text-[13px]" style={{ color: C.piedra }}>
-          Cada plan se arma a la medida y se cotiza por mensaje.
+          Cada plan se arma a tu medida. Te enviamos el precio por WhatsApp.
         </p>
       </section>
 

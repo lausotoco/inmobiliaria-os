@@ -270,9 +270,9 @@ const SERVICIOS = [
 ];
 
 const PASOS = [
-  ["Conocemos al comprador", "Qué busca, en qué zona, con qué presupuesto y para cuándo. Confirmado con el propio comprador."],
-  ["Buscamos el inmueble", "Con nuestro inventario y con la red de agentes y oficinas aliadas, siempre sin exponer sus datos."],
-  ["Acompañamos hasta la escritura", "Visita, promesa, banco y notaría, con todo acordado por escrito antes de empezar."],
+  ["Hablamos con el comprador", "Qué busca, dónde, con qué presupuesto y para cuándo."],
+  ["Buscamos el inmueble", "Entre nuestros inmuebles y los de agentes y oficinas de confianza, sin publicar sus datos."],
+  ["Acompañamos hasta firmar", "Visitas, promesa, banco y notaría."],
 ];
 
 /* Las tres marcas del ecosistema (la portada no habla de cobros) */
@@ -281,23 +281,23 @@ const MARCAS: { marca: Marca; nombre: string; titular: string; linea: string; bo
     marca: "inmobiliaria",
     nombre: "Inmobiliaria",
     titular: "Primero el comprador. Después el inmueble.",
-    linea: "Venta y arriendo de vivienda premium en la Sabana, con compradores que ya conocemos.",
-    boton: "Vender o arrendar",
+    linea: "Vendemos y arrendamos casas y apartamentos en la Sabana, a personas que ya sabemos que pueden comprar.",
+    boton: "Vender, arrendar o comprar",
     href: "/inmobiliaria",
   },
   {
     marca: "plataforma",
     nombre: "Plataforma",
-    titular: "Compradores verificados.",
-    linea: "Conectados con agentes y oficinas aliadas de Chía, Cajicá, Cota, Sopó y Bogotá norte.",
+    titular: "Compradores para agentes y oficinas.",
+    linea: "Personas que ya revisamos y pueden comprar, buscando inmueble en Chía, Cajicá, Cota, Sopó y Bogotá norte.",
     boton: "Ver compradores",
     href: "/plataforma",
   },
   {
     marca: "marketing",
     nombre: "Marketing",
-    titular: "Cada inmueble, mejor presentado.",
-    linea: "Reels, recorridos 3D y pauta para agentes, oficinas y constructoras.",
+    titular: "Inmuebles que se ven mejor.",
+    linea: "Videos, recorridos en 3D y publicidad en redes para agentes, oficinas y constructoras.",
     boton: "Agenda una reunión",
     href: "/marketing",
   },
@@ -306,9 +306,9 @@ const MARCAS: { marca: Marca; nombre: string; titular: string; linea: string; bo
 const ZONAS = ["Bogotá (zona norte)", "Chía", "Cajicá", "Cota", "Sopó"];
 
 const PRINCIPIOS = [
-  ["01", "Verificamos antes de publicar", "Ningún comprador llega a la red sin que confirmemos su presupuesto, su plazo y su forma de pago. Preferimos publicar menos y que cada uno sea real."],
-  ["02", "El comprador no se comparte por fuera", "Los datos del comprador nunca salen de KYRELO. Quien trabaja el negocio con nosotros firma un acuerdo antes de la primera visita."],
-  ["03", "Información completa", "Cada inmueble se presenta con lo que importa: precio de hoy, disponibilidad y papeles en orden. Sin adjetivos que no dicen nada."],
+  ["01", "Verificamos antes de publicar", "Antes de mostrar un comprador, confirmamos que puede comprar: presupuesto, forma de pago y para cuándo."],
+  ["02", "Cuidamos los datos de las personas", "Los datos de nuestros compradores no se publican ni se entregan. Todo se acuerda por escrito antes de la primera visita."],
+  ["03", "Información clara", "Cada inmueble se muestra con lo que importa: precio real, si está disponible y si los papeles están en orden."],
 ];
 
 /* ── Bloque envoltorio con scroll-reveal ── */
@@ -540,7 +540,7 @@ export default function LandingKyrelo({
               className="ky-display mt-5 text-[34px] leading-[1.1] sm:text-[48px]"
               style={{ letterSpacing: "-0.025em" }}
             >
-              El mercado no se busca, se organiza.
+              Primero el comprador. Después el inmueble.
             </h2>
           </Revelar>
           <Revelar delay={120}>
@@ -548,15 +548,12 @@ export default function LandingKyrelo({
               className="mt-8 max-w-2xl text-[16px] leading-[1.85] sm:text-[18px]"
               style={{ color: C.piedra }}
             >
-              El mercado inmobiliario colombiano ha sido, históricamente, un mercado
-              fragmentado: cada agente buscando inventario por su cuenta, cada propietario
-              publicando en cinco portales distintos, cada comprador repitiendo la misma
-              búsqueda con diez agentes diferentes. KYRELO invierte esa lógica: primero
-              conocemos al comprador, qué busca, con qué presupuesto y para cuándo, y
-              después buscamos el inmueble. Sobre esa idea construimos un ecosistema: una
-              inmobiliaria que cierra negocios propios, una plataforma que conecta
-              compradores verificados con agentes y oficinas, y un equipo de marketing que
-              presenta mejor cada inmueble.
+              Normalmente se consigue un inmueble y después se sale a buscar quién lo compre.
+              En KYRELO lo hacemos al revés: primero hablamos con la persona que quiere comprar,
+              entendemos qué busca y con qué presupuesto, y después buscamos el inmueble. Así
+              nadie pierde tiempo en visitas que no sirven. Alrededor de esa idea trabajan tres
+              marcas: la Inmobiliaria, que vende y arrienda; la Plataforma, que conecta compradores
+              con agentes y oficinas; y Marketing, que hace los videos y la publicidad de los inmuebles.
             </p>
           </Revelar>
         </div>
@@ -628,7 +625,7 @@ export default function LandingKyrelo({
               className="ky-display mt-5 max-w-xl text-[32px] leading-[1.1] sm:text-[44px]"
               style={{ letterSpacing: "-0.025em" }}
             >
-              Tres reglas que no negociamos.
+              Lo que siempre cumplimos.
             </h2>
           </Revelar>
           <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -670,8 +667,8 @@ export default function LandingKyrelo({
               className="ky-display text-[34px] leading-[1.12] text-white sm:text-[52px]"
               style={{ letterSpacing: "-0.025em" }}
             >
-              Primero el comprador.{" "}
-              <span style={{ color: C.cobre }}>Después el inmueble.</span>
+              Cuéntanos qué necesitas.{" "}
+              <span style={{ color: C.cobre }}>Te ayudamos.</span>
             </h2>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
