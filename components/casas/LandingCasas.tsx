@@ -132,90 +132,6 @@ function Encabezado() {
   );
 }
 
-/* ── Campo del formulario (select o teléfono) ──────────────── */
-function Campo({
-  id,
-  etiqueta,
-  valor,
-  opciones,
-  placeholder,
-  error,
-  onChange,
-  onBlur,
-  tipo = "select",
-}: {
-  id: string;
-  etiqueta: string;
-  valor: string;
-  opciones?: string[];
-  placeholder: string;
-  error?: string;
-  onChange: (v: string) => void;
-  onBlur?: () => void;
-  tipo?: "select" | "tel";
-}) {
-  const idError = `${id}-error`;
-  const borde = error ? C.rojo : C.linea;
-
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="block text-[9px] font-semibold uppercase leading-tight"
-        style={{ color: C.piedra, letterSpacing: "0.13em" }}
-      >
-        {etiqueta}
-      </label>
-
-      {tipo === "select" ? (
-        <select
-          id={id}
-          name={id}
-          value={valor}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onBlur}
-          aria-invalid={!!error}
-          aria-describedby={error ? idError : undefined}
-          className="mt-1 h-11 w-full appearance-none border-b bg-transparent text-[13px] outline-none transition-colors focus:border-[#1A1A18] sm:text-[14px]"
-          style={{ borderColor: borde, color: valor ? C.grafito : C.piedra }}
-        >
-          <option value="">{placeholder}</option>
-          {(opciones ?? []).map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <input
-          id={id}
-          name={id}
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder={placeholder}
-          value={valor}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onBlur}
-          aria-invalid={!!error}
-          aria-describedby={error ? idError : undefined}
-          className="mt-1 h-11 w-full border-b bg-transparent text-[13px] outline-none transition-colors focus:border-[#1A1A18] sm:text-[14px]"
-          style={{ borderColor: borde, color: C.grafito }}
-        />
-      )}
-
-      <p
-        id={idError}
-        aria-live="polite"
-        className="mt-1 text-[10.5px] leading-tight"
-        style={{ color: C.rojo, minHeight: error ? undefined : 0 }}
-      >
-        {error ?? ""}
-      </p>
-    </div>
-  );
-}
-
 /* ── Formulario ────────────────────────────────────────────── */
 
 type Campos = {
@@ -356,131 +272,132 @@ function Formulario({ municipio }: { municipio: Municipio }) {
     }
   }
 
-  const listo = autoriza && !enviando;
+  /* ── Paso a paso: una pregunta a la vez, con botones grandes ── */
+  const PASOS_FORM: { k: keyof Campos; pregunta: string; opciones?: string[]; columnas?: number }[] = [
+    { k: "municipio", pregunta: "¿Dónde quieres vivir?", opciones: OPCIONES_MUNICIPIO, columnas: 2 },
+    { k: "presupuesto", pregunta: "¿Cuánto quieres invertir?", opciones: OPCIONES_PRESUPUESTO },
+    { k: "tipo", pregunta: "¿Qué tipo de casa buscas?", opciones: OPCIONES_TIPO, columnas: 2 },
+    { k: "plazo", pregunta: "¿Para cuándo la necesitas?", opciones: OPCIONES_PLAZO },
+    { k: "telefono", pregunta: "¿A qué WhatsApp te escribimos?" },
+  ];
+  const [paso, setPaso] = useState(municipio.prellenado ? 1 : 0);
+  const actual = PASOS_FORM[paso];
+  const total = PASOS_FORM.length;
+
+  function elegir(k: keyof Campos, v: string) {
+    cambiar(k)(v);
+    setTimeout(() => setPaso((p) => Math.min(p + 1, total - 1)), 180);
+  }
+  function enviarConPasos() {
+    // Si falta una respuesta, se vuelve a esa pregunta
+    const faltante = PASOS_FORM.findIndex((s) => s.k !== "telefono" && !form[s.k]);
+    if (faltante >= 0) { setPaso(faltante); return; }
+    enviar();
+  }
+
+  const listo = autoriza && !enviando && !!form.telefono.trim();
+  const respondidas = PASOS_FORM.filter((s) => s.k !== "telefono" && form[s.k]);
 
   return (
     <div
       id="formulario"
-      className="ky-card rounded-2xl border bg-white p-4 sm:p-6"
-      style={{ borderColor: C.linea, boxShadow: "0 12px 32px -24px rgba(26,26,24,0.20)" }}
+      className="ky-card rounded-3xl border bg-white p-5 sm:p-6"
+      style={{ borderColor: C.linea, boxShadow: "0 24px 50px -30px rgba(26,26,24,0.35)" }}
     >
-      <div className="grid grid-cols-2 gap-x-4">
-        <Campo
-          id="municipio"
-          etiqueta="¿En qué municipio buscas?"
-          valor={form.municipio}
-          opciones={OPCIONES_MUNICIPIO}
-          placeholder="Selecciona un municipio"
-          error={errores.municipio}
-          onChange={cambiar("municipio")}
-          onBlur={validarCampo("municipio")}
-        />
-        <Campo
-          id="presupuesto"
-          etiqueta="¿Cuál es tu presupuesto?"
-          valor={form.presupuesto}
-          opciones={OPCIONES_PRESUPUESTO}
-          placeholder="Selecciona un rango"
-          error={errores.presupuesto}
-          onChange={cambiar("presupuesto")}
-          onBlur={validarCampo("presupuesto")}
-        />
-        <Campo
-          id="tipo"
-          etiqueta="¿Qué tipo de casa buscas?"
-          valor={form.tipo}
-          opciones={OPCIONES_TIPO}
-          placeholder="Selecciona una opción"
-          error={errores.tipo}
-          onChange={cambiar("tipo")}
-          onBlur={validarCampo("tipo")}
-        />
-        <Campo
-          id="plazo"
-          etiqueta="¿Para cuándo quieres estar viviendo ahí?"
-          valor={form.plazo}
-          opciones={OPCIONES_PLAZO}
-          placeholder="Selecciona un plazo"
-          error={errores.plazo}
-          onChange={cambiar("plazo")}
-          onBlur={validarCampo("plazo")}
-        />
+      {/* Avance */}
+      <div className="flex items-center gap-3">
+        {paso > 0 ? (
+          <button type="button" onClick={() => setPaso(paso - 1)} aria-label="Pregunta anterior"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[16px]" style={{ borderColor: C.linea }}>←</button>
+        ) : <span className="h-9 w-9 shrink-0" />}
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "#EEEAE0" }}>
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${((paso + 1) / total) * 100}%`, background: C.cobre }} />
+        </div>
+        <span className="shrink-0 text-[12px] font-semibold tabular-nums" style={{ color: C.piedra }}>{paso + 1} de {total}</span>
       </div>
 
-      <Campo
-        id="telefono"
-        tipo="tel"
-        etiqueta="WhatsApp"
-        valor={form.telefono}
-        placeholder="300 123 4567"
-        error={errores.telefono}
-        onChange={cambiar("telefono")}
-        onBlur={validarCampo("telefono")}
-      />
-
-      <label className="mt-2 flex cursor-pointer items-start gap-2.5">
-        <input
-          type="checkbox"
-          checked={autoriza}
-          onChange={(e) => setAutoriza(e.target.checked)}
-          className="mt-[2px] h-4 w-4 shrink-0 accent-[#1A1A18]"
-        />
-        <span className="ky-legal text-[10px] leading-[1.45]" style={{ color: C.piedra }}>
-          Autorizo a KYRELO el tratamiento de mis datos personales para contactarme por
-          WhatsApp, teléfono o correo, entender mi requerimiento de vivienda, y publicarlo
-          de forma anónima ante brokers, inmobiliarias y constructoras aliadas con el fin
-          de que me presenten propiedades que se ajusten a lo que busco. Conozco la{" "}
-          <a
-            href="/politica-de-datos"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-            style={{ color: C.grafito }}
-          >
-            Política de Tratamiento de Datos
-          </a>{" "}
-          y mis derechos a conocer, actualizar, rectificar y suprimir mis datos.
-        </span>
-      </label>
-
-      {!autoriza && (
-        <p className="mt-1.5 pl-[26px] text-[10px]" style={{ color: C.piedra }}>
-          Marca la casilla para poder contactarte.
-        </p>
+      {/* Lo que ya respondió (se toca para cambiarlo) */}
+      {respondidas.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {respondidas.map((s) => (
+            <button key={s.k} type="button" onClick={() => setPaso(PASOS_FORM.indexOf(s))}
+              className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[12px] font-medium" style={{ background: C.cobreSuave, color: C.grafito }}>
+              {form[s.k]} <span aria-hidden="true" style={{ color: C.cobreTexto }}>✎</span>
+            </button>
+          ))}
+        </div>
       )}
 
-      <button
-        type="button"
-        onClick={enviar}
-        disabled={!listo}
-        aria-describedby="estado-envio"
-        className="mt-3 h-11 w-full rounded-full text-[14px] font-semibold text-white transition-opacity"
-        style={{
-          background: C.cobreTexto,
-          opacity: listo ? 1 : 0.45,
-          cursor: listo ? "pointer" : "not-allowed",
-        }}
-      >
-        {enviando ? "Un momento…" : "Hablemos por WhatsApp"}
-      </button>
+      {/* La pregunta */}
+      <div key={paso} className="ky-paso mt-5">
+        <p className="font-display text-[24px] leading-tight sm:text-[26px]" style={{ letterSpacing: "-0.02em" }}>{actual.pregunta}</p>
 
-      {/* Lo primero que se pregunta un comprador, en el momento exacto
-          en que decide. Pastilla en cobre suave para que no se lea como
-          una nota al pie más. */}
-      <div className="mt-2.5 text-center">
+        {actual.opciones ? (
+          <div className={`mt-4 grid gap-2.5 ${actual.columnas === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+            {actual.opciones.map((o) => {
+              const on = form[actual.k] === o;
+              return (
+                <button key={o} type="button" onClick={() => elegir(actual.k, o)}
+                  className="ky-opcion flex min-h-[54px] items-center justify-between gap-2 rounded-2xl border px-4 py-3 text-left text-[15px] font-medium"
+                  style={{ borderColor: on ? C.grafito : C.linea, background: on ? C.grafito : "#fff", color: on ? "#fff" : C.grafito }}>
+                  <span>{o}</span>
+                  <span aria-hidden="true" style={{ color: on ? C.cobreSuave : C.cobreTexto }}>{on ? "✓" : "→"}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-4">
+            <input
+              id="telefono"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="300 123 4567"
+              value={form.telefono}
+              onChange={(e) => cambiar("telefono")(e.target.value)}
+              onBlur={validarCampo("telefono")}
+              aria-invalid={!!errores.telefono}
+              className="h-14 w-full rounded-2xl border bg-white px-4 text-[18px] outline-none transition-colors focus:border-[#1A1A18]"
+              style={{ borderColor: errores.telefono ? C.rojo : C.linea, color: C.grafito }}
+            />
+            {errores.telefono && <p className="mt-1.5 text-[12px]" style={{ color: C.rojo }}>{errores.telefono}</p>}
+
+            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl p-3" style={{ background: "#F7F5EF" }}>
+              <input type="checkbox" checked={autoriza} onChange={(e) => setAutoriza(e.target.checked)} className="mt-[2px] h-5 w-5 shrink-0 accent-[#1A1A18]" />
+              <span className="ky-legal text-[11px] leading-[1.5]" style={{ color: C.piedra }}>
+                Autorizo a KYRELO el tratamiento de mis datos personales para contactarme por
+                WhatsApp, teléfono o correo, entender mi requerimiento de vivienda, y publicarlo
+                de forma anónima ante brokers, inmobiliarias y constructoras aliadas con el fin
+                de que me presenten propiedades que se ajusten a lo que busco. Conozco la{" "}
+                <a href="/politica-de-datos" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: C.grafito }}>
+                  Política de Tratamiento de Datos
+                </a>{" "}
+                y mis derechos a conocer, actualizar, rectificar y suprimir mis datos.
+              </span>
+            </label>
+
+            <button
+              type="button"
+              onClick={enviarConPasos}
+              disabled={!listo}
+              aria-describedby="estado-envio"
+              className="mt-4 h-14 w-full rounded-full text-[16px] font-semibold text-white transition-opacity"
+              style={{ background: C.cobreTexto, opacity: listo ? 1 : 0.45, cursor: listo ? "pointer" : "not-allowed" }}
+            >
+              {enviando ? "Un momento…" : "Hablemos por WhatsApp"}
+            </button>
+            {!autoriza && <p className="mt-2 text-center text-[11.5px]" style={{ color: C.piedra }}>Marca la casilla para poder escribirte.</p>}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 text-center">
         <span
           id="estado-envio"
           aria-live="polite"
-          className={
-            errorServidor
-              ? "block text-[11px] leading-tight"
-              : "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold leading-tight"
-          }
-          style={
-            errorServidor
-              ? { color: C.rojo }
-              : { background: C.cobreSuave, color: C.grafito }
-          }
+          className={errorServidor ? "block text-[12px] leading-tight" : "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11.5px] font-semibold leading-tight"}
+          style={errorServidor ? { color: C.rojo } : { background: C.cobreSuave, color: C.grafito }}
         >
           {errorServidor ? (
             "No pudimos guardar tu requerimiento. Escríbenos directamente por WhatsApp:"
@@ -497,16 +414,11 @@ function Formulario({ municipio }: { municipio: Municipio }) {
 
       {errorServidor && (
         <a
-          href={enlaceWhatsApp(
-            construirMensaje({
-              ...form,
-              refCode: calcularRefCode(obtenerAtribucion().canal, municipio.slug),
-            })
-          )}
+          href={enlaceWhatsApp(construirMensaje({ ...form, refCode: calcularRefCode(obtenerAtribucion().canal, municipio.slug) }))}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => empujar("whatsapp_click", { origen: "error" })}
-          className="mt-2 flex h-11 w-full items-center justify-center rounded-full border text-[14px] font-semibold"
+          className="mt-2 flex h-12 w-full items-center justify-center rounded-full border text-[15px] font-semibold"
           style={{ borderColor: C.grafito, color: C.grafito }}
         >
           Escribir por WhatsApp
@@ -638,7 +550,7 @@ function Cierre() {
     if (!el) return;
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
-    el.querySelector("select")?.focus({ preventScroll: true });
+    el.querySelector<HTMLElement>(".ky-opcion, #telefono")?.focus({ preventScroll: true });
   };
   return (
     <section id="empezamos" className="border-t px-5 py-16 text-center sm:px-10 sm:py-24" style={{ borderColor: C.linea }}>
@@ -750,6 +662,12 @@ export default function LandingCasas({ municipio }: { municipio: Municipio }) {
           principal se aprieta para que el formulario siga cabiendo sin
           scroll. Las áreas táctiles se quedan en 44px: eso no se toca. */}
       <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes kyPaso { from { opacity: 0; transform: translateX(14px) } to { opacity: 1; transform: none } }
+        .ky-paso { animation: kyPaso .35s cubic-bezier(.16,1,.3,1) both; }
+        .ky-opcion { transition: border-color .2s ease, background-color .2s ease, transform .15s ease; }
+        .ky-opcion:active { transform: scale(.97); }
+        @media (hover: hover) { .ky-opcion:hover { border-color: #1A1A18; } }
+        @media (prefers-reduced-motion: reduce) { .ky-paso { animation: none; } }
         @media (max-height: 830px) and (max-width: 640px) {
           .ky-ante { font-size: 9px; letter-spacing: 0.18em; }
           .ky-h1 { font-size: 25px; margin-top: 8px; }
@@ -788,13 +706,16 @@ export default function LandingCasas({ municipio }: { municipio: Municipio }) {
                   {antetitulo(municipio)}
                 </p>
                 <h1
-                  className="ky-h1 font-display mt-3 text-[30px] leading-[1.06] sm:text-[44px] lg:text-[52px]"
+                  className="ky-h1 font-display mt-3 text-[27px] leading-[1.08] sm:text-[44px] lg:text-[52px]"
                   style={{ letterSpacing: "-0.03em" }}
                 >
                   {titular(municipio)}
                 </h1>
+                <p className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px] font-medium sm:hidden" style={{ color: C.piedra }}>
+                  <span>✓ Sin costo para ti</span><span>✓ Tus datos no se publican</span>
+                </p>
                 <p
-                  className="ky-sub mt-3 max-w-xl text-[12.5px] leading-[1.55] sm:mt-5 sm:text-[15px] sm:leading-[1.7]"
+                  className="ky-sub mt-3 hidden max-w-xl text-[12.5px] leading-[1.55] sm:mt-5 sm:block sm:text-[15px] sm:leading-[1.7]"
                   style={{ color: C.piedra }}
                 >
                   {SUBTITULO}{" "}

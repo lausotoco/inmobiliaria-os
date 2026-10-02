@@ -108,7 +108,7 @@ export function antetitulo(m: Municipio): string {
 }
 
 export function titular(m: Municipio): string {
-  return `Dinos qué casa buscas ${m.preposicion} ${m.nombreEnFrase} y nosotros la encontramos.`;
+  return `Dinos qué casa buscas ${m.preposicion} ${m.nombreEnFrase}. Te mostramos solo las que te sirven.`;
 }
 
 export function tituloSeo(m: Municipio): string {

@@ -85,9 +85,9 @@ export default function MarketingPage() {
 
       {/* Para quién */}
       <section className="border-t px-6 py-20 sm:px-10 sm:py-28" style={{ borderColor: C.linea }}>
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-3">
+        <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:-mx-10 sm:px-10 lg:mx-auto lg:grid lg:max-w-6xl lg:grid-cols-3 lg:gap-8 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
           {PUBLICOS.map((p) => (
-            <article key={p.eb} className="flex flex-col rounded-2xl border bg-white p-6 sm:p-7" style={{ borderColor: C.linea }}>
+            <article key={p.eb} className="flex w-[84%] shrink-0 snap-center flex-col rounded-2xl border bg-white p-5 sm:w-[60%] sm:p-7 lg:w-auto" style={{ borderColor: C.linea }}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: C.cobre }}>
                 {p.eb}
               </p>
@@ -99,7 +99,7 @@ export default function MarketingPage() {
               </p>
               {p.video ? (
                 <video
-                  className="mt-6 aspect-[9/16] w-full rounded-xl bg-[#1A1A18] object-cover"
+                  className="mt-6 aspect-[4/5] w-full rounded-xl bg-[#1A1A18] object-cover lg:aspect-[9/16]"
                   src={`${p.video}.mp4`}
                   poster={`${p.video}.jpg`}
                   controls
@@ -108,7 +108,7 @@ export default function MarketingPage() {
                 />
               ) : (
                 <div
-                  className="mt-6 flex aspect-[9/16] w-full flex-col items-center justify-center gap-5 rounded-xl"
+                  className="mt-6 flex aspect-[4/5] w-full flex-col items-center justify-center gap-5 rounded-xl lg:aspect-[9/16]"
                   style={{ background: C.grafito }}
                 >
                   <LogoMarca marca="marketing" tinta={C.hueso} className="h-24 w-24" />
@@ -120,6 +120,7 @@ export default function MarketingPage() {
             </article>
           ))}
         </div>
+        <p className="mt-3 text-center text-[12.5px] lg:hidden" style={{ color: C.piedra }}>Desliza para ver agentes, oficinas y constructoras →</p>
       </section>
 
       {/* Cómo trabajamos */}

@@ -140,7 +140,7 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
               ))}
             </div>
           </div>
-          <div className={`pf-rev ${montado ? "in" : ""} relative rounded-[32px] p-6 shadow-[0_40px_80px_-40px_rgba(26,26,24,.7)] sm:p-9`} style={{ background: C.grafito, transitionDelay: "150ms" }}>
+          <div className={`pf-rev ${montado ? "in" : ""} relative mx-auto w-full max-w-[340px] rounded-[32px] p-5 shadow-[0_40px_80px_-40px_rgba(26,26,24,.7)] sm:max-w-none sm:p-9`} style={{ background: C.grafito, transitionDelay: "150ms" }}>
             <div className="pointer-events-none absolute inset-0 rounded-[32px]" style={{ background: "radial-gradient(circle at 80% 10%, rgba(217,163,106,.18), transparent 55%)" }} />
             <GraficoPerfil id={id} className="relative h-auto w-full" />
           </div>

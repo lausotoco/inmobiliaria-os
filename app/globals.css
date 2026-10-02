@@ -141,3 +141,10 @@ h1, h2, h3, .font-display {
 input, select, textarea {
   color-scheme: light;
 }
+
+/* ── Celular ── */
+@media (max-width: 640px) {
+  /* Con menos de 16 px, el iPhone hace zoom al tocar un campo */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size: 16px !important; }
+}
+a, button { -webkit-tap-highlight-color: transparent; }

@@ -100,7 +100,7 @@ export function CabeceraSitio({
 }
 
 export function PieSitio() {
-  const enlace = "text-[13px] transition-opacity hover:opacity-70";
+  const enlace = "py-1 text-[14px] transition-opacity hover:opacity-70 sm:py-0 sm:text-[13px]";
   const tono = { color: "rgba(255,255,255,0.72)" };
   return (
     <footer className="px-6 py-12 sm:px-10" style={{ background: C.grafito, borderTop: "1px solid rgba(255,255,255,0.08)" }}>

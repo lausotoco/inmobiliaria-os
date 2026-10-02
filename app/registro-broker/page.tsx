@@ -3,6 +3,7 @@
 // app/registro-broker/page.tsx
 // Registro público para brokers e inmobiliarias aliadas.
 
+import { CabeceraSitio } from '@/components/sitio/Sitio';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -74,15 +75,16 @@ export default function RegistroBroker() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1EFE8] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm">
-        <p className="text-[9px] uppercase tracking-[0.2em] text-[#5F5E5A] mb-3">
+    <div className="min-h-screen bg-[#F1EFE8]">
+      <CabeceraSitio activa="/plataforma" />
+      <div className="mx-auto w-full max-w-md px-5 py-10 sm:py-14">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#B87333] mb-3">
           {APP.marca} · Red de agentes y oficinas
         </p>
-        <h1 className="text-2xl tracking-tight text-[#1A1A18] mb-1" style={{ fontFamily: 'Fraunces, serif' }}>
+        <h1 className="text-[30px] leading-tight tracking-tight text-[#1A1A18] mb-2" style={{ fontFamily: 'Fraunces, serif' }}>
           Crea tu cuenta en la red
         </h1>
-        <p className="text-sm text-[#5F5E5A] mb-8 leading-relaxed">
+        <p className="text-[15px] text-[#5F5E5A] mb-8 leading-relaxed">
           Gratis. Accede a compradores verificados y postula tus inmuebles. Solo compartes comisión cuando cierras.
         </p>
 
@@ -95,14 +97,14 @@ export default function RegistroBroker() {
             { k: 'password', label: 'Contraseña', type: 'password' },
           ].map((c) => (
             <div key={c.k}>
-              <label className="block text-[9px] uppercase tracking-[0.15em] text-[#5F5E5A] mb-1.5">
+              <label className="block text-[13px] font-medium text-[#1A1A18] mb-1.5">
                 {c.label}
               </label>
               <input
                 type={c.type}
                 value={(form as any)[c.k]}
                 onChange={set(c.k)}
-                className="w-full bg-transparent border-b border-[#E0DDD2] pb-2 text-sm text-[#1A1A18] outline-none focus:border-[#1A1A18] transition-colors"
+                className="h-12 w-full rounded-xl border border-[#E0DDD2] bg-white px-4 text-[15px] text-[#1A1A18] outline-none focus:border-[#1A1A18] transition-colors"
               />
             </div>
           ))}
@@ -114,9 +116,9 @@ export default function RegistroBroker() {
             type="checkbox"
             checked={acepto}
             onChange={(e) => setAcepto(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 accent-[#1A1A18]"
+            className="mt-0.5 h-5 w-5 shrink-0 accent-[#1A1A18]"
           />
-          <span className="text-[11px] leading-relaxed text-[#5F5E5A]">
+          <span className="text-[12.5px] leading-relaxed text-[#5F5E5A]">
             Autorizo el tratamiento de mis datos personales conforme a la{' '}
             <a href="/legal/tratamiento-de-datos" target="_blank" className="underline underline-offset-2 hover:text-[#1A1A18]">
               Política de tratamiento de datos
@@ -142,7 +144,7 @@ export default function RegistroBroker() {
         <button
           onClick={registrar}
           disabled={cargando}
-          className="mt-8 w-full rounded-full bg-[#1A1A18] text-[#F1EFE8] text-sm py-3 hover:opacity-80 transition-opacity disabled:opacity-40"
+          className="mt-8 h-14 w-full rounded-full bg-[#1A1A18] text-[#F1EFE8] text-[16px] font-semibold hover:opacity-80 transition-opacity disabled:opacity-40"
         >
           {cargando ? 'Creando cuenta…' : 'Crear cuenta'}
         </button>

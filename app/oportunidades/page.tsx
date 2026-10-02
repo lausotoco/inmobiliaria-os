@@ -134,7 +134,7 @@ export default function Oportunidades() {
       <div className="border-b border-[#E0DDD2] px-6 py-3 sm:px-8">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
           <p className="text-[12px] text-[#5F5E5A]">
-            <span className="font-semibold text-[#1A1A18]">KYRELO Plataforma.</span> Puedes ver todo sin crear cuenta. Solo la necesitas para enviar un inmueble.
+            <span className="font-semibold text-[#1A1A18]">KYRELO Plataforma.</span><span className="hidden sm:inline"> Puedes ver todo sin crear cuenta. Solo la necesitas para enviar un inmueble.</span><span className="sm:hidden"> Ver es libre.</span>
           </p>
           <div className="flex items-center gap-3">
             <Link href={ENTRADA} className="text-[12px] text-[#5F5E5A] hover:text-[#1A1A18] transition">
