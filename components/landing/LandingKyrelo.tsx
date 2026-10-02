@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { APP } from "@/lib/config";
 import { CabeceraSitio, PieSitio } from "@/components/sitio/Sitio";
 import { LogoMarca, type Marca } from "@/components/sitio/marca";
-import { PERFILES } from "@/lib/perfiles";
+import Constelacion from "./Constelacion";
 
 /* ── Paleta de marca ── */
 const C = {
@@ -392,8 +392,6 @@ export default function LandingKyrelo({
         .ky-card:hover .ky-ico { color: ${C.cobre}; border-color: ${C.cobre}; }
         .ky-ico { transition: color .5s ease, border-color .5s ease; }
         .ky-chip { transition: border-color .4s ease, color .4s ease; }
-        .ky-perfil { transition: border-color .35s ease, background-color .35s ease, color .35s ease, transform .35s ease; }
-        .ky-perfil:hover { border-color: ${C.cobre}; background-color: ${C.grafito}; color: ${C.hueso}; transform: translateY(-1px); }
         .ky-chip:hover { border-color: ${C.cobre}; color: ${C.cobre}; }
         .ky-btn { transition: opacity .35s ease, transform .35s ease, background-color .35s ease, color .35s ease; }
         .ky-btn:hover { transform: translateY(-1px); }
@@ -420,7 +418,7 @@ export default function LandingKyrelo({
 
         <div
           ref={heroInnerRef}
-          className="relative z-10 mx-auto w-full max-w-3xl py-24 text-center"
+          className="relative z-10 mx-auto w-full max-w-5xl pb-16 pt-10 text-center"
         >
           <p
             className={`ky-reveal ${montado ? "in" : ""} text-[11px] font-semibold uppercase`}
@@ -453,41 +451,15 @@ export default function LandingKyrelo({
             </span>
           </h1>
 
-          <p
-            className={`ky-reveal ${montado ? "in" : ""} mx-auto mt-8 max-w-xl text-[16px] leading-[1.7] sm:text-[18px]`}
-            style={{ color: C.piedra, transitionDelay: "420ms" }}
-          >
-            Primero conocemos al comprador; después buscamos el inmueble. Alrededor de
-            esa idea trabajan tres marcas: Inmobiliaria, Plataforma y Marketing.
-          </p>
-
-          {/* ¿Quién eres? Cada perfil abre su landing (/para/...) */}
-          <div
-            className={`ky-reveal ${montado ? "in" : ""} mx-auto mt-10 max-w-2xl`}
-            style={{ transitionDelay: "560ms" }}
-          >
-            <p className="text-[11px] font-semibold uppercase" style={{ color: C.piedra, letterSpacing: "0.24em" }}>
-              ¿Quién eres?
-            </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2.5">
-              {PERFILES.map((p, i) => (
-                <a
-                  key={p.id}
-                  href={`/para/${p.id}`}
-                  className="ky-perfil inline-flex items-center gap-2 rounded-full border bg-white/70 px-5 py-3 text-[14px] font-medium backdrop-blur-sm"
-                  style={{ borderColor: C.linea, color: C.grafito, transitionDelay: `${i * 40}ms` }}
-                >
-                  {p.yo}
-                  <span style={{ color: C.cobre }}>→</span>
-                </a>
-              ))}
-            </div>
+          {/* ¿Quién eres? La red de perfiles que sale de la K (cada uno abre /para/...) */}
+          <div className={`ky-reveal ${montado ? "in" : ""} mt-6`} style={{ transitionDelay: "480ms" }}>
+            <Constelacion />
           </div>
         </div>
 
         {/* Indicador de scroll que "respira" */}
         <div
-          className="ky-scroll-ind absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+          className="ky-scroll-ind absolute bottom-8 left-1/2 z-10 hidden -translate-x-1/2"
           aria-hidden="true"
         >
           <div
