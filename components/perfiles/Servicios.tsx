@@ -279,8 +279,7 @@ function Panel({ s, perfil }: { s: Servicio; perfil: Perfil }) {
   );
 }
 
-export default function Servicios({ perfil }: { perfil: Perfil }) {
-  const [activo, setActivo] = useState(perfil.servicios[0].id);
+export default function Servicios({ perfil, activo, setActivo }: { perfil: Perfil; activo: string; setActivo: (id: string) => void }) {
   const s = perfil.servicios.find((x) => x.id === activo)!;
   // Cada opción es la necesidad en primera persona + el servicio que la resuelve
   const opciones = perfil.servicios.map((x) => ({ x, frase: perfil.necesidades.find((n) => n.servicio === x.id)?.texto ?? x.nombre }));
@@ -314,8 +313,8 @@ export default function Servicios({ perfil }: { perfil: Perfil }) {
         </h2>
 
         {/* Un solo selector: la necesidad en primera persona y, debajo, el servicio */}
-        <div className={`mt-8 grid gap-3 ${opciones.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`} role="tablist">
-          {opciones.map(({ x, frase }) => {
+        <div id="formas" className={`mt-8 grid scroll-mt-24 gap-3 ${opciones.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`} role="tablist">
+          {opciones.map(({ x, frase }, i) => {
             const on = x.id === activo;
             return (
               <button key={x.id} type="button" role="tab" aria-selected={on} onClick={() => setActivo(x.id)}
@@ -327,7 +326,7 @@ export default function Servicios({ perfil }: { perfil: Perfil }) {
                 </span>
                 <span className="min-w-0">
                   <span className="block text-[17px] font-semibold leading-snug">«{frase}»</span>
-                  <span className="mt-0.5 block text-[13.5px]" style={{ color: on ? "#D9A36A" : C.piedra }}>{x.corto}</span>
+                  <span className="mt-1 block text-[13.5px] font-medium" style={{ color: on ? "#D9A36A" : C.cobre }}>Forma {i + 1} · {x.nombre}</span>
                 </span>
               </button>
             );

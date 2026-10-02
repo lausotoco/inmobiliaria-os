@@ -60,6 +60,11 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
   const [montado, setMontado] = useState(false);
   const [progreso, setProgreso] = useState(0);
   const [fijo, setFijo] = useState(false);
+  const [activo, setActivo] = useState(p.servicios[0].id);
+  function abrirForma(sid: string) {
+    setActivo(sid);
+    setTimeout(() => document.getElementById("formas")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
   const otros = PERFILES.filter((o) => o.id !== id);
 
   useEffect(() => { const t = setTimeout(() => setMontado(true), 60); return () => clearTimeout(t); }, []);
@@ -85,7 +90,11 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
         .pf-brillo::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation: pfBrillo 3.2s ease-in-out infinite; }
         @keyframes pfOrbe { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(30px,-20px) scale(1.08) } }
         .pf-orbe { animation: pfOrbe 12s ease-in-out infinite; }
-        .pf-sello { transition: transform .3s ease, background-color .3s ease; } .pf-sello:hover { transform: translateY(-2px); background: #fff; }
+        .pf-forma { transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease, opacity .8s cubic-bezier(.16,1,.3,1); }
+        .pf-forma:hover { border-color: ${C.cobre}; transform: translateX(4px); box-shadow: 0 14px 30px -22px rgba(26,26,24,.55); }
+        .pf-forma-n { background: ${C.hueso}; color: ${C.cobre}; border: 1.5px solid ${C.cobre}; transition: background-color .3s ease, color .3s ease; }
+        .pf-forma:hover .pf-forma-n { background: ${C.cobre}; color: #fff; }
+        .pf-forma-f { transition: transform .3s ease; } .pf-forma:hover .pf-forma-f { transform: translateX(3px); }
         .pf-otro { transition: border-color .35s ease, transform .35s ease, box-shadow .35s ease; }
         .pf-otro:hover { border-color: ${C.cobre}; transform: translateY(-4px); box-shadow: 0 18px 40px -26px rgba(26,26,24,.5); }
         .pf-otro:hover .pf-otro-ico { background: ${C.grafito}; color: ${C.hueso}; }
@@ -115,22 +124,19 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
               {p.titular} <i style={{ color: C.cobre }}>{p.resalta}</i>
             </h1>
             <p className="mt-6 max-w-xl text-[17px] leading-[1.7] sm:text-[19px]" style={{ color: C.piedra }}>{p.bajada}</p>
-            <div className="mt-9 flex flex-wrap items-center gap-5">
-              <Boton cta={p.cta} />
-              <a href="#servicios" className="text-[15px] font-semibold underline decoration-[#B87333] decoration-2 underline-offset-[6px]">
-                Ver cómo te ayudamos ↓
-              </a>
-            </div>
-            {/* Sellos de beneficios */}
-            <div className="mt-9 flex flex-wrap gap-2.5">
-              {p.promesas.map((t, i) => (
-                <span key={t} className={`pf-sello pf-rev ${montado ? "in" : ""} inline-flex items-center gap-2 rounded-full border bg-white/60 px-4 py-2 text-[13.5px] font-medium`}
-                  style={{ borderColor: C.linea, transitionDelay: `${400 + i * 120}ms` }}>
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: C.cobre }}>
-                    <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none" stroke="#fff" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l4 4L16 6" /></svg>
+            {/* Las formas de trabajar con KYRELO (las mismas de «¿Qué necesitas hoy?») */}
+            <div className={`mt-6 grid gap-2.5 ${p.servicios.length === 3 ? "" : "sm:grid-cols-2"}`}>
+              {p.servicios.map((s, i) => (
+                <button key={s.id} type="button" onClick={() => abrirForma(s.id)}
+                  className={`pf-forma pf-rev ${montado ? "in" : ""} group flex items-center gap-4 rounded-2xl border bg-white/80 p-3.5 pr-5 text-left backdrop-blur`}
+                  style={{ borderColor: C.linea, transitionDelay: `${300 + i * 110}ms` }}>
+                  <span className="pf-forma-n flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold" style={serif}>{i + 1}</span>
+                  <span className="min-w-0">
+                    <span className="block text-[15.5px] font-semibold leading-snug">{s.nombre}</span>
+                    <span className="block text-[13.5px] leading-snug" style={{ color: C.piedra }}>{s.corto}</span>
                   </span>
-                  {t}
-                </span>
+                  <span className="pf-forma-f ml-auto text-[18px]" style={{ color: C.cobre }}>→</span>
+                </button>
               ))}
             </div>
           </div>
@@ -142,7 +148,7 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
       </section>
 
       {/* ═══ ¿Qué necesitas hoy? ═══ */}
-      <Servicios perfil={p} />
+      <Servicios perfil={p} activo={activo} setActivo={setActivo} />
 
       {/* ═══ Desliza y mira la diferencia ═══ */}
       <section className="px-6 py-20 sm:px-10 sm:py-28" style={{ background: "#E9E4D8" }}>
@@ -168,6 +174,13 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
           <h2 className="mx-auto mt-5 max-w-3xl text-[32px] leading-[1.12] text-white sm:text-[50px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
             {p.titular} <i style={{ color: C.cobre }}>{p.resalta}</i>
           </h2>
+          <div className="mt-8 flex flex-wrap justify-center gap-2.5">
+            {p.promesas.map((t) => (
+              <span key={t} className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13.5px] text-white" style={{ borderColor: "rgba(241,239,232,.2)" }}>
+                <span style={{ color: "#D9A36A" }}>✓</span> {t}
+              </span>
+            ))}
+          </div>
           <div className="mt-10">
             <Boton cta={p.cta} />
           </div>
