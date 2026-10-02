@@ -11,7 +11,7 @@
      el resumen viaja por WhatsApp para cotizar).
    ============================================================ */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { C, LogoMarca, wa } from "@/components/sitio/marca";
 import type { Perfil, Pieza, Servicio } from "@/lib/perfiles";
@@ -60,7 +60,7 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
         </p>
       )}
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {tipo === "requerimientos" &&
           items?.slice(0, 3).map((t, i) => (
             <div key={t.id ?? i} className="pf-vivo rounded-2xl p-4" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${i * 120}ms` }}>
@@ -76,7 +76,7 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
           ))}
 
         {tipo === "inmuebles" &&
-          items?.slice(0, 2).map((i, k) => {
+          items?.slice(0, 3).map((i, k) => {
             const f = foto((i.fotos_preview ?? []).filter(Boolean)[0]);
             const parte = i.precio ? Number(i.precio) * (Number(i.comision_pct ?? 3) / 100) * Number(i.pct_comparte ?? 0.5) : null;
             return (
@@ -98,7 +98,7 @@ function EnVivo({ tipo, titulo }: { tipo: NonNullable<Servicio["vivo"]>; titulo?
           })}
 
         {tipo === "catalogo" &&
-          items?.slice(0, 2).map((p, k) => (
+          items?.slice(0, 3).map((p, k) => (
             <a key={p.slug ?? k} href={`/inmuebles/${p.slug}`} className="pf-vivo flex gap-4 rounded-2xl p-3 transition-colors hover:bg-white/10" style={{ background: "rgba(241,239,232,.06)", border: "1px solid rgba(241,239,232,.12)", animationDelay: `${k * 120}ms` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {p.imagen ? <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/propiedades/${p.imagen}`} alt="" className="h-20 w-24 shrink-0 rounded-xl object-cover" /> : <div className="h-20 w-24 shrink-0 rounded-xl" style={{ background: "rgba(241,239,232,.08)" }} />}
@@ -129,7 +129,8 @@ function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
     <div className="rounded-3xl border bg-white p-5 sm:p-6" style={{ borderColor: C.linea }}>
       <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.2em" }}>Arma tu plan del mes</p>
       <p className="mt-1 text-[13px]" style={{ color: C.piedra }}>Mueve las cantidades. Te lo cotizamos por mensaje.</p>
-      <div className="mt-5 space-y-5">
+      <div className="mt-5 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+      <div className="space-y-5">
         {piezas.map((p) => (
           <div key={p.id}>
             <div className="flex items-center justify-between gap-3">
@@ -148,7 +149,8 @@ function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
           </div>
         ))}
       </div>
-      <div className="mt-6 rounded-2xl p-4" style={{ background: C.hueso }}>
+      <div>
+      <div className="rounded-2xl p-4" style={{ background: C.hueso }}>
         <p className="text-[11px] font-semibold uppercase" style={{ color: C.piedra, letterSpacing: "0.16em" }}>Tu plan</p>
         <p className="mt-1 text-[16px] leading-snug" style={serif}>{total > 0 ? `${frase[0]?.toUpperCase()}${frase.slice(1)} al mes.` : "Elige al menos una pieza."}</p>
       </div>
@@ -156,145 +158,143 @@ function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
         className="mt-4 flex items-center justify-center rounded-full px-6 py-3.5 text-[14.5px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.cobre }}>
         Cotizar este plan por WhatsApp
       </a>
+      </div>
+      </div>
     </div>
   );
 }
 
-/* ── Cómo funciona (pasos animados) ───────────────────────── */
-function Pasos({ pasos, clave }: { pasos: string[]; clave: string }) {
+/* ── Así funciona: pasos de izquierda a derecha (en celular, hacia abajo) ── */
+function Pasos({ pasos }: { pasos: string[] }) {
   return (
-    <ol key={clave} className="relative mt-3 space-y-0">
-      <span className="pf-riel absolute bottom-4 left-[15px] top-4 w-[2px]" style={{ background: C.cobre }} />
+    <ol className={`relative grid gap-5 sm:gap-4 ${pasos.length === 5 ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
+      <span className="pf-riel absolute left-4 top-4 hidden h-[2px] sm:block" style={{ background: C.cobre, right: `calc(${100 / pasos.length}% - ${(16 * (pasos.length - 1)) / pasos.length + 16}px)` }} />
+      <span className="absolute bottom-3 left-4 top-3 w-[2px] sm:hidden" style={{ background: C.cobre }} />
       {pasos.map((p, i) => (
-        <li key={p} className="pf-paso-i relative flex items-start gap-4 py-2" style={{ animationDelay: `${150 + i * 140}ms` }}>
-          <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white" style={{ background: C.cobre }}>{i + 1}</span>
-          <span className="pt-1 text-[15px] leading-snug">{p}</span>
+        <li key={p} className="pf-paso-i relative flex items-start gap-4 sm:block" style={{ animationDelay: `${150 + i * 140}ms` }}>
+          <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white" style={{ background: C.cobre, boxShadow: `0 0 0 6px ${C.hueso}` }}>{i + 1}</span>
+          <span className="block pt-1 text-[15px] leading-snug sm:mt-4 sm:pt-0">{p}</span>
         </li>
       ))}
     </ol>
   );
 }
 
+const etiqueta = "text-[11px] font-semibold uppercase";
+
 function Panel({ s, perfil }: { s: Servicio; perfil: Perfil }) {
   const cta = s.cta.whatsapp !== undefined
     ? { href: wa(s.cta.whatsapp || `Hola KYRELO, soy ${perfil.quien} y quiero saber más de ${NOMBRE_MARCA[s.marca]}.`), target: "_blank", rel: "noopener noreferrer" }
     : { href: s.cta.href };
   return (
-    <div key={s.id} className="pf-panel grid gap-8 lg:grid-cols-[1.1fr_1fr]">
-      <div>
-        <div className="flex items-center gap-3">
-          <LogoMarca marca={s.marca} className="h-11 w-11" />
-          <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.2em" }}>{NOMBRE_MARCA[s.marca]}</p>
+    <div key={s.id} className="pf-panel">
+      {/* 1 · Qué es */}
+      <div className="max-w-3xl">
+        <h3 className="text-[30px] leading-[1.1] sm:text-[40px]" style={{ ...serif, letterSpacing: "-0.02em" }}>{s.titulo}</h3>
+        <p className="mt-4 text-[17px] leading-[1.7]" style={{ color: C.piedra }}>{s.texto}</p>
+      </div>
+
+      {/* 2 · Así funciona */}
+      <p className={`${etiqueta} mt-12`} style={{ color: C.cobre, letterSpacing: "0.22em" }}>Así funciona</p>
+      <div className="mt-6">
+        <Pasos pasos={s.pasos} />
+      </div>
+
+      {/* 3 · Incluye */}
+      <p className={`${etiqueta} mt-12`} style={{ color: C.cobre, letterSpacing: "0.22em" }}>Incluye</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {s.recibes.map((r, i) => (
+          <span key={r} className="pf-item inline-flex items-center gap-2 rounded-full px-4 py-2 text-[14px]" style={{ background: "#E9E4D8", animationDelay: `${100 + i * 60}ms` }}>
+            <span style={{ color: C.cobre }}>✓</span>
+            {r}
+          </span>
+        ))}
+      </div>
+
+      {/* 4 · Cuánto cuesta / cómo ganas + acción */}
+      <div className="mt-12 flex flex-col gap-5 rounded-3xl p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7" style={{ background: C.grafito, color: C.hueso }}>
+        <div className="max-w-xl">
+          {s.modelo && (
+            <>
+              <p className={etiqueta} style={{ color: "#D9A36A", letterSpacing: "0.22em" }}>{s.modelo.titulo}</p>
+              <p className="mt-1.5 text-[16px] leading-relaxed">{s.modelo.texto}</p>
+            </>
+          )}
+          {!s.modelo && <p className="text-[19px] leading-relaxed" style={serif}>Escríbenos y lo hablamos.</p>}
         </div>
-        <h3 className="mt-5 text-[30px] leading-[1.1] sm:text-[38px]" style={{ ...serif, letterSpacing: "-0.02em" }}>{s.titulo}</h3>
-        <p className="mt-4 text-[16px] leading-[1.7]" style={{ color: C.piedra }}>{s.texto}</p>
-
-        <p className="mt-8 text-[11px] font-semibold uppercase" style={{ color: C.piedra, letterSpacing: "0.2em" }}>Lo que recibes</p>
-        <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
-          {s.recibes.map((r, i) => (
-            <li key={r} className="pf-item flex items-start gap-3 rounded-xl border bg-white px-4 py-3 text-[14px] leading-snug" style={{ borderColor: C.linea, animationDelay: `${100 + i * 70}ms` }}>
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ background: C.cobre }}>
-                <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none" stroke="#fff" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l4 4L16 6" /></svg>
-              </span>
-              {r}
-            </li>
-          ))}
-        </ul>
-
-        {s.modelo && (
-          <div className="mt-6 rounded-2xl border-l-4 px-5 py-4" style={{ borderColor: C.cobre, background: "#EAE5D9" }}>
-            <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.2em" }}>{s.modelo.titulo}</p>
-            <p className="mt-1.5 text-[15px] leading-relaxed">{s.modelo.texto}</p>
-          </div>
-        )}
-
-        {!s.armador && (
-          <a {...cta} className="mt-8 inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-[15px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.grafito }}>
-            {s.cta.texto} <span style={{ color: "#D9A36A" }}>→</span>
+        {s.armador ? (
+          <a href="#armador" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.cobre }}>
+            Armar mi plan ↓
+          </a>
+        ) : (
+          <a {...cta} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.cobre }}>
+            {s.cta.texto} →
           </a>
         )}
       </div>
 
-      <div className="space-y-6">
-        <div className="rounded-3xl border bg-white p-5 sm:p-6" style={{ borderColor: C.linea }}>
-          <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.2em" }}>Cómo funciona</p>
-          <Pasos pasos={s.pasos} clave={s.id} />
+      {/* 5 · Datos en vivo o armador del plan */}
+      {s.vivo && (
+        <div className="mt-8">
+          <EnVivo tipo={s.vivo} titulo={s.vivoTitulo} />
         </div>
-        {s.vivo && <EnVivo tipo={s.vivo} titulo={s.vivoTitulo} />}
-        {s.armador && <Armador piezas={s.armador} quien={perfil.quien} />}
-      </div>
+      )}
+      {s.armador && (
+        <div id="armador" className="mt-8 scroll-mt-24">
+          <Armador piezas={s.armador} quien={perfil.quien} />
+        </div>
+      )}
     </div>
   );
 }
 
 export default function Servicios({ perfil }: { perfil: Perfil }) {
   const [activo, setActivo] = useState(perfil.servicios[0].id);
-  const panelRef = useRef<HTMLDivElement | null>(null);
   const s = perfil.servicios.find((x) => x.id === activo)!;
-
-  function elegir(id: string, desplazar = false) {
-    setActivo(id);
-    if (desplazar) setTimeout(() => panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
-  }
+  // Cada opción es la necesidad en primera persona + el servicio que la resuelve
+  const opciones = perfil.servicios.map((x) => ({ x, frase: perfil.necesidades.find((n) => n.servicio === x.id)?.texto ?? x.nombre }));
 
   return (
     <section id="servicios" className="scroll-mt-20 border-t px-6 py-20 sm:px-10 sm:py-24" style={{ borderColor: C.linea }}>
       <style>{`
         @keyframes pfEntra { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
-        @keyframes pfRiel { from { transform: scaleY(0) } to { transform: scaleY(1) } }
+        @keyframes pfRiel { from { transform: scaleX(0) } to { transform: scaleX(1) } }
         .pf-panel { animation: pfEntra .55s cubic-bezier(.16,1,.3,1) both; }
         .pf-item, .pf-paso-i, .pf-vivo { animation: pfEntra .6s cubic-bezier(.16,1,.3,1) both; }
-        .pf-riel { transform-origin: top; animation: pfRiel 1.1s cubic-bezier(.16,1,.3,1) both .1s; }
+        .pf-riel { transform-origin: left; animation: pfRiel 1.2s cubic-bezier(.16,1,.3,1) both .1s; }
         .pf-tab { transition: background-color .3s ease, color .3s ease, border-color .3s ease, transform .3s ease; }
         .pf-tab:hover { transform: translateY(-2px); border-color: ${C.cobre}; }
-        .pf-nec { transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
-        .pf-nec:hover { border-color: ${C.cobre}; }
         .pf-rango { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 99px; outline: none; }
         .pf-rango::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid ${C.cobre}; box-shadow: 0 4px 10px -4px rgba(26,26,24,.4); cursor: pointer; }
         .pf-rango::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid ${C.cobre}; cursor: pointer; }
         @media (prefers-reduced-motion: reduce) { .pf-panel, .pf-item, .pf-paso-i, .pf-vivo, .pf-riel { animation: none; } }
       `}</style>
       <div className="mx-auto max-w-6xl">
-        {/* ¿Qué necesitas hoy? */}
-        <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.26em" }}>Lo que KYRELO tiene para ti</p>
-        <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[44px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
-          {perfil.servicios.length === 2 ? "Dos" : "Tres"} servicios. <i style={{ color: C.cobre }}>¿Qué necesitas hoy?</i>
+        <h2 className="text-[32px] leading-[1.1] sm:text-[44px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
+          ¿Qué necesitas <i style={{ color: C.cobre }}>hoy?</i>
         </h2>
-        <div className="mt-6 flex flex-wrap gap-2.5">
-          {perfil.necesidades.map((n) => {
-            const on = n.servicio === activo;
-            return (
-              <button key={n.texto} type="button" onClick={() => elegir(n.servicio, true)}
-                className="pf-nec inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-[14px] font-medium"
-                style={{ borderColor: on ? C.cobre : C.linea, background: on ? C.cobre : "#fff", color: on ? "#fff" : C.grafito }}>
-                «{n.texto}»
-              </button>
-            );
-          })}
-        </div>
 
-        {/* Pestañas */}
-        <div ref={panelRef} className={`mt-10 grid scroll-mt-24 gap-3 ${perfil.servicios.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`} role="tablist">
-          {perfil.servicios.map((x, i) => {
+        {/* Un solo selector: la necesidad en primera persona y, debajo, el servicio */}
+        <div className={`mt-8 grid gap-3 ${opciones.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`} role="tablist">
+          {opciones.map(({ x, frase }) => {
             const on = x.id === activo;
             return (
-              <button key={x.id} type="button" role="tab" aria-selected={on} onClick={() => elegir(x.id)}
-                className="pf-tab flex items-center gap-4 rounded-2xl border p-4 text-left"
+              <button key={x.id} type="button" role="tab" aria-selected={on} onClick={() => setActivo(x.id)}
+                className="pf-tab flex items-center gap-4 rounded-2xl border p-5 text-left"
                 style={{ borderColor: on ? C.grafito : C.linea, background: on ? C.grafito : "#fff", color: on ? C.hueso : C.grafito }}>
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ background: C.hueso }}>
-                  <LogoMarca marca={x.marca} className="h-9 w-9" />
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: C.hueso }}>
+                  <LogoMarca marca={x.marca} className="h-8 w-8" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[10px] font-semibold uppercase" style={{ color: on ? "#D9A36A" : C.cobre, letterSpacing: "0.16em" }}>Servicio {i + 1}</span>
-                  <span className="mt-0.5 block text-[16px] font-semibold leading-snug">{x.nombre}</span>
-                  <span className="block text-[12.5px]" style={{ color: on ? "rgba(241,239,232,.7)" : C.piedra }}>{x.corto}</span>
+                  <span className="block text-[17px] font-semibold leading-snug">«{frase}»</span>
+                  <span className="mt-0.5 block text-[13px]" style={{ color: on ? "#D9A36A" : C.piedra }}>{NOMBRE_MARCA[x.marca]} · {x.nombre}</span>
                 </span>
               </button>
             );
           })}
         </div>
 
-        <div className="mt-10">
+        <div className="mt-14">
           <Panel s={s} perfil={perfil} />
         </div>
       </div>
