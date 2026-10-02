@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { APP } from '@/lib/config';
+import { CabeceraSitio } from '@/components/sitio/Sitio';
 import { vinetas, resumenPreferencias } from '@/lib/requerimientos-formato';
 
 const ENTRADA = '/brokers'; // punto único de entrada (login + registro)
@@ -128,13 +129,13 @@ export default function Oportunidades() {
 
   return (
     <div className="min-h-screen bg-[#F1EFE8]">
-      {/* Header */}
-      <header className="border-b border-[#E0DDD2] px-6 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link href="/" className="leading-tight">
-            <p className="text-[15px] font-bold tracking-tight text-[#1A1A18]">{APP.nombre}</p>
-            <p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-[#A8A69E]">Red de agentes y oficinas</p>
-          </Link>
+      {/* Cabecera del sitio + barra de la red (la cuenta solo hace falta para postular) */}
+      <CabeceraSitio activa="/plataforma" />
+      <div className="border-b border-[#E0DDD2] px-6 py-3 sm:px-8">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
+          <p className="text-[12px] text-[#5F5E5A]">
+            <span className="font-semibold text-[#1A1A18]">KYRELO Plataforma.</span> Ver es libre; la cuenta solo se pide para postular un inmueble.
+          </p>
           <div className="flex items-center gap-3">
             <Link href={ENTRADA} className="text-[12px] text-[#5F5E5A] hover:text-[#1A1A18] transition">
               Iniciar sesión
@@ -144,13 +145,13 @@ export default function Oportunidades() {
             </Link>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Hero grafito + buscador (mismo look que /broker). Sin foto: la promesa es la Sabana, no una torre. */}
       <section className="relative bg-[#1A1A18] overflow-hidden">
         <div className="relative mx-auto max-w-3xl px-8 py-14 text-center sm:py-20">
           <p className="mb-3 text-[10px] uppercase tracking-[0.24em] text-[#EBDBC8]">
-            {APP.nombre} · Compradores activos
+            KYRELO Plataforma · Compradores activos
           </p>
           <h1 className="mb-2 text-3xl tracking-tight text-[#F1EFE8] sm:text-4xl">
             ¿Qué inmueble tienes?

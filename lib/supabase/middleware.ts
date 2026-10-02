@@ -48,6 +48,7 @@ export async function updateSession(request: NextRequest) {
     path === "/plataforma" ||
     path === "/marketing" ||
     path.startsWith("/reels/") ||
+    path.startsWith("/para/") ||
     path === "/login" ||
     path === "/registro-broker" ||
     path === "/recuperar" ||

@@ -16,6 +16,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/inmobiliaria`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${BASE}/plataforma`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/marketing`, changeFrequency: "monthly", priority: 0.8 },
+    ...["compradores", "propietarios", "agentes", "oficinas", "constructoras"].map((p) => ({
+      url: `${BASE}/para/${p}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
     {
       url: `${BASE}/inmuebles`,
       changeFrequency: "daily",
