@@ -17,8 +17,8 @@
 import { useEffect, useRef, useState } from "react";
 import { APP } from "@/lib/config";
 import { CabeceraSitio, PieSitio } from "@/components/sitio/Sitio";
-import { LogoMarca, type Marca } from "@/components/sitio/marca";
 import Constelacion from "./Constelacion";
+import Ecosistema from "./Ecosistema";
 
 /* ── Paleta de marca ── */
 const C = {
@@ -275,34 +275,6 @@ const PASOS = [
   ["Acompañamos hasta firmar", "Visitas, promesa, banco y notaría."],
 ];
 
-/* Las tres marcas del ecosistema (la portada no habla de cobros) */
-const MARCAS: { marca: Marca; nombre: string; titular: string; linea: string; boton: string; href: string }[] = [
-  {
-    marca: "inmobiliaria",
-    nombre: "Inmobiliaria",
-    titular: "Primero el comprador. Después el inmueble.",
-    linea: "Vendemos y arrendamos casas y apartamentos en la Sabana, a personas que ya sabemos que pueden comprar.",
-    boton: "Vender, arrendar o comprar",
-    href: "/inmobiliaria",
-  },
-  {
-    marca: "plataforma",
-    nombre: "Plataforma",
-    titular: "Compradores para agentes y oficinas.",
-    linea: "Personas que ya revisamos y pueden comprar, buscando inmueble en Chía, Cajicá, Cota, Sopó y Bogotá norte.",
-    boton: "Ver compradores",
-    href: "/plataforma",
-  },
-  {
-    marca: "marketing",
-    nombre: "Marketing",
-    titular: "Inmuebles que se ven mejor.",
-    linea: "Videos, recorridos en 3D y publicidad en redes para agentes, oficinas y constructoras.",
-    boton: "Agenda una reunión",
-    href: "/marketing",
-  },
-];
-
 const ZONAS = ["Bogotá (zona norte)", "Chía", "Cajicá", "Cota", "Sopó"];
 
 const PRINCIPIOS = [
@@ -469,95 +441,8 @@ export default function LandingKyrelo({
         </div>
       </section>
 
-      {/* ════════ LAS TRES MARCAS ════════ */}
-      <section id="marcas" className="scroll-mt-20 px-6 py-20 sm:px-10 sm:py-28" style={{ borderTop: `1px solid ${C.linea}` }}>
-        <div className="mx-auto max-w-6xl">
-          <Revelar className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: C.cobre }}>
-              Un solo ecosistema
-            </p>
-            <h2 className="mt-3 text-[26px] leading-tight sm:text-[32px]" style={{ fontFamily: "Fraunces, serif" }}>
-              Tres marcas para comprar y vender vivienda
-            </h2>
-          </Revelar>
-
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {MARCAS.map((m, i) => (
-              <Revelar key={m.marca} delay={i * 100}>
-                <a
-                  href={m.href}
-                  className="ky-card group flex h-full flex-col rounded-2xl border bg-white p-7"
-                  style={{ borderColor: C.linea }}
-                >
-                  <LogoMarca marca={m.marca} className="h-16 w-16" />
-                  <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: C.cobre }}>
-                    KYRELO {m.nombre}
-                  </p>
-                  <h3 className="mt-3 text-[22px] leading-snug" style={{ fontFamily: "Fraunces, serif", color: C.grafito }}>
-                    {m.titular}
-                  </h3>
-                  <p className="mt-3 text-[14px] leading-relaxed" style={{ color: C.piedra }}>
-                    {m.linea}
-                  </p>
-                  <span
-                    className="mt-auto inline-flex pt-7 text-[14px] font-semibold underline-offset-4 group-hover:underline"
-                    style={{ color: C.grafito }}
-                  >
-                    {m.boton} →
-                  </span>
-                </a>
-              </Revelar>
-            ))}
-          </div>
-
-          {/* Cobertura */}
-          <Revelar delay={80}>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 rounded-2xl px-8 py-6 text-center" style={{ background: C.hueso, border: `1px solid ${C.linea}` }}>
-              <p className="text-[13px]" style={{ color: C.piedra }}>
-                Trabajamos en vivienda de la Sabana norte y Bogotá norte.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-                {["Chía", "Cajicá", "Cota", "Sopó", "Bogotá norte"].map((z) => (
-                  <span key={z} className="text-[13px] font-medium" style={{ color: C.grafito }}>{z}</span>
-                ))}
-              </div>
-            </div>
-          </Revelar>
-        </div>
-      </section>
-
-      {/* ════════ QUÉ ES KYRELO ════════ */}
-      <section className="px-6 py-24 sm:px-10 sm:py-32">
-        <div className="mx-auto max-w-3xl">
-          <Revelar>
-            <p
-              className="text-[11px] font-semibold uppercase"
-              style={{ color: C.cobre, letterSpacing: "0.26em" }}
-            >
-              Qué es KYRELO
-            </p>
-            <h2
-              className="ky-display mt-5 text-[34px] leading-[1.1] sm:text-[48px]"
-              style={{ letterSpacing: "-0.025em" }}
-            >
-              Primero el comprador. Después el inmueble.
-            </h2>
-          </Revelar>
-          <Revelar delay={120}>
-            <p
-              className="mt-8 max-w-2xl text-[16px] leading-[1.85] sm:text-[18px]"
-              style={{ color: C.piedra }}
-            >
-              Normalmente se consigue un inmueble y después se sale a buscar quién lo compre.
-              En KYRELO lo hacemos al revés: primero hablamos con la persona que quiere comprar,
-              entendemos qué busca y con qué presupuesto, y después buscamos el inmueble. Así
-              nadie pierde tiempo en visitas que no sirven. Alrededor de esa idea trabajan tres
-              marcas: la Inmobiliaria, que vende y arrienda; la Plataforma, que conecta compradores
-              con agentes y oficinas; y Marketing, que hace los videos y la publicidad de los inmuebles.
-            </p>
-          </Revelar>
-        </div>
-      </section>
+      {/* ════════ QUÉ ES KYRELO: la K y sus tres marcas ════════ */}
+      <Ecosistema />
 
       {/* ════════ ASÍ TRABAJAMOS (3 pasos, reveal secuencial) ════════ */}
       <ComoFunciona />
