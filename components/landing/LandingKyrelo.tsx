@@ -374,7 +374,7 @@ export default function LandingKyrelo({
   return (
     <main className="ky-wrap" style={{ background: C.hueso, color: C.grafito }}>
       {/* Estilos y keyframes de la landing */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .ky-wrap { font-family: Inter, system-ui, sans-serif; }
         .ky-display { font-family: "Fraunces", Georgia, serif; }
         .ky-reveal { opacity: 0; transform: translateY(26px);
@@ -401,7 +401,7 @@ export default function LandingKyrelo({
           .ky-reveal, .ky-line, .ky-steps .ky-step { opacity: 1 !important; transform: none !important; animation: none !important; }
           .ky-scroll-ind { animation: none; }
         }
-      `}</style>
+      ` }} />
 
       {/* ════════ CABECERA con el menú de las tres marcas ════════ */}
       <CabeceraSitio loggedIn={loggedIn} panelHref={panelHref} />

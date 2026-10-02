@@ -749,7 +749,7 @@ export default function LandingCasas({ municipio }: { municipio: Municipio }) {
       {/* En pantallas bajitas (Androids de 360x780 y similares) el bloque
           principal se aprieta para que el formulario siga cabiendo sin
           scroll. Las áreas táctiles se quedan en 44px: eso no se toca. */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-height: 830px) and (max-width: 640px) {
           .ky-ante { font-size: 9px; letter-spacing: 0.18em; }
           .ky-h1 { font-size: 25px; margin-top: 8px; }
@@ -771,7 +771,7 @@ export default function LandingCasas({ municipio }: { municipio: Municipio }) {
           .ky-card .ky-legal { font-size: 9px; line-height: 1.35; }
           .ky-grid { gap: 8px; }
         }
-      `}</style>
+      ` }} />
       {/* ── BLOQUE PRINCIPAL: cabe completo en 390x844 ── */}
       <div className="relative flex min-h-[100svh] flex-col overflow-hidden">
         <FondoConstelacion />

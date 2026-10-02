@@ -68,7 +68,7 @@ export default function AcuerdoPublicoPage() {
 
   return (
     <main className="min-h-screen antialiased" style={{ backgroundColor: C.fondo, color: C.negro, fontFamily: "Inter, system-ui, sans-serif" }}>
-      <style>{`@media print { .no-imprimir { display: none !important; } main { background: white !important; } .hoja { box-shadow: none !important; border: 0 !important; } }`}</style>
+      <style dangerouslySetInnerHTML={{ __html: `@media print { .no-imprimir { display: none !important; } main { background: white !important; } .hoja { box-shadow: none !important; border: 0 !important; } }` }} />
       <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
         <div className="no-imprimir mb-6 flex flex-wrap items-center justify-between gap-3">
           <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.24em" }}>KYRELO · Acuerdo con agente</p>

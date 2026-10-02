@@ -67,7 +67,7 @@ export default function BrokersPage() {
       style={{ background: C.hueso, color: C.grafito, fontFamily: "Inter, system-ui, sans-serif" }}
       className="min-h-screen"
     >
-      <style>{`.bk-serif{font-family:"Fraunces",Georgia,serif;}`}</style>
+      <style dangerouslySetInnerHTML={{ __html: `.bk-serif{font-family:"Fraunces",Georgia,serif;}` }} />
 
       {/* Cabecera del sitio: esta página es KYRELO Plataforma */}
       <CabeceraSitio activa="/plataforma" />

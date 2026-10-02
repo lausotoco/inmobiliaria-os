@@ -2,16 +2,19 @@
 
 /* ============================================================
    Landing de un perfil de cliente (/para/[perfil])
-   Hero con gráfico animado · lo que cambia · cómo funciona ·
-   qué marca te acompaña · promesas · otros perfiles · cierre
+   Barra de progreso · hero con gráfico animado y sellos de
+   beneficios · ¿qué necesitas hoy? (servicios) · desliza y mira
+   la diferencia · cierre · otros perfiles · botón fijo en celular
    ============================================================ */
 
 import { useEffect, useRef, useState } from "react";
 import { CabeceraSitio, PieSitio } from "@/components/sitio/Sitio";
 import { C, wa } from "@/components/sitio/marca";
+import { Figura } from "@/components/landing/Constelacion";
 import { PERFILES, buscarPerfil, type PerfilId } from "@/lib/perfiles";
 import { ESTILOS_GRAFICOS, GraficoPerfil } from "./Graficos";
 import Servicios from "./Servicios";
+import Comparador from "./Comparador";
 
 const serif = { fontFamily: '"Fraunces", Georgia, serif' };
 
@@ -37,15 +40,17 @@ function Aparece({ children, delay = 0, className = "" }: { children: React.Reac
   );
 }
 
-function Boton({ cta, oscuro = false }: { cta: { texto: string; href?: string; whatsapp?: string }; oscuro?: boolean }) {
-  const ext = cta.whatsapp ? { href: wa(cta.whatsapp), target: "_blank", rel: "noopener noreferrer" } : { href: cta.href };
+type Cta = { texto: string; href?: string; whatsapp?: string };
+const enlace = (cta: Cta) => (cta.whatsapp ? { href: wa(cta.whatsapp), target: "_blank", rel: "noopener noreferrer" } : { href: cta.href });
+
+function Boton({ cta, claro = false, className = "" }: { cta: Cta; claro?: boolean; className?: string }) {
   return (
     <a
-      {...ext}
-      className="pf-btn inline-flex items-center justify-center rounded-full px-8 py-4 text-[15px] font-semibold"
-      style={{ background: oscuro ? C.hueso : C.cobre, color: oscuro ? C.grafito : "#fff" }}
+      {...enlace(cta)}
+      className={`pf-btn pf-brillo relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-8 py-4 text-[15px] font-semibold ${className}`}
+      style={{ background: claro ? C.hueso : C.cobre, color: claro ? C.grafito : "#fff", boxShadow: claro ? "none" : "0 14px 30px -14px rgba(184,115,51,.8)" }}
     >
-      {cta.texto}
+      {cta.texto} <span aria-hidden="true">→</span>
     </a>
   );
 }
@@ -53,113 +58,118 @@ function Boton({ cta, oscuro = false }: { cta: { texto: string; href?: string; w
 export default function PerfilLanding({ id }: { id: PerfilId }) {
   const p = buscarPerfil(id)!;
   const [montado, setMontado] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setMontado(true), 60); return () => clearTimeout(t); }, []);
+  const [progreso, setProgreso] = useState(0);
+  const [fijo, setFijo] = useState(false);
   const otros = PERFILES.filter((o) => o.id !== id);
 
+  useEffect(() => { const t = setTimeout(() => setMontado(true), 60); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const f = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      setProgreso(h > 0 ? window.scrollY / h : 0);
+      setFijo(window.scrollY > 520 && window.scrollY < h - 700);
+    };
+    f();
+    window.addEventListener("scroll", f, { passive: true });
+    return () => window.removeEventListener("scroll", f);
+  }, []);
+
   return (
-    <main style={{ background: C.hueso, color: C.grafito, fontFamily: "Inter, system-ui, sans-serif" }} className="min-h-screen">
-      <style>{`
+    <main style={{ background: C.hueso, color: C.grafito, fontFamily: "Inter, system-ui, sans-serif" }} className="min-h-screen overflow-x-clip">
+      <style dangerouslySetInnerHTML={{ __html: `
         ${ESTILOS_GRAFICOS}
         .pf-rev { opacity: 0; transform: translateY(24px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
         .pf-rev.in { opacity: 1; transform: none; }
-        .pf-btn { transition: transform .3s ease, opacity .3s ease; } .pf-btn:hover { transform: translateY(-1px); opacity: .92; }
-          .pf-tachar { -webkit-box-decoration-break: clone; box-decoration-break: clone; background-image: linear-gradient(currentColor, currentColor); background-size: 0% 1.5px; background-repeat: no-repeat; background-position: 0 55%; transition: background-size .9s cubic-bezier(.16,1,.3,1) .35s; }
-        .pf-rev.in .pf-tachar { background-size: 100% 1.5px; }
-        .pf-linea { transform-origin: left; transform: scaleX(0); transition: transform 2.2s cubic-bezier(.16,1,.3,1); }
-        .pf-pasos.in .pf-linea { transform: scaleX(1); }
-        .pf-paso { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.16,1,.3,1); }
-        .pf-pasos.in .pf-paso { opacity: 1; transform: none; }
-        .pf-num { transition: background-color .5s ease, color .5s ease; }
-        .pf-pasos.in .pf-num { background-color: ${C.cobre}; color: #fff; border-color: ${C.cobre}; }
-        .pf-otro { transition: border-color .35s ease, transform .35s ease; } .pf-otro:hover { border-color: ${C.cobre}; transform: translateY(-2px); }
-        @media (prefers-reduced-motion: reduce) { .pf-rev, .pf-paso, .pf-linea { opacity: 1 !important; transform: none !important; transition: none !important; } }
-      `}</style>
+        .pf-btn { transition: transform .3s ease, box-shadow .3s ease; } .pf-btn:hover { transform: translateY(-2px) scale(1.02); }
+        @keyframes pfBrillo { 0%, 70% { transform: translateX(-120%) skewX(-20deg) } 100% { transform: translateX(220%) skewX(-20deg) } }
+        .pf-brillo::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation: pfBrillo 3.2s ease-in-out infinite; }
+        @keyframes pfOrbe { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(30px,-20px) scale(1.08) } }
+        .pf-orbe { animation: pfOrbe 12s ease-in-out infinite; }
+        .pf-sello { transition: transform .3s ease, background-color .3s ease; } .pf-sello:hover { transform: translateY(-2px); background: #fff; }
+        .pf-otro { transition: border-color .35s ease, transform .35s ease, box-shadow .35s ease; }
+        .pf-otro:hover { border-color: ${C.cobre}; transform: translateY(-4px); box-shadow: 0 18px 40px -26px rgba(26,26,24,.5); }
+        .pf-otro:hover .pf-otro-ico { background: ${C.grafito}; color: ${C.hueso}; }
+        .pf-otro-ico { transition: background-color .35s ease, color .35s ease; }
+        @media (prefers-reduced-motion: reduce) { .pf-rev { opacity: 1 !important; transform: none !important; transition: none !important; } .pf-brillo::after, .pf-orbe { animation: none; } }
+      ` }} />
+
+      {/* Barra de progreso de lectura */}
+      <div className="fixed left-0 top-0 z-50 h-[3px] w-full" aria-hidden="true">
+        <div className="h-full origin-left" style={{ background: C.cobre, transform: `scaleX(${progreso})` }} />
+      </div>
 
       <CabeceraSitio />
 
       {/* ═══ Hero ═══ */}
-      <section className="px-6 pb-16 pt-14 sm:px-10 sm:pb-24 sm:pt-20">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
+      <section className="relative px-6 pb-16 pt-14 sm:px-10 sm:pb-24 sm:pt-20">
+        <div className="pf-orbe pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle, rgba(184,115,51,.28), transparent 65%)" }} />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
           <div className={`pf-rev ${montado ? "in" : ""}`}>
-            <p
-              className="inline-flex rounded-full border px-4 py-1.5 text-[13px] font-medium"
-              style={{ borderColor: C.cobre, color: C.cobre }}
-            >
+            <p className="inline-flex items-center gap-2.5 rounded-full border bg-white/70 py-1.5 pl-1.5 pr-4 text-[13.5px] font-medium backdrop-blur" style={{ borderColor: C.linea }}>
+              <span className="flex h-7 w-7 items-center justify-center rounded-full" style={{ background: C.grafito, color: C.hueso }}>
+                <Figura id={id} className="h-4 w-4" />
+              </span>
               «{p.yo}»
             </p>
             <h1 className="mt-7 text-[40px] leading-[1.04] sm:text-[60px]" style={{ ...serif, letterSpacing: "-0.03em" }}>
               {p.titular} <i style={{ color: C.cobre }}>{p.resalta}</i>
             </h1>
-            <p className="mt-6 max-w-xl text-[17px] leading-[1.7] sm:text-[19px]" style={{ color: C.piedra }}>
-              {p.bajada}
-            </p>
+            <p className="mt-6 max-w-xl text-[17px] leading-[1.7] sm:text-[19px]" style={{ color: C.piedra }}>{p.bajada}</p>
             <div className="mt-9 flex flex-wrap items-center gap-5">
               <Boton cta={p.cta} />
-              <a href="#servicios" className="text-[15px] font-semibold underline underline-offset-4">
+              <a href="#servicios" className="text-[15px] font-semibold underline decoration-[#B87333] decoration-2 underline-offset-[6px]">
                 Ver cómo te ayudamos ↓
               </a>
             </div>
+            {/* Sellos de beneficios */}
+            <div className="mt-9 flex flex-wrap gap-2.5">
+              {p.promesas.map((t, i) => (
+                <span key={t} className={`pf-sello pf-rev ${montado ? "in" : ""} inline-flex items-center gap-2 rounded-full border bg-white/60 px-4 py-2 text-[13.5px] font-medium`}
+                  style={{ borderColor: C.linea, transitionDelay: `${400 + i * 120}ms` }}>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: C.cobre }}>
+                    <svg viewBox="0 0 20 20" className="h-3 w-3" fill="none" stroke="#fff" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l4 4L16 6" /></svg>
+                  </span>
+                  {t}
+                </span>
+              ))}
+            </div>
           </div>
-          <div
-            className={`pf-rev ${montado ? "in" : ""} rounded-[28px] p-6 sm:p-9`}
-            style={{ background: C.grafito, transitionDelay: "150ms" }}
-          >
-            <GraficoPerfil id={id} className="h-auto w-full" />
+          <div className={`pf-rev ${montado ? "in" : ""} relative rounded-[32px] p-6 shadow-[0_40px_80px_-40px_rgba(26,26,24,.7)] sm:p-9`} style={{ background: C.grafito, transitionDelay: "150ms" }}>
+            <div className="pointer-events-none absolute inset-0 rounded-[32px]" style={{ background: "radial-gradient(circle at 80% 10%, rgba(217,163,106,.18), transparent 55%)" }} />
+            <GraficoPerfil id={id} className="relative h-auto w-full" />
           </div>
         </div>
       </section>
 
-      {/* ═══ Servicios (lo principal) ═══ */}
+      {/* ═══ ¿Qué necesitas hoy? ═══ */}
       <Servicios perfil={p} />
 
-      {/* ═══ Lo que cambia ═══ */}
-      <section className="border-t px-6 py-20 sm:px-10 sm:py-28" style={{ borderColor: C.linea }}>
-        <div className="mx-auto max-w-5xl">
-          <Aparece>
-            <p className="text-[11px] font-semibold uppercase" style={{ color: C.cobre, letterSpacing: "0.26em" }}>Lo que cambia</p>
-            <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[44px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
-              Antes y <i style={{ color: C.cobre }}>con KYRELO.</i>
+      {/* ═══ Desliza y mira la diferencia ═══ */}
+      <section className="px-6 py-20 sm:px-10 sm:py-28" style={{ background: "#E9E4D8" }}>
+        <div className="mx-auto max-w-4xl">
+          <Aparece className="text-center">
+            <h2 className="text-[32px] leading-[1.1] sm:text-[46px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
+              Desliza y mira <i style={{ color: C.cobre }}>la diferencia.</i>
             </h2>
           </Aparece>
-          <div className="mt-12 space-y-3">
-            {p.cambios.map(([antes, ahora], i) => (
-              <Aparece key={antes} delay={i * 110}>
-                <div className="grid items-center gap-3 rounded-2xl border bg-white p-5 sm:grid-cols-[1fr_auto_1fr] sm:gap-6 sm:p-6" style={{ borderColor: C.linea }}>
-                  <p className="text-[15px] sm:text-[16px]" style={{ color: "#8A8880" }}><span className="pf-tachar">{antes}</span></p>
-                  <span className="hidden text-[20px] sm:block" style={{ color: C.cobre }}>→</span>
-                  <p className="flex items-center gap-3 text-[16px] font-semibold sm:text-[17px]">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: C.cobre }}>
-                      <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="#fff" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l4 4L16 6" /></svg>
-                    </span>
-                    {ahora}
-                  </p>
-                </div>
-              </Aparece>
-            ))}
-          </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {p.promesas.map((t, i) => (
-              <Aparece key={t} delay={i * 100}>
-                <div className="flex items-center gap-3 rounded-2xl px-6 py-5" style={{ background: "#E9E5DA" }}>
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: C.cobre }} />
-                  <p className="text-[15px] font-semibold">{t}</p>
-                </div>
-              </Aparece>
-            ))}
-          </div>
+          <Aparece delay={120} className="mt-10">
+            <Comparador cambios={p.cambios} />
+          </Aparece>
         </div>
       </section>
 
-
       {/* ═══ Cierre ═══ */}
-      <section className="px-6 py-24 text-center sm:px-10" style={{ background: C.grafito }}>
-        <Aparece>
-          <p className="text-[13px]" style={{ color: "#D9A36A" }}>«{p.yo}»</p>
-          <h2 className="mx-auto mt-4 max-w-3xl text-[32px] leading-[1.12] text-white sm:text-[48px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
+      <section className="relative overflow-hidden px-6 py-24 text-center sm:px-10 sm:py-28" style={{ background: C.grafito }}>
+        <div className="pf-orbe pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(184,115,51,.25), transparent 60%)" }} />
+        <Aparece className="relative">
+          <p className="inline-flex items-center gap-2 text-[13px]" style={{ color: "#D9A36A" }}>
+            <Figura id={id} className="h-5 w-5" /> «{p.yo}»
+          </p>
+          <h2 className="mx-auto mt-5 max-w-3xl text-[32px] leading-[1.12] text-white sm:text-[50px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
             {p.titular} <i style={{ color: C.cobre }}>{p.resalta}</i>
           </h2>
           <div className="mt-10">
-            <Boton cta={p.cta} oscuro />
+            <Boton cta={p.cta} />
           </div>
         </Aparece>
       </section>
@@ -170,9 +180,12 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
           <p className="text-[11px] font-semibold uppercase" style={{ color: C.piedra, letterSpacing: "0.22em" }}>¿No eres tú? Elige tu perfil</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {otros.map((o) => (
-              <a key={o.id} href={`/para/${o.id}`} className="pf-otro flex items-center justify-between gap-3 rounded-2xl border bg-white px-5 py-4 text-[14.5px] font-medium" style={{ borderColor: C.linea }}>
-                {o.yo}
-                <span style={{ color: C.cobre }}>→</span>
+              <a key={o.id} href={`/para/${o.id}`} className="pf-otro flex items-center gap-3.5 rounded-2xl border bg-white p-3.5 pr-5 text-[14.5px] font-medium" style={{ borderColor: C.linea }}>
+                <span className="pf-otro-ico flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: C.hueso, color: C.grafito }}>
+                  <Figura id={o.id} className="h-6 w-6" />
+                </span>
+                <span className="leading-snug">{o.yo}</span>
+                <span className="ml-auto" style={{ color: C.cobre }}>→</span>
               </a>
             ))}
           </div>
@@ -180,6 +193,24 @@ export default function PerfilLanding({ id }: { id: PerfilId }) {
       </section>
 
       <PieSitio />
+
+      {/* Botón fijo en celular */}
+      <div
+        className="fixed inset-x-3 bottom-3 z-40 transition-all duration-500 md:hidden"
+        style={{ opacity: fijo ? 1 : 0, transform: fijo ? "translateY(0)" : "translateY(120%)", pointerEvents: fijo ? "auto" : "none" }}
+      >
+        <a
+          {...enlace(p.cta)}
+          className="pf-brillo relative flex items-center justify-between overflow-hidden rounded-full py-2 pl-2 pr-5 text-[14.5px] font-semibold text-white shadow-[0_18px_40px_-14px_rgba(26,26,24,.7)]"
+          style={{ background: C.grafito }}
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: C.cobre }}>
+            <Figura id={id} className="h-5 w-5" />
+          </span>
+          {p.cta.texto}
+          <span style={{ color: "#D9A36A" }}>→</span>
+        </a>
+      </div>
     </main>
   );
 }

@@ -16,7 +16,7 @@ import { C, LogoMarca } from "@/components/sitio/marca";
 import { PERFILES, type PerfilId } from "@/lib/perfiles";
 
 /* Figuras de línea (48 × 48) */
-function Figura({ id, className = "h-9 w-9" }: { id: PerfilId; className?: string }) {
+export function Figura({ id, className = "h-9 w-9" }: { id: PerfilId; className?: string }) {
   const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return (
     <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
@@ -103,7 +103,7 @@ export default function Constelacion() {
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes kyFluye { to { stroke-dashoffset: -28; } }
         @keyframes kyFlota { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
         @keyframes kyHalo { 0% { transform: scale(1); opacity: .55 } 100% { transform: scale(1.65); opacity: 0 } }
@@ -122,7 +122,7 @@ export default function Constelacion() {
         .ky-nodo:hover .ky-flecha { transform: translateX(2px); }
         .ky-fila { transition: border-color .3s ease, transform .3s ease; } .ky-fila:active { transform: scale(.98); }
         @media (prefers-reduced-motion: reduce) { .ky-flota, .ky-mano, .ky-orbita, .ky-halo { animation: none; } }
-      `}</style>
+      ` }} />
 
       {/* La instrucción */}
       <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-2.5">

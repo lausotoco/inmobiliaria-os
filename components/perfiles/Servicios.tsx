@@ -121,6 +121,8 @@ const UNO: Record<string, string> = { videos: "video", recorridos: "recorrido", 
 function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
   const [cant, setCant] = useState<Record<string, number>>(() => Object.fromEntries(piezas.map((p) => [p.id, p.cantidad])));
   const total = piezas.reduce((a, p) => a + cant[p.id], 0);
+  const maximo = piezas.reduce((a, p) => a + p.max, 0);
+  const nivel = total / maximo < 0.2 ? "Plan inicial" : total / maximo < 0.45 ? "Plan de crecimiento" : "Plan completo";
   const resumen = piezas.filter((p) => cant[p.id] > 0).map((p) => `${cant[p.id]} ${cant[p.id] === 1 ? (UNO[p.unidad] ?? p.unidad) : p.unidad}`);
   const frase = resumen.length > 1 ? `${resumen.slice(0, -1).join(", ")} y ${resumen[resumen.length - 1]}` : resumen[0] ?? "";
   const mensaje = `Hola KYRELO, soy ${quien}. Quiero un plan con ${frase} al mes. ¿Cuánto cuesta?`;
@@ -138,7 +140,7 @@ function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
               <div className="flex items-center gap-2">
                 <button type="button" aria-label={`Menos ${p.unidad}`} onClick={() => setCant((c) => ({ ...c, [p.id]: Math.max(p.min, c[p.id] - 1) }))}
                   className="flex h-8 w-8 items-center justify-center rounded-full border text-[16px] transition-colors hover:border-[#B87333]" style={{ borderColor: C.linea }}>−</button>
-                <span className="w-8 text-center text-[20px] tabular-nums" style={serif}>{cant[p.id]}</span>
+                <span className="w-8 text-center text-[22px] tabular-nums" style={serif}><span key={cant[p.id]} className="pf-salto">{cant[p.id]}</span></span>
                 <button type="button" aria-label={`Más ${p.unidad}`} onClick={() => setCant((c) => ({ ...c, [p.id]: Math.min(p.max, c[p.id] + 1) }))}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-[16px] text-white transition-opacity hover:opacity-85" style={{ background: C.grafito }}>+</button>
               </div>
@@ -151,11 +153,17 @@ function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
       </div>
       <div>
       <div className="rounded-2xl p-4" style={{ background: C.hueso }}>
-        <p className="text-[11px] font-semibold uppercase" style={{ color: C.piedra, letterSpacing: "0.16em" }}>Tu plan</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] font-semibold uppercase" style={{ color: C.piedra, letterSpacing: "0.16em" }}>Tu plan</p>
+          <span key={nivel} className="pf-salto rounded-full px-3 py-1 text-[11.5px] font-semibold text-white" style={{ background: C.cobre }}>{nivel}</span>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full" style={{ background: "#E2DCCF" }}>
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(6, (total / maximo) * 100)}%`, background: `linear-gradient(90deg, #D9A36A, ${C.cobre})` }} />
+        </div>
         <p className="mt-1 text-[16px] leading-snug" style={serif}>{total > 0 ? `${frase[0]?.toUpperCase()}${frase.slice(1)} al mes.` : "Elige al menos una pieza."}</p>
       </div>
       <a href={wa(mensaje)} target="_blank" rel="noopener noreferrer"
-        className="mt-4 flex items-center justify-center rounded-full px-6 py-3.5 text-[14.5px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.cobre }}>
+        className="pf-brillo2 relative mt-4 flex items-center justify-center overflow-hidden rounded-full px-6 py-3.5 text-[14.5px] font-semibold text-white transition-transform hover:scale-[1.02]" style={{ background: C.cobre }}>
         Pedir el precio por WhatsApp
       </a>
       </div>
@@ -164,18 +172,40 @@ function Armador({ piezas, quien }: { piezas: Pieza[]; quien: string }) {
   );
 }
 
-/* ── Así funciona: pasos de izquierda a derecha (en celular, hacia abajo) ── */
+/* ── Así funciona: los pasos se encienden uno por uno; al tocar uno, se queda ahí ── */
 function Pasos({ pasos }: { pasos: string[] }) {
+  const [activo, setActivo] = useState(0);
+  const [fijo, setFijo] = useState(false);
+  useEffect(() => {
+    if (fijo) return;
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setActivo((a) => (a + 1) % pasos.length), 1600);
+    return () => clearInterval(t);
+  }, [fijo, pasos.length]);
+  const pct = pasos.length > 1 ? (activo / (pasos.length - 1)) * 100 : 0;
+  const n = pasos.length;
   return (
-    <ol className={`relative grid gap-5 sm:gap-4 ${pasos.length === 5 ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
-      <span className="pf-riel absolute left-4 top-4 hidden h-[2px] sm:block" style={{ background: C.cobre, right: `calc(${100 / pasos.length}% - ${(16 * (pasos.length - 1)) / pasos.length + 16}px)` }} />
-      <span className="absolute bottom-3 left-4 top-3 w-[2px] sm:hidden" style={{ background: C.cobre }} />
-      {pasos.map((p, i) => (
-        <li key={p} className="pf-paso-i relative flex items-start gap-4 sm:block" style={{ animationDelay: `${150 + i * 140}ms` }}>
-          <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white" style={{ background: C.cobre, boxShadow: `0 0 0 6px ${C.hueso}` }}>{i + 1}</span>
-          <span className="block pt-1 text-[15px] leading-snug sm:mt-4 sm:pt-0">{p}</span>
-        </li>
-      ))}
+    <ol className={`relative grid gap-3 sm:gap-4 ${n === 5 ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
+      {/* riel y avance (escritorio) */}
+      <span className="absolute left-5 top-5 hidden h-[3px] rounded-full sm:block" style={{ background: "#E2DCCF", right: `calc(${100 / n}% - ${(16 * (n - 1)) / n + 20}px)` }}>
+        <span className="block h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: C.cobre }} />
+      </span>
+      {pasos.map((p, i) => {
+        const on = i <= activo, actual = i === activo;
+        return (
+          <li key={p}>
+            <button type="button" onClick={() => { setFijo(true); setActivo(i); }}
+              className="pf-paso-i group relative flex w-full items-center gap-4 rounded-2xl p-2 text-left transition-colors sm:block sm:p-0"
+              style={{ animationDelay: `${150 + i * 140}ms` }}>
+              <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-semibold transition-all duration-500"
+                style={{ background: on ? C.cobre : "#fff", color: on ? "#fff" : C.piedra, border: `2px solid ${on ? C.cobre : "#E2DCCF"}`, transform: actual ? "scale(1.15)" : "scale(1)", boxShadow: actual ? "0 0 0 7px rgba(184,115,51,.18)" : `0 0 0 6px ${C.hueso}` }}>
+                {i + 1}
+              </span>
+              <span className="block text-[15px] leading-snug transition-colors duration-500 sm:mt-4" style={{ color: actual ? C.grafito : on ? "#3A3936" : "#8A8880", fontWeight: actual ? 600 : 400 }}>{p}</span>
+            </button>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -204,16 +234,17 @@ function Panel({ s, perfil }: { s: Servicio; perfil: Perfil }) {
       <p className={`${etiqueta} mt-12`} style={{ color: C.cobre, letterSpacing: "0.22em" }}>Incluye</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {s.recibes.map((r, i) => (
-          <span key={r} className="pf-item inline-flex items-center gap-2 rounded-full px-4 py-2 text-[14px]" style={{ background: "#E9E4D8", animationDelay: `${100 + i * 60}ms` }}>
-            <span style={{ color: C.cobre }}>✓</span>
+          <span key={r} className="pf-item pf-chip inline-flex cursor-default items-center gap-2 rounded-full px-4 py-2.5 text-[14px]" style={{ animationDelay: `${100 + i * 60}ms` }}>
+            <span className="pf-chip-ok flex h-5 w-5 items-center justify-center rounded-full text-[11px]">✓</span>
             {r}
           </span>
         ))}
       </div>
 
       {/* 4 · Cuánto cuesta / cómo ganas + acción */}
-      <div className="mt-12 flex flex-col gap-5 rounded-3xl p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7" style={{ background: C.grafito, color: C.hueso }}>
-        <div className="max-w-xl">
+      <div className="relative mt-12 flex flex-col gap-5 overflow-hidden rounded-3xl p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8" style={{ background: C.grafito, color: C.hueso }}>
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full blur-3xl" style={{ background: "rgba(184,115,51,.28)" }} />
+        <div className="relative max-w-xl">
           {s.modelo && (
             <>
               <p className={etiqueta} style={{ color: "#D9A36A", letterSpacing: "0.22em" }}>{s.modelo.titulo}</p>
@@ -223,11 +254,11 @@ function Panel({ s, perfil }: { s: Servicio; perfil: Perfil }) {
           {!s.modelo && <p className="text-[19px] leading-relaxed" style={serif}>Escríbenos y lo hablamos.</p>}
         </div>
         {s.armador ? (
-          <a href="#armador" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.cobre }}>
+          <a href="#armador" className="pf-brillo2 relative inline-flex shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full px-7 py-3.5 text-[15px] font-semibold text-white transition-transform hover:scale-[1.03]" style={{ background: C.cobre }}>
             Armar mi plan ↓
           </a>
         ) : (
-          <a {...cta} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-7 py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90" style={{ background: C.cobre }}>
+          <a {...cta} className="pf-brillo2 relative inline-flex shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full px-7 py-3.5 text-[15px] font-semibold text-white transition-transform hover:scale-[1.03]" style={{ background: C.cobre }}>
             {s.cta.texto} →
           </a>
         )}
@@ -256,9 +287,17 @@ export default function Servicios({ perfil }: { perfil: Perfil }) {
 
   return (
     <section id="servicios" className="scroll-mt-20 border-t px-6 py-20 sm:px-10 sm:py-24" style={{ borderColor: C.linea }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes pfEntra { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
         @keyframes pfRiel { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+        @keyframes pfBrillo2 { 0%, 70% { transform: translateX(-120%) skewX(-20deg) } 100% { transform: translateX(240%) skewX(-20deg) } }
+        .pf-brillo2::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation: pfBrillo2 3.2s ease-in-out infinite; }
+        .pf-chip { background: #E9E4D8; transition: background-color .25s ease, color .25s ease, transform .25s ease; }
+        .pf-chip-ok { background: rgba(184,115,51,.15); color: ${C.cobre}; transition: background-color .25s ease, color .25s ease; }
+        .pf-chip:hover { background: ${C.grafito}; color: ${C.hueso}; transform: translateY(-2px); }
+        .pf-chip:hover .pf-chip-ok { background: ${C.cobre}; color: #fff; }
+        @keyframes pfSalto { 0% { transform: scale(1) } 40% { transform: scale(1.35) } 100% { transform: scale(1) } }
+        .pf-salto { display: inline-block; animation: pfSalto .35s ease-out; }
         .pf-panel { animation: pfEntra .55s cubic-bezier(.16,1,.3,1) both; }
         .pf-item, .pf-paso-i, .pf-vivo { animation: pfEntra .6s cubic-bezier(.16,1,.3,1) both; }
         .pf-riel { transform-origin: left; animation: pfRiel 1.2s cubic-bezier(.16,1,.3,1) both .1s; }
@@ -267,8 +306,8 @@ export default function Servicios({ perfil }: { perfil: Perfil }) {
         .pf-rango { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 99px; outline: none; }
         .pf-rango::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid ${C.cobre}; box-shadow: 0 4px 10px -4px rgba(26,26,24,.4); cursor: pointer; }
         .pf-rango::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid ${C.cobre}; cursor: pointer; }
-        @media (prefers-reduced-motion: reduce) { .pf-panel, .pf-item, .pf-paso-i, .pf-vivo, .pf-riel { animation: none; } }
-      `}</style>
+        @media (prefers-reduced-motion: reduce) { .pf-panel, .pf-item, .pf-paso-i, .pf-vivo, .pf-riel, .pf-brillo2::after, .pf-salto { animation: none; } }
+      ` }} />
       <div className="mx-auto max-w-6xl">
         <h2 className="text-[32px] leading-[1.1] sm:text-[44px]" style={{ ...serif, letterSpacing: "-0.025em" }}>
           ¿Qué necesitas <i style={{ color: C.cobre }}>hoy?</i>
@@ -280,8 +319,9 @@ export default function Servicios({ perfil }: { perfil: Perfil }) {
             const on = x.id === activo;
             return (
               <button key={x.id} type="button" role="tab" aria-selected={on} onClick={() => setActivo(x.id)}
-                className="pf-tab flex items-center gap-4 rounded-2xl border p-5 text-left"
-                style={{ borderColor: on ? C.grafito : C.linea, background: on ? C.grafito : "#fff", color: on ? C.hueso : C.grafito }}>
+                className="pf-tab relative flex items-center gap-4 rounded-2xl border p-5 text-left"
+                style={{ borderColor: on ? C.grafito : C.linea, background: on ? C.grafito : "#fff", color: on ? C.hueso : C.grafito, boxShadow: on ? "0 22px 44px -24px rgba(26,26,24,.7), 0 0 0 3px rgba(184,115,51,.35)" : "0 10px 24px -22px rgba(26,26,24,.5)" }}>
+                {on && <span className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full text-[13px] text-white" style={{ background: C.cobre, boxShadow: `0 0 0 3px ${C.hueso}` }}>✓</span>}
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: C.hueso }}>
                   <LogoMarca marca={x.marca} className="h-8 w-8" />
                 </span>
