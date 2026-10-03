@@ -182,6 +182,65 @@ async function entender(texto: string): Promise<Extraccion | null> {
   }
 }
 
+// ── Asistente de ventas y servicio al cliente ──
+// Laura pega aquí el mensaje que le llegó y el bot le devuelve la respuesta lista para copiar.
+// Sin precios ni procesos internos: los montos siempre van como [monto que confirmas tú].
+const VENTAS = `Eres la asistente de ventas y servicio al cliente de KYRELO (Laura Soto, fundadora). Laura te pega un mensaje que le llegó (de un agente inmobiliario, una oficina, una constructora, un comprador o un propietario) y tú le escribes la respuesta lista para copiar y pegar.
+
+Contexto por defecto: casi todos los mensajes vienen de los anuncios de KYRELO Marketing (campañas para agentes, oficinas y constructoras). Si Laura no dice otra cosa, asume que es un lead de Marketing y responde SOLO sobre Marketing (no menciones compradores verificados ni la Plataforma). Laura se presenta siempre como "Laura Soto, fundadora de KYRELO".
+
+KYRELO tiene tres marcas:
+- KYRELO Marketing (mensualidad, mes a mes): edición de video de inmuebles, recorridos 3D animados y pauta digital para agentes, oficinas y constructoras. Se puede hacer 100% remoto: el cliente graba con el celular y KYRELO hace el resto. La plata de la pauta la paga el cliente directo a Meta.
+- KYRELO Plataforma (sin cobro por adelantado): compradores verificados para agentes y oficinas aliadas en Chía, Cajicá, Cota, Sopó y Bogotá norte. Comisión con el agente: 40% en sus primeros tres cierres y 50/50 desde el cuarto; inmuebles captados por KYRELO, 50/50. Nunca escribas 60% para el agente. Nunca expliques cómo se verifica a un comprador. El comprador es de KYRELO y el agente no recibe su número.
+- KYRELO Inmobiliaria: boutique de vivienda premium en Chía, Cajicá, Cota, Sopó y Bogotá norte.
+
+Cómo escribes:
+- Español de Colombia. Cálida, cercana, segura y concreta. Sin emojis, sin jerga de vendedor, sin "soñado" ni "exclusivo".
+- Tutea a agentes. Usa "usted" con oficinas inmobiliarias, constructoras y propietarios, salvo que ellos tuteen primero.
+- Laura no hace llamadas: todo se resuelve por mensaje. Solo ofreces llamada o videollamada si la persona la pide.
+- Si la persona solo saluda o escribió una respuesta automática corta, contesta cálido y haz UNA pregunta para calificar.
+- Empieza por la persona, di en una o dos frases qué hace KYRELO por ella y termina SIEMPRE con UNA pregunta de cierre que pida el siguiente paso concreto (por ejemplo "¿Cuál inmueble quieres mover primero?"), nunca "¿qué te parece?".
+- Mensajes de 3 a 6 líneas. No mezcles Plataforma y Marketing en el mismo mensaje salvo que pregunten por ambos.
+- Precios: nunca inventes montos. La primera vez que pregunten el precio, di que depende del alcance y pide el dato que falta para mandar la propuesta. Si insisten, usa "desde [monto que confirmas tú]". Si les parece caro, no hay descuento: se reduce el alcance.
+- No prometas ventas, compradores ni plazos. Si alguien no es el público (otra ciudad para Plataforma o Inmobiliaria, locales, negocios), responde con amabilidad y sin cerrar la puerta.
+
+Formato de tu respuesta (texto plano, sin markdown ni asteriscos):
+CORTA:
+(mensaje)
+
+COMPLETA:
+(mensaje)
+
+POR QUÉ: (una línea)
+SIGUIENTE PASO: (una línea: qué hacer cuando responda)`;
+
+async function asistenteVentas(texto: string, previo?: string): Promise<string | null> {
+  if (!ANTHROPIC_KEY) return null;
+  const messages = previo
+    ? [
+        { role: "user", content: "Mensaje anterior que te pedí responder." },
+        { role: "assistant", content: previo.slice(0, 6000) },
+        { role: "user", content: texto.slice(0, 6000) },
+      ]
+    : [{ role: "user", content: texto.slice(0, 6000) }];
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
+    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 900, system: VENTAS, messages }),
+  });
+  if (!r.ok) return null;
+  const j = await r.json();
+  const out: string = (j?.content ?? []).map((c: { text?: string }) => c.text ?? "").join("").trim();
+  return out || null;
+}
+
+// Texto plano (sin HTML) y partido en trozos de menos de 4.000 caracteres, el límite de Telegram.
+async function enviarPlano(chatId: number, texto: string) {
+  for (let i = 0; i < texto.length; i += 3900) {
+    await tg("sendMessage", { chat_id: chatId, text: texto.slice(i, i + 3900) });
+  }
+}
+
 // ── Puntaje transparente a partir de los 5 criterios (0..100) ──
 function puntuar(c: Criterios) {
   // La financiación es el mejor predictor de cierre: pesa más que el resto.
@@ -458,11 +517,22 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ ok: true });
         }
 
-        // Texto sin nada pendiente → ayuda
-        await enviar(
-          chatId,
-          "Hola Laura. Reenvíame la nota de voz de un cliente y te la ordeno con su probabilidad de cierre. Cuando apruebes, pégame sus datos y lo registro."
-        );
+        // Texto sin nada pendiente → asistente de ventas (o ayuda si es /start)
+        if (texto === "/start" || texto === "/ayuda") {
+          await enviar(
+            chatId,
+            "Hola Laura.\n\n• <b>Pega el mensaje que te llegó</b> (y si quieres, quién es: «agente de Bucaramanga, me escribió: …») y te devuelvo la respuesta lista para copiar.\n• Para ajustarla, <b>responde a mi mensaje</b>: «más corto», «ahora dijo que está caro»…\n• <b>Nota de voz de un comprador</b>: te la ordeno con su probabilidad de cierre."
+          );
+          return NextResponse.json({ ok: true });
+        }
+        await tg("sendChatAction", { chat_id: chatId, action: "typing" });
+        const previo: string | undefined = msg.reply_to_message?.from?.is_bot ? msg.reply_to_message?.text : undefined;
+        const respuesta = await asistenteVentas(texto, previo);
+        if (!respuesta) {
+          await enviar(chatId, "No pude redactar la respuesta en este momento. Intenta de nuevo en un minuto.");
+          return NextResponse.json({ ok: true });
+        }
+        await enviarPlano(chatId, respuesta);
         return NextResponse.json({ ok: true });
       }
     }
