@@ -19,8 +19,13 @@ export default function NuevoVideo() {
   useEffect(() => {
     if (empezado.current) return;
     empezado.current = true;
-    api<{ id: string }>('/api/videos', 'POST')
-      .then((r) => router.replace(`/broker/videos/${r.id}`))
+    api<{ id: string; sin_cuenta?: boolean; nuevo?: boolean }>('/api/videos', 'POST')
+      .then((r) => {
+        // Meta: alguien sin cuenta empezó su primer video (la campaña optimiza hacia esto)
+        const fbq = (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq;
+        if (r.sin_cuenta && r.nuevo && fbq) fbq('track', 'Lead', { content_name: 'video_por_inmueble' });
+        router.replace(`/broker/videos/${r.id}`);
+      })
       .catch((e) => {
         setError((e as Error).message);
         setEntrar(!!(e as Error & { datos?: { entrar?: boolean } }).datos?.entrar);

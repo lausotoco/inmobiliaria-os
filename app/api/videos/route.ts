@@ -147,5 +147,5 @@ async function crearSinCuenta(req: NextRequest) {
     .insert({ agente_id: null, invitado_hash: invitado, invitado_red: red, ficha, estilo: "directo" })
     .select("id");
   if (error || !data || data.length === 0) return fallo(500, "No se pudo crear el video. Inténtalo de nuevo.");
-  return guardarCookieInvitado(sinCache({ id: data[0].id, sin_cuenta: true }), token);
+  return guardarCookieInvitado(sinCache({ id: data[0].id, sin_cuenta: true, nuevo: true }), token);
 }
