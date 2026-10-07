@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { formatoCOP } from '@/lib/utils';
 import { enlaceWhatsApp } from '@/lib/mensaje-whatsapp';
 import { normalizarTelefono } from '@/lib/telefono';
-import { ENTREGAS, ESTILOS, TIPOS_INMUEBLE, entregaEstimada, formatoMB, mimeDe, type EstadoVideo, type Ficha } from '@/lib/videos/config';
+import { ENTREGAS, ESTILOS, PREVIAS_PORTADA, TIPOS_INMUEBLE, entregaEstimada, formatoMB, mimeDe, type EstadoVideo, type Ficha } from '@/lib/videos/config';
 import { api, subirConAvance } from '@/lib/videos/subir';
 import { EtiquetaEstado, ICONO_CASILLA, Icono, botonAcento, botonPrimario, botonSecundario, tarjeta } from '@/components/videos/ui';
 
@@ -39,6 +39,54 @@ type Datos = {
   entrega_limite: string | null;
 };
 
+/**
+ * Copia pequeña de una portada para que el agente la vea antes de pagar, con la
+ * misma marca de la vista previa del video: «VISTA PREVIA» y «KYRELO» en el centro
+ * (no su marca, para que no la pueda publicar) y el aviso abajo.
+ */
+async function previaDePortada(archivo: File): Promise<File> {
+  const url = URL.createObjectURL(archivo);
+  try {
+    const img = await new Promise<HTMLImageElement>((ok, mal) => {
+      const i = new Image();
+      i.onload = () => ok(i);
+      i.onerror = () => mal(new Error('No se pudo leer la portada.'));
+      i.src = url;
+    });
+    const ancho = 360;
+    const alto = Math.round((img.naturalHeight * ancho) / img.naturalWidth);
+    const lienzo = document.createElement('canvas');
+    lienzo.width = ancho;
+    lienzo.height = alto;
+    const g = lienzo.getContext('2d');
+    if (!g) throw new Error('No se pudo crear la copia.');
+    g.drawImage(img, 0, 0, ancho, alto);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    const texto = (t: string, x: number, y: number, tam: number, opacidad: number) => {
+      g.font = `${tam < 16 ? 700 : 800} ${tam}px Arial, sans-serif`;
+      g.lineWidth = 2;
+      g.strokeStyle = 'rgba(0,0,0,0.12)';
+      g.fillStyle = `rgba(255,255,255,${opacidad})`;
+      g.strokeText(t, x, y);
+      g.fillText(t, x, y);
+    };
+    // «VISTA PREVIA · KYRELO» en el centro y, entre los datos y esa marca, el aviso
+    // también como marca de agua (abajo se recortaría fácil)
+    const vertical = alto > ancho * 1.3;
+    const yMarca = alto * (vertical ? 0.58 : 0.66);
+    const yAviso = alto * (vertical ? 0.45 : 0.5);
+    texto('VISTA PREVIA', ancho / 2, yMarca, 36, 0.38);
+    texto('KYRELO', ancho / 2, yMarca + 30, 18, 0.38);
+    const aviso = ['Esta portada es una vista previa.', 'No se puede publicar ni usar en anuncios.'];
+    aviso.forEach((linea, i) => texto(linea, ancho / 2, yAviso + i * (vertical ? 17 : 15), vertical ? 13 : 11.5, 0.55));
+    const blob = await new Promise<Blob>((ok, mal) => lienzo.toBlob((b) => (b ? ok(b) : mal(new Error('No se pudo crear la copia.'))), 'image/jpeg', 0.72));
+    return new File([blob], 'portada-vista-previa.jpg', { type: 'image/jpeg' });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 function SubirEntrega({ videoId, tipo, nombre, actual, onListo }: { videoId: string; tipo: string; nombre: string; actual?: { tamano?: number; nombre?: string; url: string | null }; onListo: () => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [avance, setAvance] = useState<number | null>(null);
@@ -55,6 +103,18 @@ function SubirEntrega({ videoId, tipo, nombre, actual, onListo }: { videoId: str
       const firma = await api<{ url: string; ruta: string }>(`/api/videos/${videoId}/panel`, 'POST', { accion: 'firmar_entrega', tipo, mime, tamano: archivo.size });
       await subirConAvance(firma.url, archivo, mime, setAvance);
       await api(`/api/videos/${videoId}/panel`, 'POST', { accion: 'registrar_entrega', tipo, ruta: firma.ruta, nombre: archivo.name });
+      // Portadas: se sube sola una copia pequeña con marca para la vista previa del agente
+      const tipoPrevia = PREVIAS_PORTADA[tipo];
+      if (tipoPrevia) {
+        try {
+          const previa = await previaDePortada(archivo);
+          const f2 = await api<{ url: string; ruta: string }>(`/api/videos/${videoId}/panel`, 'POST', { accion: 'firmar_entrega', tipo: tipoPrevia, mime: 'image/jpeg', tamano: previa.size });
+          await subirConAvance(f2.url, previa, 'image/jpeg', () => undefined);
+          await api(`/api/videos/${videoId}/panel`, 'POST', { accion: 'registrar_entrega', tipo: tipoPrevia, ruta: f2.ruta, nombre: previa.name });
+        } catch {
+          setError('La portada quedó subida, pero no se creó su copia para la vista previa. Vuelve a subirla.');
+        }
+      }
       setAvance(null);
       onListo();
     } catch (e) {

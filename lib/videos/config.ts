@@ -317,6 +317,16 @@ export const ENTREGAS = [
 ] as const;
 export type TipoEntrega = (typeof ENTREGAS)[number]["v"];
 
+/**
+ * Copia pequeña y con marca de cada portada, para que el agente vea el paquete
+ * completo antes de pagar. El panel la crea sola al subir la portada; no se
+ * descarga ni cuenta para publicar.
+ */
+export const PREVIAS_PORTADA: Record<string, string> = {
+  portada_vertical: "portada_vertical_previa",
+  portada_cuadrada: "portada_cuadrada_previa",
+};
+
 export const NOMBRE_DESCARGA: Record<string, string> = {
   final_vertical: "video-vertical",
   final_anuncio: "video-anuncios-4x5",

@@ -55,6 +55,12 @@ type Datos = {
     texto_corto: string | null;
     texto_largo: string | null;
     entregas_listas: string[];
+    /** Antes de pagar: copias con marca de las portadas y el comienzo de los textos */
+    paquete: {
+      portadas: { tipo: string; url: string }[];
+      textos: { corto: string | null; largo: string | null };
+      con_anuncio: boolean;
+    } | null;
   };
   tomas: Toma[];
   logo_url: string | null;
@@ -623,7 +629,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
             <LineaEstados estado={estado} />
           </div>
           <div className="mt-8 grid gap-8 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-14">
-            <VistaPreviaProtegida videoId={id} nombreAgente={datos.nombre_agente} />
+            <VistaPreviaProtegida videoId={id} />
             <div className="space-y-4">
               <section className={`${tarjeta} p-6 sm:p-8`}>
                 <p className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-[12px] font-semibold text-orange-700">
@@ -688,6 +694,61 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
               </button>
             </div>
           </div>
+
+          {v.paquete && (v.paquete.portadas.length > 0 || v.paquete.textos.corto || v.paquete.textos.largo) && (
+            <section className="mt-12">
+              <h2 className="text-[22px] font-semibold text-zinc-900 sm:text-[26px]">Todo lo que recibes al desbloquear</h2>
+              <p className="mt-1 text-[14px] text-zinc-500">Además del video vertical en alta calidad y sin marcas{v.paquete.con_anuncio ? ' y su versión 4:5 para anuncios' : ''}.</p>
+              <div className="mt-6 grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)]">
+                {v.paquete.portadas.length > 0 && (
+                  <div className={`${tarjeta} p-5`} onContextMenu={(e) => e.preventDefault()}>
+                    <p className="flex items-center gap-2 text-[14px] font-semibold text-zinc-900">
+                      <Icono nombre="imagen" className="h-4 w-4 text-zinc-400" />
+                      Portadas
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-zinc-500">Vertical y cuadrada, con tus datos</p>
+                    <div className="mt-4 flex items-end gap-3">
+                      {v.paquete.portadas.map((p) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={p.tipo}
+                          src={p.url}
+                          alt={p.tipo === 'portada_vertical' ? 'Portada vertical' : 'Portada cuadrada'}
+                          draggable={false}
+                          className={`pointer-events-none select-none rounded-xl object-cover ring-1 ring-black/5 ${p.tipo === 'portada_vertical' ? 'aspect-[9/16] w-[118px]' : 'aspect-square w-[150px]'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {([
+                    ['corto', 'Texto para tu anuncio', v.paquete.textos.corto],
+                    ['largo', 'Texto para tu publicación', v.paquete.textos.largo],
+                  ] as const)
+                    .filter(([, , texto]) => texto)
+                    .map(([k, t, texto]) => (
+                      <div key={k} className={`${tarjeta} p-5`}>
+                        <p className="flex items-center gap-2 text-[14px] font-semibold text-zinc-900">
+                          <Icono nombre="texto" className="h-4 w-4 text-zinc-400" />
+                          {t}
+                        </p>
+                        <p className="mt-3 text-[14px] leading-relaxed text-zinc-700">{texto}</p>
+                        <div aria-hidden className="mt-2.5 space-y-2 blur-[2.5px]">
+                          <span className="block h-3 w-[94%] rounded bg-zinc-200" />
+                          <span className="block h-3 w-[86%] rounded bg-zinc-200" />
+                          <span className="block h-3 w-[62%] rounded bg-zinc-200" />
+                        </div>
+                        <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-[12px] font-semibold text-zinc-600">
+                          <Icono nombre="candado" className="h-3.5 w-3.5" />
+                          Completo al desbloquear
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </section>
+          )}
         </main>
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:hidden">
           <div className="mx-auto flex max-w-xl items-center gap-3">

@@ -21,6 +21,7 @@ import {
 import {
   CASILLAS,
   ENTREGAS,
+  PREVIAS_PORTADA,
   MAX_BYTES_ARCHIVO,
   MAX_MB_ARCHIVO,
   MIMES_IMAGEN,
@@ -37,7 +38,7 @@ export const dynamic = "force-dynamic";
 
 type Ctx = { params: { id: string } };
 
-const TIPOS_ENTREGA: string[] = ENTREGAS.map((e) => e.v);
+const TIPOS_ENTREGA: string[] = [...ENTREGAS.map((e) => e.v), ...Object.values(PREVIAS_PORTADA)];
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const s = await sesion();

@@ -35,6 +35,7 @@ import {
   partesDe,
   rutaParte,
   ESTILOS,
+  PREVIAS_PORTADA,
   MAX_BYTES_ARCHIVO,
   MAX_BYTES_LOGO,
   MAX_PREVIAS_SIN_PAGAR,
@@ -104,6 +105,36 @@ function limpiarFicha(entrada: any, anterior: Ficha): Ficha {
   };
 }
 
+/** Comienzo de un texto (cortado en una palabra) para mostrarlo antes de pagar. */
+function adelanto(texto: string | null | undefined, largo = 110): string | null {
+  const t = (texto ?? "").replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  if (t.length <= largo) return t;
+  const corte = t.lastIndexOf(" ", largo);
+  return t.slice(0, corte > 40 ? corte : largo).replace(/[,.;:·\-]+$/, "") + "…";
+}
+
+/**
+ * Lo que el agente ve del paquete antes de pagar: las copias pequeñas y con marca
+ * de las portadas, y el comienzo de cada texto (el resto nunca sale del servidor).
+ */
+async function paqueteEnVistaPrevia(s: Visitante, video: Record<string, any>) {
+  if (video.estado !== "vista_previa") return null;
+  const entregas = (video.entregas ?? {}) as Record<string, { ruta?: string }>;
+  const portadas: { tipo: string; url: string }[] = [];
+  for (const [tipo, previa] of Object.entries(PREVIAS_PORTADA)) {
+    const ruta = entregas[previa]?.ruta;
+    if (!ruta) continue;
+    const { data } = await s.admin.storage.from(BUCKET_ENTREGAS).createSignedUrl(ruta, 600);
+    if (data?.signedUrl) portadas.push({ tipo, url: data.signedUrl });
+  }
+  return {
+    portadas,
+    textos: { corto: adelanto(video.texto_corto), largo: adelanto(video.texto_largo) },
+    con_anuncio: !!entregas.final_anuncio?.ruta,
+  };
+}
+
 async function enlaceLogo(s: Visitante, ruta?: string | null) {
   if (!ruta) return null;
   const { data } = await s.admin.storage.from(BUCKET_TOMAS).createSignedUrl(ruta, 600);
@@ -154,6 +185,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
       texto_largo: video.estado === "desbloqueado" ? video.texto_largo : null,
       tiene_vista_previa: !!video.ruta_vista_previa,
       entregas_listas: Object.keys(entregas).filter((k) => k !== "vista_previa"),
+      paquete: await paqueteEnVistaPrevia(s, video),
       tomas_borradas: !!video.tomas_borradas_at,
     },
     tomas: tomas ?? [],

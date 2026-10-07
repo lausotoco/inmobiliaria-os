@@ -3,8 +3,9 @@
 // Reproductor de la vista previa. Ninguna página web puede impedir al 100 %
 // que alguien grabe la pantalla; por eso lo que se pueda grabar no sirve
 // para publicar:
-//  · archivo aparte en baja calidad, con marca de agua quemada (lo hace Laura);
-//  · encima, otra marca de agua grande y en movimiento con el nombre del agente;
+//  · archivo aparte en baja calidad, con una marca de agua suave quemada en el
+//    centro y el nombre del agente (lo hace hacer-vista-previa.sh). Encima solo
+//    va una etiqueta discreta: con dos marcas no se veía el trabajo (7 oct 2026);
 //  · reproductor pequeño, sin controles nativos: sin pantalla completa, sin
 //    imagen en imagen, sin menú de descarga ni clic derecho;
 //  · el enlace del archivo vence en 60 segundos y se usa una sola vez: el video
@@ -13,36 +14,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const TEXTO = 'VISTA PREVIA · NO APTA PARA PUBLICIDAD';
-
-function MarcaDeAgua({ nombre }: { nombre: string }) {
-  const filas = Array.from({ length: 14 });
+function Etiqueta() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="marca-agua absolute -inset-[60%] flex flex-col justify-center gap-7">
-        {filas.map((_, i) => (
-          <p
-            key={i}
-            className="whitespace-nowrap text-center text-[15px] font-bold uppercase tracking-[0.18em] text-white/45"
-            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.45)', marginLeft: i % 2 ? '-12%' : '8%' }}
-          >
-            {i % 2 ? Array(5).fill(nombre).join(' · ') : `${TEXTO} · ${TEXTO}`}
-          </p>
-        ))}
-      </div>
-      <div className="marca-agua-2 absolute left-1/2 top-1/2">
-        <p
-          className="whitespace-nowrap rounded-md border-2 border-white/60 px-3 py-1.5 text-[20px] font-black uppercase tracking-[0.2em] text-white/70"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
-        >
-          Vista previa
-        </p>
-      </div>
-    </div>
+    <span
+      aria-hidden
+      className="pointer-events-none absolute left-3 top-9 rounded-full bg-black/45 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white/90 backdrop-blur"
+    >
+      Vista previa
+    </span>
   );
 }
 
-export default function VistaPreviaProtegida({ videoId, nombreAgente }: { videoId: string; nombreAgente: string }) {
+export default function VistaPreviaProtegida({ videoId }: { videoId: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [src, setSrc] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -125,7 +108,7 @@ export default function VistaPreviaProtegida({ videoId, nombreAgente }: { videoI
             }}
           />
         )}
-        <MarcaDeAgua nombre={nombreAgente} />
+        <Etiqueta />
         <span aria-hidden className="pointer-events-none absolute left-1/2 top-2 h-5 w-20 -translate-x-1/2 rounded-full bg-zinc-900" />
 
         {!src && !error && (
