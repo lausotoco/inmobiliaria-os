@@ -1,16 +1,17 @@
 'use client';
 
 // Página pública para agentes (/video-inmueble): qué es el video por inmueble,
-// cómo funciona y crear la cuenta. Corta a propósito: portada, 3 pasos,
-// 4 preguntas y cierre. Sin precios públicos (se ven dentro de la plataforma)
-// y sin prometer ventas.
+// cómo funciona y empezar el primer video. Corta a propósito: portada con lo
+// que se lleva el agente, 3 pasos, 4 preguntas y cierre. Sin precios públicos
+// y sin prometer ventas. Se empieza sin cuenta: la cuenta se crea al pedir la
+// vista previa, cuando ya cargó todo y no lo quiere perder.
 
 import Link from 'next/link';
 import { enlaceWhatsApp } from '@/lib/mensaje-whatsapp';
 import DemoTelefono from '@/components/videos/DemoTelefono';
 import { Icono, botonPrimario, botonSecundario } from '@/components/videos/ui';
 
-const REGISTRO = '/registro-broker?siguiente=%2Fbroker%2Fvideos';
+const EMPEZAR = '/broker/videos/nuevo';
 const ENTRAR = '/login?siguiente=%2Fbroker%2Fvideos';
 const WHATSAPP = enlaceWhatsApp('Hola KYRELO, quiero saber más del video por inmueble.');
 
@@ -20,17 +21,18 @@ const PASOS = [
   { icono: 'ojo', titulo: 'Lo ves y lo publicas', texto: 'Ves la vista previa antes de pagar. Si te gusta, lo descargas sin marcas.' },
 ];
 
+// Lo que se lleva el agente al desbloquear (lo que de verdad se entrega)
 const RECIBES = [
-  ['video', 'Video vertical'],
-  ['video', 'Versión para anuncios'],
-  ['imagen', 'Dos portadas'],
-  ['texto', 'Texto de la publicación'],
+  { icono: 'video', titulo: 'Video vertical', texto: 'Para Instagram, TikTok, historias y WhatsApp.', destacado: false },
+  { icono: 'video', titulo: 'Versión para anuncios', texto: 'En 4:5, lista para Facebook e Instagram.', destacado: false },
+  { icono: 'texto', titulo: 'Textos para tus anuncios', texto: 'El del anuncio y el de la publicación, listos para copiar.', destacado: true },
+  { icono: 'imagen', titulo: 'Dos portadas', texto: 'Vertical y cuadrada.', destacado: false },
 ];
 
 const PREGUNTAS = [
   {
     p: '¿Cuánto cuesta?',
-    r: 'Crear la cuenta y subir tus tomas no cuesta nada. El precio de cada video lo ves en la plataforma antes de pagar, y pagas solo si te gusta la vista previa.',
+    r: 'Empezar y subir tu video no cuesta nada, y no necesitas cuenta para hacerlo. La creas al pedir tu vista previa, ahí ves el precio y pagas solo si te gusta.',
   },
   { p: '¿Cuánto se demora?', r: 'Menos de 40 minutos, entre 7 a. m. y 8 p. m. Lo que llega de noche sale a primera hora.' },
   { p: '¿Tengo que cortar o editar algo?', r: 'No. Subes un solo video caminando por el inmueble y nosotros sacamos las tomas. La plataforma lo revisa al subirlo y te avisa si está horizontal, oscuro o muy movido, para que lo repitas antes de irte.' },
@@ -55,8 +57,8 @@ export default function LandingVideos() {
             <Link href={ENTRAR} className="whitespace-nowrap rounded-lg px-2.5 py-2 text-[14px] font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 sm:px-3">
               Entrar
             </Link>
-            <Link href={REGISTRO} className={`${botonPrimario} whitespace-nowrap px-3.5 py-2 text-[13px] sm:px-4 sm:py-2.5 sm:text-[14px]`}>
-              Crear cuenta
+            <Link href={EMPEZAR} className={`${botonPrimario} whitespace-nowrap px-3.5 py-2 text-[13px] sm:px-4 sm:py-2.5 sm:text-[14px]`}>
+              Empezar
             </Link>
           </nav>
         </div>
@@ -73,13 +75,34 @@ export default function LandingVideos() {
             Los agentes que más venden
             <span className="block text-orange-600">presentan mejor sus inmuebles.</span>
           </h1>
-          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-zinc-600 sm:text-[18px]">
-            <strong className="font-semibold text-zinc-900">Graba tu inmueble con el celular. Nosotros lo convertimos en video.</strong> Subes un solo
-            video y en menos de 40 minutos lo tienes listo para publicar, con tu logo y tu WhatsApp. Lo ves antes de pagar.
-          </p>
+          {/* La oferta: listo en 40 minutos y todo lo que se lleva al descargar */}
+          <div className="mt-7 max-w-xl rounded-3xl bg-zinc-900 p-4 text-white sm:p-5">
+            <div className="flex items-center gap-3 px-1">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white">
+                <Icono nombre="reloj" className="h-[22px] w-[22px]" />
+              </span>
+              <p className="text-[16px] font-semibold leading-snug sm:text-[18px]">
+                Video editado y listo para redes y anuncios <span className="text-orange-400">en menos de 40 minutos.</span>
+              </p>
+            </div>
+            <p className="mt-5 px-1 text-[12px] font-semibold uppercase tracking-wider text-white/45">Al descargarlo te llevas</p>
+            <ul className="mt-2.5 grid gap-2 sm:grid-cols-2">
+              {RECIBES.map((e) => (
+                <li key={e.titulo} className={`flex items-start gap-3 rounded-2xl p-3 ring-1 ${e.destacado ? 'bg-orange-500/15 ring-orange-400/60' : 'bg-white/[0.06] ring-white/10'}`}>
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${e.destacado ? 'bg-orange-500 text-white' : 'bg-white/10 text-orange-300'}`}>
+                    <Icono nombre={e.icono} className="h-[18px] w-[18px]" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[14px] font-semibold leading-tight">{e.titulo}</span>
+                    <span className="mt-1 block text-[12.5px] leading-snug text-white/60">{e.texto}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href={REGISTRO} className={`${botonPrimario} px-7 py-4 text-[16px]`}>
-              Crear mi cuenta gratis
+            <Link href={EMPEZAR} className={`${botonPrimario} px-7 py-4 text-[16px]`}>
+              Empezar mi primer video
               <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />
             </Link>
             <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className={`${botonSecundario} px-6 py-4 text-[15px]`}>
@@ -87,11 +110,15 @@ export default function LandingVideos() {
               Pregúntanos por WhatsApp
             </a>
           </div>
+          <p className="mt-3 flex items-center gap-1.5 text-[13px] text-zinc-500">
+            <Icono nombre="check" className="h-4 w-4 text-orange-600" grosor={2.2} />
+            No necesitas crear cuenta para empezar.
+          </p>
         </div>
         <DemoTelefono />
       </section>
 
-      {/* Cómo funciona + qué recibes */}
+      {/* Cómo funciona */}
       <section className="border-y border-black/[0.06] bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
           <h2 className="max-w-2xl text-[28px] font-semibold leading-tight sm:text-[38px]">Así de simple.</h2>
@@ -109,15 +136,6 @@ export default function LandingVideos() {
               </li>
             ))}
           </ol>
-          <div className="mt-10 flex flex-wrap items-center gap-2.5 border-t border-zinc-100 pt-8">
-            <span className="mr-1 text-[14px] font-semibold text-zinc-900">Recibes:</span>
-            {RECIBES.map(([i, t]) => (
-              <span key={t} className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3.5 py-2 text-[14px] font-medium text-zinc-700">
-                <Icono nombre={i} className="h-4 w-4 text-zinc-500" />
-                {t}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -140,8 +158,8 @@ export default function LandingVideos() {
           <h2 className="mx-auto max-w-3xl text-[26px] font-semibold leading-tight sm:text-[36px]">
             Tu próximo inmueble, <span className="text-orange-400">en video hoy mismo.</span>
           </h2>
-          <Link href={REGISTRO} className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-7 py-4 text-[16px] font-semibold text-white transition hover:bg-orange-500">
-            Crear mi cuenta gratis
+          <Link href={EMPEZAR} className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-7 py-4 text-[16px] font-semibold text-white transition hover:bg-orange-500">
+            Empezar mi primer video
             <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />
           </Link>
           <p className="mt-4 text-[13px] text-white/50">

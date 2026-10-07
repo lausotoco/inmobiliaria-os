@@ -424,11 +424,11 @@ export default function PanelVideo({ params }: { params: { id: string } }) {
           </section>
 
           <section className={`${tarjeta} p-5`}>
-            <h2 className="text-[17px] font-semibold">Texto de la publicación</h2>
+            <h2 className="text-[17px] font-semibold">Textos para el agente</h2>
             <div className="mt-3 grid gap-4 lg:grid-cols-2">
               {(['texto_corto', 'texto_largo'] as const).map((k) => (
                 <label key={k} className="block">
-                  <span className="text-[13px] font-medium text-zinc-700">{k === 'texto_corto' ? 'Corto' : 'Largo'}</span>
+                  <span className="text-[13px] font-medium text-zinc-700">{k === 'texto_corto' ? 'Para su anuncio (corto)' : 'Para su publicación (largo)'}</span>
                   <textarea
                     rows={6}
                     value={textos[k]}

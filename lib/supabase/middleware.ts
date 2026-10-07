@@ -60,6 +60,10 @@ export async function updateSession(request: NextRequest) {
     // Wompi avisa los pagos sin sesión (con firma).
     path.startsWith("/api/videos") ||
     path.startsWith("/api/wompi") ||
+    // El video se empieza sin cuenta: la cuenta se crea al pedir la vista
+    // previa. Si el video es de otro, la página manda a iniciar sesión.
+    path === "/broker/videos/nuevo" ||
+    /^\/broker\/videos\/[0-9a-f-]{36}$/i.test(path) ||
     path.startsWith("/legal") ||
     // Landings de captación de compradores (tráfico pagado: nunca pueden pedir login)
     path.startsWith("/casas/") ||

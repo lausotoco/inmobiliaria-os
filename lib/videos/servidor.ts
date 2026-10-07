@@ -2,6 +2,8 @@
 // El agente solo lee lo suyo en la base; todo cambio pasa por aquí, con el
 // cliente de servicio, después de revisar quién pide y en qué estado está.
 
+import { createHash, randomBytes } from "crypto";
+import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
@@ -13,10 +15,17 @@ export const BUCKET_ENTREGAS = "videos-entregas";
 export type Sesion = {
   userId: string;
   email: string;
+  /** Cuándo se creó la cuenta (para avisar a Laura de agentes nuevos). */
+  creadoEn: string | null;
   esInterno: boolean;
   perfil: { nombre: string | null; empresa: string | null; telefono: string | null } | null;
   admin: SupabaseClient;
+  /** Huella del navegador que empezó videos sin cuenta (ver invitadoActual). */
+  invitado: string | null;
 };
+
+/** Quien pide, con o sin cuenta. Sin cuenta solo puede llenar su propio borrador. */
+export type Visitante = Omit<Sesion, "userId"> & { userId: string | null };
 
 export function fallo(status: number, mensaje: string, extra?: Record<string, unknown>) {
   return NextResponse.json({ error: mensaje, ...(extra ?? {}) }, { status });
@@ -26,15 +35,60 @@ export function sinCache(cuerpo: unknown, status = 200) {
   return NextResponse.json(cuerpo, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-/** Quién está pidiendo. Devuelve una respuesta de error si no hay sesión. */
-export async function sesion(): Promise<Sesion | NextResponse> {
+// ── Empezar sin cuenta ──
+// El agente puede llenar la ficha y subir su video sin registrarse. El
+// navegador guarda una llave al azar (cookie que solo lee el servidor) y en la
+// base queda su huella cifrada; al pedir la vista previa crea la cuenta y el
+// borrador pasa a su nombre (reclamarBorradores).
+export const COOKIE_INVITADO = "kv_invitado";
+const DIAS_COOKIE_INVITADO = 30;
+/** Un borrador sin cuenta que nadie toca en este tiempo se borra con sus archivos. */
+const HORAS_BORRADOR_INVITADO = 24;
+
+const huella = (prefijo: string, valor: string) => createHash("sha256").update(`${prefijo}:${valor}`).digest("hex");
+
+/** La llave del navegador, si ya empezó un video sin cuenta. */
+export function tokenInvitado(): string | null {
+  const t = cookies().get(COOKIE_INVITADO)?.value ?? "";
+  return /^[A-Za-z0-9_-]{32,64}$/.test(t) ? t : null;
+}
+
+export function invitadoActual(): string | null {
+  const t = tokenInvitado();
+  return t ? huella("kv-invitado", t) : null;
+}
+
+export const huellaInvitado = (token: string) => huella("kv-invitado", token);
+export const nuevoTokenInvitado = () => randomBytes(32).toString("base64url");
+
+export function guardarCookieInvitado(res: NextResponse, token: string) {
+  res.cookies.set(COOKIE_INVITADO, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: DIAS_COOKIE_INVITADO * 86400,
+  });
+  return res;
+}
+
+/** Huella de la conexión (para frenar a quien abra muchos borradores seguidos). */
+export function huellaRed(req: NextRequest): string | null {
+  const ip = (req.headers.get("x-nf-client-connection-ip") ?? req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
+  return ip ? huella("kv-red", ip) : null;
+}
+
+/** Quién está pidiendo, con o sin cuenta. Error si no tiene cuenta ni borrador. */
+export async function visitante(): Promise<Visitante | NextResponse> {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return fallo(401, "Inicia sesión para continuar.");
+  const invitado = invitadoActual();
+  if (!user && !invitado) return fallo(401, "Inicia sesión para continuar.", { entrar: true });
   const admin = createAdminClient();
   if (!admin) return fallo(500, "Falta configurar el servidor. Avísale a KYRELO.");
+  if (!user) return { userId: null, email: "", creadoEn: null, esInterno: false, perfil: null, admin, invitado };
   const { data: perfil } = await admin
     .from("profiles")
     .select("nombre, empresa, telefono, rol")
@@ -43,24 +97,88 @@ export async function sesion(): Promise<Sesion | NextResponse> {
   return {
     userId: user.id,
     email: user.email ?? "",
+    creadoEn: user.created_at ?? null,
     esInterno: !!perfil && perfil.rol !== "broker",
     perfil: perfil
       ? { nombre: perfil.nombre ?? null, empresa: perfil.empresa ?? null, telefono: perfil.telefono ?? null }
       : null,
     admin,
+    invitado,
   };
+}
+
+/** Quién está pidiendo. Devuelve una respuesta de error si no hay sesión. */
+export async function sesion(): Promise<Sesion | NextResponse> {
+  const v = await visitante();
+  if (v instanceof Response) return v;
+  const { userId } = v;
+  if (!userId) return fallo(401, "Inicia sesión para continuar.", { entrar: true });
+  return { ...v, userId };
+}
+
+/** Pasa a la cuenta del agente los borradores que empezó sin cuenta en este navegador. */
+export async function reclamarBorradores(s: Visitante): Promise<string[]> {
+  if (!s.userId || !s.invitado) return [];
+  const { data } = await s.admin
+    .from("videos_inmueble")
+    .update({ agente_id: s.userId, invitado_hash: null })
+    .eq("invitado_hash", s.invitado)
+    .is("agente_id", null)
+    .eq("estado", "borrador")
+    .select("id");
+  return (data ?? []).map((v) => v.id as string);
+}
+
+/**
+ * Borra los borradores sin cuenta abandonados y sus archivos, para cuidar el
+ * espacio gratis. Corre cuando alguien empieza un video sin cuenta y cuando
+ * Laura abre su panel.
+ */
+export async function limpiarInvitados(admin: SupabaseClient) {
+  const limite = new Date(Date.now() - HORAS_BORRADOR_INVITADO * 3600000).toISOString();
+  const { data: viejos } = await admin
+    .from("videos_inmueble")
+    .select("id")
+    .is("agente_id", null)
+    .lt("updated_at", limite)
+    .limit(20);
+  for (const v of viejos ?? []) {
+    const { data: tomas } = await admin.from("tomas_inmueble").select("ruta, partes").eq("video_id", v.id);
+    await borrarArchivos(admin, BUCKET_TOMAS, (tomas ?? []).flatMap((t) => archivosDeToma(t)));
+    const { data: logos } = await admin.storage.from(BUCKET_TOMAS).list(`invitados/${v.id}/marca`, { limit: 50 });
+    await borrarArchivos(admin, BUCKET_TOMAS, (logos ?? []).map((l) => `invitados/${v.id}/marca/${l.name}`));
+    await admin.from("videos_inmueble").delete().eq("id", v.id).is("agente_id", null).select("id");
+  }
+}
+
+/** Carpetas de los archivos de un video: las del agente, o las de invitados si aún no tiene cuenta. */
+export function carpetasDe(video: { id: string; agente_id: string | null }) {
+  return video.agente_id
+    ? { tomas: `${video.agente_id}/${video.id}`, marca: `${video.agente_id}/marca` }
+    : { tomas: `invitados/${video.id}`, marca: `invitados/${video.id}/marca` };
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const esUuid = (v: string) => UUID.test(v);
 
-/** Carga un video si quien pide es su agente o del equipo interno. */
-export async function cargarVideo(s: Sesion, id: string) {
+/**
+ * Carga un video si quien pide es su agente, del equipo interno o el navegador
+ * que lo empezó sin cuenta. Si ese navegador ya entró con su cuenta, el
+ * borrador pasa a su nombre aquí mismo.
+ */
+export async function cargarVideo(s: Visitante, id: string) {
   if (!esUuid(id)) return null;
   const { data } = await s.admin.from("videos_inmueble").select("*").eq("id", id).maybeSingle();
   if (!data) return null;
-  if (!s.esInterno && data.agente_id !== s.userId) return null;
-  return data as Record<string, any>;
+  const delNavegador = !data.agente_id && !!s.invitado && data.invitado_hash === s.invitado;
+  if (delNavegador && s.userId) {
+    await reclamarBorradores(s);
+    // Se vuelve a leer: si otra pestaña lo reclamó primero, igual queda a su nombre
+    const { data: suyo } = await s.admin.from("videos_inmueble").select("*").eq("id", id).maybeSingle();
+    return suyo && suyo.agente_id === s.userId ? (suyo as Record<string, any>) : null;
+  }
+  if (s.esInterno || delNavegador || (!!s.userId && data.agente_id === s.userId)) return data as Record<string, any>;
+  return null;
 }
 
 /**

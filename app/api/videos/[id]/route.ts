@@ -3,6 +3,8 @@
 //  PATCH → guarda la ficha, el estilo y la voz en off (solo sin enviar o por regrabar)
 //  POST  → { accion }: firmar_subida · registrar_toma · borrar_toma ·
 //          firmar_logo · registrar_logo · enviar · descartar
+// Sin cuenta (navegador que empezó el borrador) se puede todo menos enviar:
+// para pedir la vista previa hay que crear la cuenta.
 
 import { NextRequest } from "next/server";
 import {
@@ -12,14 +14,15 @@ import {
   borrarArchivos,
   cambiarVideo,
   cargarVideo,
+  carpetasDe,
   fallo,
   nombreAgente,
   origenDe,
   pesoArchivo,
   recalcularPesoTomas,
-  sesion,
   sinCache,
-  type Sesion,
+  visitante,
+  type Visitante,
 } from "@/lib/videos/servidor";
 import { configWompi, precioDesbloqueo } from "@/lib/videos/wompi";
 import { avisarLaura, escaparHtml } from "@/lib/telegram";
@@ -101,27 +104,29 @@ function limpiarFicha(entrada: any, anterior: Ficha): Ficha {
   };
 }
 
-async function enlaceLogo(s: Sesion, ruta?: string | null) {
+async function enlaceLogo(s: Visitante, ruta?: string | null) {
   if (!ruta) return null;
   const { data } = await s.admin.storage.from(BUCKET_TOMAS).createSignedUrl(ruta, 600);
   return data?.signedUrl ?? null;
 }
 
+/** Sin cuenta, un video ajeno pide entrar (puede ser el de un agente que no ha iniciado sesión). */
+const noEncontrado = (s: Visitante) =>
+  s.userId ? fallo(404, "No encontramos este video.") : fallo(401, "Inicia sesión para ver este video.", { entrar: true });
+
 export async function GET(_req: NextRequest, { params }: Ctx) {
-  const s = await sesion();
+  const s = await visitante();
   if (s instanceof Response) return s;
   const video = await cargarVideo(s, params.id);
-  if (!video) return fallo(404, "No encontramos este video.");
+  if (!video) return noEncontrado(s);
 
   const { data: tomas } = await s.admin
     .from("tomas_inmueble")
     .select("id, casilla, nombre_archivo, tamano, duracion, ancho, alto, revision, observaciones, miniatura, partes, created_at")
     .eq("video_id", video.id);
-  const { data: perfil } = await s.admin
-    .from("profiles")
-    .select("nombre, empresa, email")
-    .eq("id", video.agente_id)
-    .maybeSingle();
+  const { data: perfil } = video.agente_id
+    ? await s.admin.from("profiles").select("nombre, empresa, email").eq("id", video.agente_id).maybeSingle()
+    : { data: null };
   const { data: pagos } = await s.admin
     .from("pagos")
     .select("id, estado, monto, creado_en, aprobado_en")
@@ -154,7 +159,10 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     tomas: tomas ?? [],
     logo_url: await enlaceLogo(s, (video.ficha as Ficha)?.logo_ruta),
     nombre_agente: nombreAgente(perfil, perfil?.email ?? undefined),
-    precio: precioDesbloqueo(),
+    // Sin cuenta todavía: la cuenta se crea al pedir la vista previa.
+    // El precio no se muestra sin cuenta (no hay precios públicos).
+    sin_cuenta: !video.agente_id,
+    precio: video.agente_id ? precioDesbloqueo() : null,
     pago_en_linea: !!configWompi(),
     pagos: pagos ?? [],
     entrega: enviado ? formatoEntrega(entregaEstimada(enviado)) : null,
@@ -164,10 +172,10 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
-  const s = await sesion();
+  const s = await visitante();
   if (s instanceof Response) return s;
   const video = await cargarVideo(s, params.id);
-  if (!video) return fallo(404, "No encontramos este video.");
+  if (!video) return noEncontrado(s);
   if (!EDITABLE.includes(video.estado)) return fallo(409, "Este video ya se envió: no se puede cambiar la ficha.");
 
   const cuerpo = await req.json().catch(() => ({}));
@@ -183,14 +191,17 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
-  const s = await sesion();
+  const s = await visitante();
   if (s instanceof Response) return s;
   const video = await cargarVideo(s, params.id);
-  if (!video) return fallo(404, "No encontramos este video.");
+  if (!video) return noEncontrado(s);
   const cuerpo = await req.json().catch(() => ({}));
   const accion = String(cuerpo.accion ?? "");
   const ficha = (video.ficha ?? {}) as Ficha;
-  const carpeta = `${video.agente_id}/${video.id}`;
+  const carpetas = carpetasDe({ id: video.id, agente_id: video.agente_id });
+  const carpeta = carpetas.tomas;
+  // Lo que se subió antes de crear la cuenta sigue en la carpeta de invitados
+  const carpetasValidas = [carpeta, carpetasDe({ id: video.id, agente_id: null }).tomas];
 
   switch (accion) {
     // ── 1. Pedir permiso para subir una toma (enlace firmado de un solo uso) ──
@@ -227,7 +238,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       if (!EDITABLE.includes(video.estado)) return fallo(409, "Este video ya se envió.");
       const casilla = String(cuerpo.casilla ?? "");
       const ruta = String(cuerpo.ruta ?? "");
-      if (!esCasillaValida(casilla) || !ruta.startsWith(`${carpeta}/${casilla}-`) || ruta.includes(".."))
+      if (!esCasillaValida(casilla) || !carpetasValidas.some((c) => ruta.startsWith(`${c}/${casilla}-`)) || ruta.includes(".."))
         return fallo(400, "Ruta de la toma no válida.");
       const partes = casilla === CASILLA_RECORRIDO ? Math.min(20, Math.max(1, Math.floor(Number(cuerpo.partes ?? 1)))) : 0;
       let peso = 0;
@@ -299,7 +310,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       if (!MIMES_IMAGEN.includes(mime)) return fallo(400, "El logo debe ser PNG, JPG o WEBP.");
       const tamano = Number(cuerpo.tamano ?? 0);
       if (!(tamano > 0) || tamano > MAX_BYTES_LOGO) return fallo(400, "El logo pesa más de 5 MB.");
-      const ruta = `${video.agente_id}/marca/logo-${Date.now()}.${extensionSegura(mime)}`;
+      const ruta = `${carpetas.marca}/logo-${Date.now()}.${extensionSegura(mime)}`;
       const { data, error } = await s.admin.storage.from(BUCKET_TOMAS).createSignedUploadUrl(ruta);
       if (error || !data) return fallo(500, "No se pudo preparar la subida del logo.");
       return sinCache({ url: data.signedUrl, ruta });
@@ -308,7 +319,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     case "registrar_logo": {
       if (!EDITABLE.includes(video.estado)) return fallo(409, "Este video ya se envió.");
       const ruta = String(cuerpo.ruta ?? "");
-      if (!ruta.startsWith(`${video.agente_id}/marca/logo-`) || ruta.includes(".."))
+      if (!ruta.startsWith(`${carpetas.marca}/logo-`) || ruta.includes(".."))
         return fallo(400, "Ruta del logo no válida.");
       if ((await pesoArchivo(s.admin, BUCKET_TOMAS, ruta)) === null)
         return fallo(400, "No encontramos el logo. Súbelo de nuevo.");
@@ -320,6 +331,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     // ── 3. Enviar a edición: revisa todo y avisa a Laura por Telegram ──
     case "enviar": {
       if (!EDITABLE.includes(video.estado)) return fallo(409, "Este video ya se envió.");
+      if (!s.userId || !video.agente_id)
+        return fallo(401, "Crea tu cuenta para pedir tu vista previa.", { necesita_cuenta: true });
       const faltan = faltantesFicha(ficha);
       if (faltan.length) return fallo(400, `Falta en la ficha: ${faltan.join(", ")}.`, { faltan });
 
@@ -363,11 +376,15 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const orden = casillasDe(ficha.tipo);
       const agente = nombreAgente(s.perfil, s.email);
       const estilo = ESTILOS.find((e) => e.v === video.estilo)?.l ?? "Directo";
+      const minutosCuenta = s.creadoEn ? Math.round((ahora.getTime() - Date.parse(s.creadoEn)) / 60000) : null;
+      const cuentaNueva = minutosCuenta !== null && minutosCuenta >= 0 && minutosCuenta < 180;
       const enlace = `${origenDe(req)}/videos/${video.id}`;
       await avisarLaura(
         [
           `<b>${reenvio ? "Material corregido" : "Nuevo video por editar"} · ${codigoVideo(video.id)}</b>`,
           `Agente: ${escaparHtml(agente)}${s.perfil?.empresa && s.perfil.empresa !== agente ? ` (${escaparHtml(s.perfil.empresa)})` : ""}`,
+          cuentaNueva ? `Agente nuevo: creó su cuenta hace ${Math.max(1, minutosCuenta ?? 1)} min para pedir este video.` : "",
+          cuentaNueva && s.perfil?.telefono ? `Su WhatsApp: ${escaparHtml(s.perfil.telefono)}` : "",
           `Inmueble: ${escaparHtml(tituloVideo(ficha))}`,
           recorrido
             ? `Material: un solo video del recorrido${recorrido.duracion ? ` de ${Math.round(Number(recorrido.duracion))} s` : ""} (${Math.round(Number(recorrido.tamano ?? 0) / 1048576)} MB). Hay que sacar las tomas.${conAvisos ? " Tiene avisos para revisar." : ""}`
