@@ -4,7 +4,7 @@
 // Registro público para brokers e inmobiliarias aliadas.
 
 import { CabeceraSitio } from '@/components/sitio/Sitio';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { APP } from '@/lib/config';
@@ -17,6 +17,14 @@ export default function RegistroBroker() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [confirmarCorreo, setConfirmarCorreo] = useState(false);
+  // ?siguiente=/broker/videos: viene a hacer el video de un inmueble
+  const [siguiente, setSiguiente] = useState('');
+  const paraVideos = siguiente.startsWith('/broker/videos');
+
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get('siguiente') ?? '';
+    if (s.startsWith('/broker') && !s.startsWith('//')) setSiguiente(s);
+  }, []);
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -71,7 +79,7 @@ export default function RegistroBroker() {
       (window as any).fbq('track', 'CompleteRegistration');
     }
 
-    router.push('/broker');
+    router.push(siguiente || '/broker');
   }
 
   return (
@@ -82,10 +90,12 @@ export default function RegistroBroker() {
           {APP.marca} · Red de agentes y oficinas
         </p>
         <h1 className="text-[30px] leading-tight tracking-tight text-[#1A1A18] mb-2" style={{ fontFamily: 'Fraunces, serif' }}>
-          Crea tu cuenta en la red
+          {paraVideos ? 'Crea tu cuenta para hacer tus videos' : 'Crea tu cuenta en la red'}
         </h1>
         <p className="text-[15px] text-[#5F5E5A] mb-8 leading-relaxed">
-          Gratis. Accede a compradores verificados y postula tus inmuebles. Solo compartes comisión cuando cierras.
+          {paraVideos
+            ? 'Gratis. Subes las tomas de tu inmueble, ves el video editado y pagas solo si te gusta.'
+            : 'Gratis. Accede a compradores verificados y postula tus inmuebles. Solo compartes comisión cuando cierras.'}
         </p>
 
         <div className="space-y-4">
@@ -151,7 +161,7 @@ export default function RegistroBroker() {
 
         <p className="text-xs text-[#A8A69E] mt-6 text-center">
           ¿Ya tienes cuenta?{' '}
-          <a href="/login" className="text-[#5F5E5A] underline underline-offset-4">Inicia sesión</a>
+          <a href={siguiente ? `/login?siguiente=${encodeURIComponent(siguiente)}` : '/login'} className="text-[#5F5E5A] underline underline-offset-4">Inicia sesión</a>
         </p>
       </div>
     </div>

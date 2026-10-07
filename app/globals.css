@@ -148,3 +148,26 @@ input, select, textarea {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size: 16px !important; }
 }
 a, button { -webkit-tap-highlight-color: transparent; }
+
+/* ── Vista previa protegida (video por inmueble): marca de agua que se mueve
+      para que ninguna grabación de pantalla quede limpia ni se pueda recortar ── */
+@keyframes marcaDeriva {
+  from { transform: translate(-14%, -10%) rotate(-26deg); }
+  to   { transform: translate(12%, 12%) rotate(-26deg); }
+}
+@keyframes marcaDeriva2 {
+  0%   { transform: translate(-80%, -160%) rotate(-12deg); }
+  50%  { transform: translate(-20%, 90%) rotate(-12deg); }
+  100% { transform: translate(-60%, -40%) rotate(-12deg); }
+}
+.marca-agua { animation: marcaDeriva 7s ease-in-out infinite alternate; }
+.marca-agua-2 { animation: marcaDeriva2 11s ease-in-out infinite alternate; }
+
+/* ── Video por inmueble: interfaz de aplicación (Inter en todo, sin serif) ── */
+.app-videos h1, .app-videos h2, .app-videos h3, .app-videos .font-display {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.025em;
+}
+@keyframes subirAnillo { from { stroke-dashoffset: 100; } }
+@keyframes latido { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.85; } }
+.latido { animation: latido 2.4s ease-in-out infinite; }

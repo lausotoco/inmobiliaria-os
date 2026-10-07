@@ -537,6 +537,9 @@ export default function PortalBroker() {
               {t.l}
             </button>
           ))}
+          <a href="/broker/videos" className="pb-3 text-sm whitespace-nowrap text-[#B87333] transition-colors hover:text-[#1A1A18]">
+            Videos de tus inmuebles
+          </a>
         </div>
 
         {/* ============ COMPRADORES ============ */}

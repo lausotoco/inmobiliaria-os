@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { APP } from "@/lib/config";
@@ -12,6 +12,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  // A dónde volver después de entrar (solo rutas del portal del agente)
+  const [siguiente, setSiguiente] = useState("");
+
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get("siguiente") ?? "";
+    if (s.startsWith("/broker") && !s.startsWith("//")) setSiguiente(s);
+  }, []);
 
   async function iniciarSesion(e: React.FormEvent) {
     e.preventDefault();
@@ -31,7 +38,7 @@ export default function LoginPage() {
     }
 
     // El middleware decide a dónde va cada rol (dashboard u /broker)
-    router.push("/dashboard");
+    router.push(siguiente || "/dashboard");
     router.refresh();
   }
 
@@ -122,7 +129,7 @@ export default function LoginPage() {
             ¿Eres broker o inmobiliaria aliada?
           </p>
           <a
-            href="/brokers"
+            href={siguiente ? `/registro-broker?siguiente=${encodeURIComponent(siguiente)}` : "/brokers"}
             className="mt-2 inline-block text-[13px] font-medium text-[#1A1A18] underline underline-offset-4 transition hover:opacity-70"
           >
             Crea tu cuenta de broker

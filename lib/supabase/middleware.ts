@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     path === "/inmobiliaria" ||
     path === "/plataforma" ||
     path === "/marketing" ||
+    path === "/video-inmueble" ||
     path.startsWith("/reels/") ||
     path.startsWith("/para/") ||
     path === "/login" ||
@@ -55,6 +56,10 @@ export async function updateSession(request: NextRequest) {
     path === "/nueva-clave" ||
     path === "/oportunidades" ||
     path.startsWith("/api/telegram") ||
+    // Video por inmueble: cada ruta revisa la sesión y el dueño del video;
+    // Wompi avisa los pagos sin sesión (con firma).
+    path.startsWith("/api/videos") ||
+    path.startsWith("/api/wompi") ||
     path.startsWith("/legal") ||
     // Landings de captación de compradores (tráfico pagado: nunca pueden pedir login)
     path.startsWith("/casas/") ||
@@ -72,6 +77,8 @@ export async function updateSession(request: NextRequest) {
   if (!user && !esPublica) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    // Desde el portal del agente (ej. un enlace a su video) vuelve ahí después de entrar
+    url.search = path.startsWith("/broker/") ? `?siguiente=${encodeURIComponent(path)}` : "";
     return NextResponse.redirect(url);
   }
 
