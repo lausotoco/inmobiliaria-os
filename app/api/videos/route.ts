@@ -78,7 +78,8 @@ export async function GET(req: NextRequest) {
 }
 
 /** Borradores sin cuenta que se pueden abrir desde una misma conexión en 24 horas. */
-const MAX_BORRADORES_POR_RED = 4;
+// Freno contra abusos, alto a propósito: varios agentes pueden salir por la misma red (oficina o datos móviles)
+const MAX_BORRADORES_POR_RED = 30;
 
 export async function POST(req: NextRequest) {
   const s = await sesion();
@@ -138,7 +139,7 @@ async function crearSinCuenta(req: NextRequest) {
       .eq("invitado_red", red)
       .gte("created_at", new Date(Date.now() - 86400000).toISOString());
     if ((count ?? 0) >= MAX_BORRADORES_POR_RED)
-      return fallo(429, "Ya empezaste varios videos desde esta conexión. Entra o crea tu cuenta para seguir.", { entrar: true });
+      return fallo(429, "Hoy se empezaron muchos videos desde esta conexión. Escríbenos por WhatsApp y te ayudamos a seguir.");
   }
 
   const ficha: Ficha = { color_principal: "#1A1A18", color_secundario: "#B87333", diferenciales: ["", "", ""] };

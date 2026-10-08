@@ -3,8 +3,8 @@
 // Página pública para agentes (/video-inmueble): qué es el video por inmueble,
 // cómo funciona y empezar el primer video. Corta a propósito: portada con lo
 // que se lleva el agente, 3 pasos, 4 preguntas y cierre. Sin precios públicos
-// y sin prometer ventas. Se empieza sin cuenta: la cuenta se crea al pedir la
-// vista previa, cuando ya cargó todo y no lo quiere perder.
+// y sin prometer ventas. Sin registro (8 oct 2026): el agente deja su WhatsApp
+// al pedir la vista previa, le avisamos por ahí y el pago va por WhatsApp.
 
 import Link from 'next/link';
 import { enlaceWhatsApp } from '@/lib/mensaje-whatsapp';
@@ -12,12 +12,11 @@ import DemoTelefono from '@/components/videos/DemoTelefono';
 import { Icono, botonPrimario, botonSecundario } from '@/components/videos/ui';
 
 const EMPEZAR = '/broker/videos/nuevo';
-const ENTRAR = '/login?siguiente=%2Fbroker%2Fvideos';
 const WHATSAPP = enlaceWhatsApp('Hola KYRELO, quiero saber más del video por inmueble.');
 
 const PASOS = [
   { icono: 'camara', titulo: 'Graba y sube', texto: 'Un solo video recorriendo tu inmueble con el celular. No tienes que cortar nada.' },
-  { icono: 'varita', titulo: 'Nosotros editamos', texto: 'Sacamos las mejores tomas y ponemos textos, música y tu marca. Listo en menos de 40 minutos.' },
+  { icono: 'varita', titulo: 'Nosotros editamos', texto: 'Sacamos las mejores tomas y ponemos textos, música y tu marca. Listo en menos de 30 minutos.' },
   { icono: 'ojo', titulo: 'Lo ves y lo publicas', texto: 'Ves la vista previa antes de pagar. Si te gusta, lo descargas sin marcas.' },
 ];
 
@@ -32,9 +31,9 @@ const RECIBES = [
 const PREGUNTAS = [
   {
     p: '¿Cuánto cuesta?',
-    r: 'Empezar y subir tu video no cuesta nada, y no necesitas cuenta para hacerlo. La creas al pedir tu vista previa, ahí ves el precio y pagas solo si te gusta.',
+    r: 'Empezar y subir tu video no cuesta nada, y no necesitas crear cuenta. Al pedir tu vista previa nos dejas tu WhatsApp: ahí te avisamos cuando esté lista, ves el precio y pagas solo si te gusta.',
   },
-  { p: '¿Cuánto se demora?', r: 'Menos de 40 minutos, entre 7 a. m. y 8 p. m. Lo que llega de noche sale a primera hora.' },
+  { p: '¿Cuánto se demora?', r: 'Menos de 30 minutos, entre 7 a. m. y 8 p. m. Lo que llega de noche sale a primera hora.' },
   { p: '¿Tengo que cortar o editar algo?', r: 'No. Subes un solo video caminando por el inmueble y nosotros sacamos las tomas. La plataforma lo revisa al subirlo y te avisa si está horizontal, oscuro o muy movido. Y si no tienes video, subes tus fotos y armamos el video con ellas.' },
   { p: '¿El video lleva la marca de KYRELO?', r: 'No. Cierra con tu logo, tu nombre y tu WhatsApp. Las personas interesadas te escriben a ti.' },
 ];
@@ -54,9 +53,6 @@ export default function LandingVideos() {
             </span>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2">
-            <Link href={ENTRAR} className="whitespace-nowrap rounded-lg px-2.5 py-2 text-[14px] font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 sm:px-3">
-              Entrar
-            </Link>
             <Link href={EMPEZAR} className={`${botonPrimario} whitespace-nowrap px-3.5 py-2 text-[13px] sm:px-4 sm:py-2.5 sm:text-[14px]`}>
               Empezar
             </Link>
@@ -75,14 +71,14 @@ export default function LandingVideos() {
             Los agentes que más venden
             <span className="block text-orange-600">presentan mejor sus inmuebles.</span>
           </h1>
-          {/* La oferta: listo en 40 minutos y todo lo que se lleva al descargar */}
+          {/* La oferta: listo en 30 minutos y todo lo que se lleva al descargar */}
           <div className="mt-7 max-w-xl rounded-3xl bg-zinc-900 p-4 text-white sm:p-5">
             <div className="flex items-center gap-3 px-1">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white">
                 <Icono nombre="reloj" className="h-[22px] w-[22px]" />
               </span>
               <p className="text-[16px] font-semibold leading-snug sm:text-[18px]">
-                Video editado y listo para redes y anuncios <span className="text-orange-400">en menos de 40 minutos.</span>
+                Video editado y listo para redes y anuncios <span className="text-orange-400">en menos de 30 minutos.</span>
               </p>
             </div>
             <p className="mt-5 px-1 text-[12px] font-semibold uppercase tracking-wider text-white/45">Al descargarlo te llevas</p>
@@ -162,12 +158,6 @@ export default function LandingVideos() {
             Empezar mi primer video
             <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />
           </Link>
-          <p className="mt-4 text-[13px] text-white/50">
-            ¿Ya tienes cuenta?{' '}
-            <Link href={ENTRAR} className="underline underline-offset-2">
-              Entra aquí
-            </Link>
-          </p>
         </div>
       </section>
 

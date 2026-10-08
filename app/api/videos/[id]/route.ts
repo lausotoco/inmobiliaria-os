@@ -3,8 +3,9 @@
 //  PATCH → guarda la ficha, el estilo y la voz en off (solo sin enviar o por regrabar)
 //  POST  → { accion }: firmar_subida · registrar_toma · borrar_toma ·
 //          firmar_logo · registrar_logo · enviar · descartar
-// Sin cuenta (navegador que empezó el borrador) se puede todo menos enviar:
-// para pedir la vista previa hay que crear la cuenta.
+// Sin cuenta (navegador que empezó el borrador, o con el enlace de WhatsApp) se
+// puede todo: al pedir la vista previa deja su nombre y su WhatsApp, y el pago va
+// por WhatsApp. No se pide registro (8 oct 2026).
 
 import { NextRequest } from "next/server";
 import {
@@ -16,6 +17,7 @@ import {
   cargarVideo,
   carpetasDe,
   fallo,
+  enlaceAgente,
   nombreAgente,
   origenDe,
   pesoArchivo,
@@ -100,6 +102,10 @@ function limpiarFicha(entrada: any, anterior: Ficha): Ficha {
       : ["", "", ""],
     nombre_marca: txt(f.nombre_marca, 80),
     whatsapp: txt(f.whatsapp, 20),
+    // Contacto del agente sin cuenta: solo cambia al enviar
+    aviso_nombre: anterior.aviso_nombre,
+    aviso_whatsapp: anterior.aviso_whatsapp,
+    aviso_acepto_at: anterior.aviso_acepto_at,
     // El logo solo cambia con registrar_logo (se revisa que el archivo exista)
     logo_ruta: anterior.logo_ruta ?? null,
     color_principal: color(f.color_principal, "#1A1A18"),
@@ -194,11 +200,11 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     tomas: tomas ?? [],
     logo_url: await enlaceLogo(s, (video.ficha as Ficha)?.logo_ruta),
     nombre_agente: nombreAgente(perfil, perfil?.email ?? undefined),
-    // Sin cuenta todavía: la cuenta se crea al pedir la vista previa.
-    // El precio no se muestra sin cuenta (no hay precios públicos).
+    // Sin cuenta: el aviso y el pago van por WhatsApp. El precio se muestra
+    // desde que pide la vista previa (no hay precios en la página pública).
     sin_cuenta: !video.agente_id,
-    precio: video.agente_id ? precioDesbloqueo() : null,
-    pago_en_linea: !!configWompi(),
+    precio: video.agente_id || video.estado !== "borrador" ? precioDesbloqueo() : null,
+    pago_en_linea: !!configWompi() && !!video.agente_id,
     pagos: pagos ?? [],
     entrega: enviado ? formatoEntrega(entregaEstimada(enviado)) : null,
     entrega_si_envia_ahora: formatoEntrega(entregaEstimada(new Date())),
@@ -375,8 +381,18 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     // ── 3. Enviar a edición: revisa todo y avisa a Laura por Telegram ──
     case "enviar": {
       if (!EDITABLE.includes(video.estado)) return fallo(409, "Este video ya se envió.");
-      if (!s.userId || !video.agente_id)
-        return fallo(401, "Crea tu cuenta para pedir tu vista previa.", { necesita_cuenta: true });
+      // Sin cuenta: nombre y WhatsApp para avisarle, con su autorización (Ley 1581)
+      let contacto: { aviso_nombre: string; aviso_whatsapp: string; aviso_acepto_at: string } | null = null;
+      if (!video.agente_id) {
+        const c = cuerpo.contacto ?? {};
+        const nombre = txt(c.nombre, 80).trim();
+        const digitos = String(c.whatsapp ?? "").replace(/\D/g, "");
+        const celular = digitos.length === 12 && digitos.startsWith("57") ? digitos.slice(2) : digitos;
+        if (nombre.length < 2) return fallo(400, "Escribe tu nombre.", { contacto: true });
+        if (!/^3\d{9}$/.test(celular)) return fallo(400, "Escribe tu WhatsApp de 10 dígitos (ej. 300 123 4567).", { contacto: true });
+        if (c.acepto !== true) return fallo(400, "Autoriza el uso de tus datos para avisarte.", { contacto: true });
+        contacto = { aviso_nombre: nombre, aviso_whatsapp: celular, aviso_acepto_at: new Date().toISOString() };
+      }
       const faltan = faltantesFicha(ficha);
       if (faltan.length) return fallo(400, `Falta en la ficha: ${faltan.join(", ")}.`, { faltan });
 
@@ -396,12 +412,16 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         if (subidas.size < MINIMO_TOMAS) return fallo(400, `Sube al menos ${MINIMO_TOMAS} tomas.`);
       }
 
-      const { count } = await s.admin
+      const pendientes = s.admin
         .from("videos_inmueble")
         .select("id", { count: "exact", head: true })
-        .eq("agente_id", video.agente_id)
         .in("estado", ESTADOS_SIN_PAGAR)
         .neq("id", video.id);
+      const { count } = video.agente_id
+        ? await pendientes.eq("agente_id", video.agente_id)
+        : video.invitado_hash
+          ? await pendientes.eq("invitado_hash", video.invitado_hash)
+          : { count: 0 };
       if ((count ?? 0) >= MAX_PREVIAS_SIN_PAGAR)
         return fallo(
           409,
@@ -415,13 +435,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         estado: "recibido",
         enviado_at: ahora.toISOString(),
         motivo_rechazo: null,
+        ...(contacto ? { ficha: { ...ficha, ...contacto } } : {}),
       });
       if (!r.ok) return fallo(409, r.mensaje);
 
       const entrega = entregaEstimada(ahora);
       const conAvisos = (tomas ?? []).filter((t) => t.revision !== "ok").length;
       const orden = casillasDe(ficha.tipo);
-      const agente = nombreAgente(s.perfil, s.email);
+      const agente = contacto ? contacto.aviso_nombre : nombreAgente(s.perfil, s.email);
       const estilo = ESTILOS.find((e) => e.v === video.estilo)?.l ?? "Directo";
       const minutosCuenta = s.creadoEn ? Math.round((ahora.getTime() - Date.parse(s.creadoEn)) / 60000) : null;
       const cuentaNueva = minutosCuenta !== null && minutosCuenta >= 0 && minutosCuenta < 180;
@@ -429,9 +450,12 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       await avisarLaura(
         [
           `<b>${reenvio ? "Material corregido" : "Nuevo video por editar"} · ${codigoVideo(video.id)}</b>`,
-          `Agente: ${escaparHtml(agente)}${s.perfil?.empresa && s.perfil.empresa !== agente ? ` (${escaparHtml(s.perfil.empresa)})` : ""}`,
+          contacto
+            ? `Agente (sin cuenta): ${escaparHtml(agente)} · WhatsApp ${escaparHtml(contacto.aviso_whatsapp)}`
+            : `Agente: ${escaparHtml(agente)}${s.perfil?.empresa && s.perfil.empresa !== agente ? ` (${escaparHtml(s.perfil.empresa)})` : ""}`,
           cuentaNueva ? `Agente nuevo: creó su cuenta hace ${Math.max(1, minutosCuenta ?? 1)} min para pedir este video.` : "",
           cuentaNueva && s.perfil?.telefono ? `Su WhatsApp: ${escaparHtml(s.perfil.telefono)}` : "",
+          contacto ? `Enlace para mandarle cuando esté lista: ${escaparHtml(enlaceAgente(origenDe(req), video as { id: string; agente_id: string | null }))}` : "",
           `Inmueble: ${escaparHtml(tituloVideo(ficha))}`,
           conFotos
             ? `Material: ${fotos.length} fotos, sin video. Hay que armar el video con las fotos.`
@@ -471,7 +495,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       if (video.estado === "vista_previa") {
         await avisarLaura(
           `<b>Vista previa descartada · ${codigoVideo(video.id)}</b>\n${escaparHtml(
-            nombreAgente(s.perfil, s.email)
+            video.agente_id ? nombreAgente(s.perfil, s.email) : `${ficha.aviso_nombre ?? "El agente"} (WhatsApp ${ficha.aviso_whatsapp ?? "—"})`
           )} descartó ${escaparHtml(tituloVideo(ficha))} sin pagar. Vale la pena preguntarle por qué.`
         );
       }

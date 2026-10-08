@@ -5,15 +5,14 @@
 // navegador) y lleva al asistente.
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/videos/subir';
+import { enlaceWhatsApp } from '@/lib/mensaje-whatsapp';
 import { Aviso, BarraApp, botonPrimario, fondoApp } from '@/components/videos/ui';
 
 export default function NuevoVideo() {
   const router = useRouter();
   const [error, setError] = useState('');
-  const [entrar, setEntrar] = useState(false);
   const empezado = useRef(false);
 
   useEffect(() => {
@@ -28,7 +27,6 @@ export default function NuevoVideo() {
       })
       .catch((e) => {
         setError((e as Error).message);
-        setEntrar(!!(e as Error & { datos?: { entrar?: boolean } }).datos?.entrar);
       });
   }, [router]);
 
@@ -39,11 +37,14 @@ export default function NuevoVideo() {
         {error ? (
           <>
             <Aviso tono="error">{error}</Aviso>
-            {entrar && (
-              <Link href="/login?siguiente=%2Fbroker%2Fvideos" className={`${botonPrimario} mt-6`}>
-                Entrar a mi cuenta
-              </Link>
-            )}
+            <a
+              href={enlaceWhatsApp('Hola KYRELO, quiero empezar mi video por inmueble.')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${botonPrimario} mt-6`}
+            >
+              Escríbenos por WhatsApp
+            </a>
           </>
         ) : (
           <>

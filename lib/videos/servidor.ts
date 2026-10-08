@@ -2,7 +2,7 @@
 // El agente solo lee lo suyo en la base; todo cambio pasa por aquí, con el
 // cliente de servicio, después de revisar quién pide y en qué estado está.
 
-import { createHash, randomBytes } from "crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -22,6 +22,8 @@ export type Sesion = {
   admin: SupabaseClient;
   /** Huella del navegador que empezó videos sin cuenta (ver invitadoActual). */
   invitado: string | null;
+  /** Videos sin cuenta que este navegador abrió con el enlace de WhatsApp (ver enlaceAgente). */
+  enlaces: string[];
 };
 
 /** Quien pide, con o sin cuenta. Sin cuenta solo puede llenar su propio borrador. */
@@ -35,11 +37,13 @@ export function sinCache(cuerpo: unknown, status = 200) {
   return NextResponse.json(cuerpo, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-// ── Empezar sin cuenta ──
-// El agente puede llenar la ficha y subir su video sin registrarse. El
-// navegador guarda una llave al azar (cookie que solo lee el servidor) y en la
-// base queda su huella cifrada; al pedir la vista previa crea la cuenta y el
-// borrador pasa a su nombre (reclamarBorradores).
+// ── Sin cuenta (8 oct 2026: no se pide registro en ningún paso) ──
+// El agente llena la ficha, sube su video y pide la vista previa sin registrarse.
+// El navegador guarda una llave al azar (cookie que solo lee el servidor) y en la
+// base queda su huella cifrada. Al pedir la vista previa deja su nombre y su
+// WhatsApp; Laura le avisa por WhatsApp con un enlace firmado (enlaceAgente) que
+// abre el video en cualquier celular. El pago va por WhatsApp. Si el agente sí
+// tiene cuenta y entra, sus borradores pasan a su nombre (reclamarBorradores).
 export const COOKIE_INVITADO = "kv_invitado";
 const DIAS_COOKIE_INVITADO = 30;
 /** Un borrador sin cuenta que nadie toca en este tiempo se borra con sus archivos. */
@@ -72,6 +76,54 @@ export function guardarCookieInvitado(res: NextResponse, token: string) {
   return res;
 }
 
+// ── Enlace para el agente sin cuenta ──
+// Firmado con la llave del servidor: no se guarda en la base y no se puede adivinar.
+// Al abrirlo, el navegador recuerda ese video en la cookie kv_enlaces.
+export const COOKIE_ENLACES = "kv_enlaces";
+const MAX_ENLACES = 12;
+
+function firmaEnlace(id: string): string | null {
+  const llave = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!llave) return null;
+  return createHmac("sha256", llave).update(`kv-enlace:${id}`).digest("base64url").slice(0, 32);
+}
+
+export function enlaceValido(id: string, k: string): boolean {
+  const esperada = firmaEnlace(id);
+  if (!esperada || k.length !== esperada.length) return false;
+  return timingSafeEqual(Buffer.from(k), Buffer.from(esperada));
+}
+
+/** El enlace que Laura le manda al agente: abre su video sin cuenta, en cualquier navegador. */
+export function enlaceAgente(origen: string, video: { id: string; agente_id: string | null }): string {
+  const k = video.agente_id ? null : firmaEnlace(video.id);
+  return k ? `${origen}/api/videos/${video.id}/acceso?k=${k}` : `${origen}/broker/videos/${video.id}`;
+}
+
+function enlacesDelNavegador(): string[] {
+  const crudo = cookies().get(COOKIE_ENLACES)?.value ?? "";
+  return crudo
+    .split(",")
+    .map((par) => par.split("."))
+    .filter(([id, k]) => !!id && !!k && esUuid(id) && enlaceValido(id, k))
+    .map(([id]) => id);
+}
+
+/** Suma un video a la cookie de enlaces del navegador. */
+export function guardarEnlace(res: NextResponse, id: string, k: string) {
+  const crudo = cookies().get(COOKIE_ENLACES)?.value ?? "";
+  const pares = crudo.split(",").filter((par) => par && !par.startsWith(`${id}.`));
+  const nuevo = [`${id}.${k}`, ...pares].slice(0, MAX_ENLACES).join(",");
+  res.cookies.set(COOKIE_ENLACES, nuevo, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: DIAS_COOKIE_INVITADO * 86400,
+  });
+  return res;
+}
+
 /** Huella de la conexión (para frenar a quien abra muchos borradores seguidos). */
 export function huellaRed(req: NextRequest): string | null {
   const ip = (req.headers.get("x-nf-client-connection-ip") ?? req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
@@ -85,10 +137,11 @@ export async function visitante(): Promise<Visitante | NextResponse> {
     data: { user },
   } = await supabase.auth.getUser();
   const invitado = invitadoActual();
-  if (!user && !invitado) return fallo(401, "Inicia sesión para continuar.", { entrar: true });
+  const enlaces = enlacesDelNavegador();
+  if (!user && !invitado && enlaces.length === 0) return fallo(401, "Inicia sesión para continuar.", { entrar: true });
   const admin = createAdminClient();
   if (!admin) return fallo(500, "Falta configurar el servidor. Avísale a KYRELO.");
-  if (!user) return { userId: null, email: "", creadoEn: null, esInterno: false, perfil: null, admin, invitado };
+  if (!user) return { userId: null, email: "", creadoEn: null, esInterno: false, perfil: null, admin, invitado, enlaces };
   const { data: perfil } = await admin
     .from("profiles")
     .select("nombre, empresa, telefono, rol")
@@ -104,6 +157,7 @@ export async function visitante(): Promise<Visitante | NextResponse> {
       : null,
     admin,
     invitado,
+    enlaces,
   };
 }
 
@@ -132,7 +186,7 @@ export async function reclamarBorradores(s: Visitante): Promise<string[]> {
 /**
  * Borra los borradores sin cuenta abandonados y sus archivos, para cuidar el
  * espacio gratis. Corre cuando alguien empieza un video sin cuenta y cuando
- * Laura abre su panel.
+ * Laura abre su panel. Nunca toca los que ya se enviaron.
  */
 export async function limpiarInvitados(admin: SupabaseClient) {
   const limite = new Date(Date.now() - HORAS_BORRADOR_INVITADO * 3600000).toISOString();
@@ -140,6 +194,7 @@ export async function limpiarInvitados(admin: SupabaseClient) {
     .from("videos_inmueble")
     .select("id")
     .is("agente_id", null)
+    .in("estado", ["borrador", "descartado"])
     .lt("updated_at", limite)
     .limit(20);
   for (const v of viejos ?? []) {
@@ -147,7 +202,13 @@ export async function limpiarInvitados(admin: SupabaseClient) {
     await borrarArchivos(admin, BUCKET_TOMAS, (tomas ?? []).flatMap((t) => archivosDeToma(t)));
     const { data: logos } = await admin.storage.from(BUCKET_TOMAS).list(`invitados/${v.id}/marca`, { limit: 50 });
     await borrarArchivos(admin, BUCKET_TOMAS, (logos ?? []).map((l) => `invitados/${v.id}/marca/${l.name}`));
-    await admin.from("videos_inmueble").delete().eq("id", v.id).is("agente_id", null).select("id");
+    await admin
+      .from("videos_inmueble")
+      .delete()
+      .eq("id", v.id)
+      .is("agente_id", null)
+      .in("estado", ["borrador", "descartado"])
+      .select("id");
   }
 }
 
@@ -162,22 +223,23 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const esUuid = (v: string) => UUID.test(v);
 
 /**
- * Carga un video si quien pide es su agente, del equipo interno o el navegador
- * que lo empezó sin cuenta. Si ese navegador ya entró con su cuenta, el
- * borrador pasa a su nombre aquí mismo.
+ * Carga un video si quien pide es su agente, del equipo interno, el navegador
+ * que lo empezó sin cuenta o uno que abrió su enlace de WhatsApp. Si el
+ * navegador que lo empezó ya entró con su cuenta, el borrador pasa a su nombre.
  */
 export async function cargarVideo(s: Visitante, id: string) {
   if (!esUuid(id)) return null;
   const { data } = await s.admin.from("videos_inmueble").select("*").eq("id", id).maybeSingle();
   if (!data) return null;
   const delNavegador = !data.agente_id && !!s.invitado && data.invitado_hash === s.invitado;
-  if (delNavegador && s.userId) {
+  const porEnlace = !data.agente_id && s.enlaces.includes(data.id);
+  if (delNavegador && s.userId && data.estado === "borrador") {
     await reclamarBorradores(s);
     // Se vuelve a leer: si otra pestaña lo reclamó primero, igual queda a su nombre
     const { data: suyo } = await s.admin.from("videos_inmueble").select("*").eq("id", id).maybeSingle();
     return suyo && suyo.agente_id === s.userId ? (suyo as Record<string, any>) : null;
   }
-  if (s.esInterno || delNavegador || (!!s.userId && data.agente_id === s.userId)) return data as Record<string, any>;
+  if (s.esInterno || delNavegador || porEnlace || (!!s.userId && data.agente_id === s.userId)) return data as Record<string, any>;
   return null;
 }
 

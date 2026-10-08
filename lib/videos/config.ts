@@ -35,6 +35,10 @@ export type Ficha = {
   color_principal?: string;
   color_secundario?: string;
   permiso_propietario?: boolean;
+  /** Sin cuenta: a quién avisarle por WhatsApp cuando la vista previa esté lista */
+  aviso_nombre?: string;
+  aviso_whatsapp?: string;
+  aviso_acepto_at?: string;
 };
 
 export const TIPOS_INMUEBLE: { v: TipoInmueble; l: string }[] = [
@@ -160,10 +164,10 @@ export const ESTADOS_SIN_PAGAR: EstadoVideo[] = ["recibido", "en_edicion", "vist
 
 // ── Horario de atención y reloj de entrega (hora de Colombia) ──
 export const HORARIO = { inicio: 7, fin: 20 }; // 7 a. m. a 8 p. m., todos los días
-// Promesa de entrega (7 oct 2026: 40 minutos mientras Laura tiene tiempo para atender;
-// si un día no alcanza, se cambia aquí y en TEXTO_ENTREGA, y toda la plataforma se ajusta)
-export const MINUTOS_ENTREGA = 40;
-export const TEXTO_ENTREGA = "menos de 40 minutos";
+// Promesa de entrega (8 oct 2026: 30 minutos, la misma de los anuncios; antes 40.
+// Si un día no alcanza, se cambia aquí y en TEXTO_ENTREGA, y toda la plataforma se ajusta)
+export const MINUTOS_ENTREGA = 30;
+export const TEXTO_ENTREGA = "menos de 30 minutos";
 const OFFSET_COLOMBIA_MS = -5 * 3600 * 1000; // Colombia no cambia de hora
 const DIA_MS = 24 * 3600 * 1000;
 

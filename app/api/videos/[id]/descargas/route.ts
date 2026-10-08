@@ -2,13 +2,13 @@
 // Solo existen después del pago (estado «desbloqueado») y vencen en 10 minutos.
 
 import { NextRequest } from "next/server";
-import { BUCKET_ENTREGAS, cargarVideo, fallo, sesion, sinCache } from "@/lib/videos/servidor";
+import { BUCKET_ENTREGAS, cargarVideo, fallo, sinCache, visitante } from "@/lib/videos/servidor";
 import { ENTREGAS, NOMBRE_DESCARGA, codigoVideo, extensionDe } from "@/lib/videos/config";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const s = await sesion();
+  const s = await visitante();
   if (s instanceof Response) return s;
   const video = await cargarVideo(s, params.id);
   if (!video) return fallo(404, "No encontramos este video.");

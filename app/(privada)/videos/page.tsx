@@ -1,7 +1,7 @@
 'use client';
 
 // app/(privada)/videos/page.tsx — Panel de Laura · Video por inmueble.
-// La fila de edición con el reloj de entrega (40 minutos), las vistas previas que esperan
+// La fila de edición con el reloj de entrega (30 minutos), las vistas previas que esperan
 // pago, los pagos de Wompi y el espacio usado del plan gratis.
 
 import { useEffect, useState } from 'react';
@@ -83,7 +83,8 @@ export default function PanelVideos() {
       </div>
     );
 
-  const agente = (id: string | null) => {
+  const agente = (id: string | null, ficha?: { aviso_nombre?: string }) => {
+    if (!id) return `${ficha?.aviso_nombre || 'Agente'} · sin cuenta`;
     const p = datos.perfiles.find((x) => x.id === id);
     return p?.nombre || p?.empresa || p?.email || 'Agente';
   };
@@ -177,7 +178,7 @@ export default function PanelVideos() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-semibold">{tituloVideo(v.ficha ?? {})}</p>
                   <p className="mt-0.5 text-[12px] text-zinc-500">
-                    {codigoVideo(v.id)} · {agente(v.agente_id)} · {v.tomas_inmueble?.[0]?.count ?? 0} tomas
+                    {codigoVideo(v.id)} · {agente(v.agente_id, v.ficha)} · {v.tomas_inmueble?.[0]?.count ?? 0} tomas
                     {v.tomas_borradas_at ? ' (borradas)' : ` · ${formatoMB(Number(v.peso_tomas) + Number(v.peso_entregas))}`}
                     {v.metodo === 'manual' ? ' · desbloqueo a mano' : ''}
                   </p>

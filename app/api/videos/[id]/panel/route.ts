@@ -11,6 +11,7 @@ import {
   borrarArchivos,
   cambiarVideo,
   cargarVideo,
+  enlaceAgente,
   fallo,
   origenDe,
   pesoArchivo,
@@ -41,7 +42,7 @@ type Ctx = { params: { id: string } };
 
 const TIPOS_ENTREGA: string[] = [...ENTREGAS.map((e) => e.v), ...Object.values(PREVIAS_PORTADA)];
 
-export async function GET(_req: NextRequest, { params }: Ctx) {
+export async function GET(req: NextRequest, { params }: Ctx) {
   const s = await sesion();
   if (s instanceof Response) return s;
   if (!s.esInterno) return fallo(403, "Solo para el equipo de KYRELO.");
@@ -103,6 +104,8 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     entregas: entregasConEnlace,
     pagos: pagos ?? [],
     entrega_limite: video.enviado_at ? entregaEstimada(new Date(video.enviado_at)).toISOString() : null,
+    // Para «Avisar por WhatsApp»: sin cuenta, el enlace firmado que abre su video en cualquier celular
+    enlace_agente: enlaceAgente(origenDe(req), { id: video.id, agente_id: video.agente_id }),
   });
 }
 
@@ -201,7 +204,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         vista_previa_at: ahora,
       });
       if (!r.ok) return fallo(409, r.mensaje);
-      return sinCache({ ok: true, enlace: `${origenDe(req)}/broker/videos/${video.id}` });
+      return sinCache({ ok: true, enlace: enlaceAgente(origenDe(req), { id: video.id, agente_id: video.agente_id }) });
     }
 
     // Pago recibido por fuera de Wompi (Nequi, Bre-B, transferencia) o cortesía

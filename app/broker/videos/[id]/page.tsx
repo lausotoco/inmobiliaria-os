@@ -4,8 +4,9 @@
 // asistente de 4 pasos (inmueble · detalles · tomas · marca y envío) →
 // Recibido / En edición → vista previa protegida con desbloqueo por Wompi →
 // descargas en alta calidad.
-// Se puede empezar sin cuenta: la cuenta se crea al pedir la vista previa,
-// cuando ya está todo cargado (CuentaVistaPrevia).
+// Sin registro (8 oct 2026): al pedir la vista previa el agente sin cuenta deja
+// su nombre y su WhatsApp (ContactoVistaPrevia); le avisamos por WhatsApp con un
+// enlace para verla y el desbloqueo se paga por WhatsApp.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -28,7 +29,7 @@ import { api } from '@/lib/videos/subir';
 import { PasoDetalles, PasoInmueble, PasoMarca } from '@/components/videos/FichaVideo';
 import CasillasTomas, { type Toma } from '@/components/videos/CasillasTomas';
 import VistaPreviaProtegida from '@/components/videos/VistaPreviaProtegida';
-import CuentaVistaPrevia from '@/components/videos/CuentaVistaPrevia';
+import ContactoVistaPrevia, { type Contacto } from '@/components/videos/ContactoVistaPrevia';
 import {
   Aviso,
   BarraApp,
@@ -112,7 +113,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
   const [pagando, setPagando] = useState(false);
   const [verificando, setVerificando] = useState(false);
   const [copiado, setCopiado] = useState('');
-  const [pidiendoCuenta, setPidiendoCuenta] = useState(false);
+  const [pidiendoContacto, setPidiendoContacto] = useState(false);
   const pendiente = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fichaPorGuardar = useRef<Ficha | null>(null);
   const arriba = useRef<HTMLDivElement>(null);
@@ -126,9 +127,9 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
       setLogoUrl(d.logo_url);
       return d;
     } catch (e) {
-      // Video de un agente que no ha iniciado sesión: a entrar y volver aquí
+      // Ni cuenta, ni el navegador que lo empezó, ni el enlace de WhatsApp
       if ((e as Error & { datos?: { entrar?: boolean } }).datos?.entrar) {
-        router.replace(`/login?siguiente=${encodeURIComponent(`/broker/videos/${id}`)}`);
+        setError('Abre tu video desde el enlace que te enviamos por WhatsApp, o desde el celular o computador donde lo empezaste.');
         return null;
       }
       setError((e as Error).message);
@@ -215,28 +216,38 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
     arriba.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /** Sin cuenta, primero se crea (o se entra) y después se envía. */
+  /** Sin cuenta, primero deja su nombre y su WhatsApp para avisarle; después se envía. */
   async function pedirVistaPrevia() {
     if (datos?.sin_cuenta) {
-      if (await guardarAhora()) setPidiendoCuenta(true);
+      if (await guardarAhora()) setPidiendoContacto(true);
       return;
     }
     await enviar();
   }
 
-  async function enviar() {
+  async function enviar(contacto?: Contacto): Promise<string | void> {
     setErrorAccion('');
     setEnviando(true);
     if (!(await guardarAhora())) {
       setEnviando(false);
-      return;
+      return 'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.';
     }
     try {
-      await api(`/api/videos/${id}`, 'POST', { accion: 'enviar' });
+      await api(`/api/videos/${id}`, 'POST', { accion: 'enviar', contacto });
+      // Meta: alguien sin cuenta pidió su vista previa (antes se medía al crear la cuenta)
+      const fbq = (window as unknown as { fbq?: (...a: unknown[]) => void }).fbq;
+      if (contacto && fbq) fbq('track', 'CompleteRegistration', { content_name: 'video_por_inmueble' });
+      setPidiendoContacto(false);
       await cargar();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
-      setErrorAccion((e as Error).message);
+      const mensaje = (e as Error).message;
+      const delContacto = !!(e as Error & { datos?: { contacto?: boolean } }).datos?.contacto;
+      setEnviando(false);
+      if (contacto && delContacto) return mensaje;
+      setPidiendoContacto(false);
+      setErrorAccion(mensaje);
+      return;
     }
     setEnviando(false);
   }
@@ -285,7 +296,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
 
   if (error)
     return (
-      <Pantalla>
+      <Pantalla sinCuenta>
         <main className="mx-auto max-w-xl px-4 py-10">
           <Aviso tono="error">{error}</Aviso>
         </main>
@@ -393,7 +404,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
           {datos.sin_cuenta && (
             <p className="flex items-start gap-2 text-zinc-600">
               <Icono nombre="check" className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
-              <span>No necesitas cuenta para empezar. La creas al pedir tu vista previa.</span>
+              <span>No necesitas cuenta. Te avisamos por WhatsApp cuando tu vista previa esté lista.</span>
             </p>
           )}
         </div>
@@ -412,31 +423,18 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
       </div>
     );
 
-    const siguiente = `/broker/videos/${id}`;
     return (
       <Pantalla
         sinCuenta={datos.sin_cuenta}
-        derecha={
-          datos.sin_cuenta ? (
-            <Link href={`/login?siguiente=${encodeURIComponent(siguiente)}`} className="rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900">
-              ¿Ya tienes cuenta? <span className="font-semibold text-zinc-900">Entrar</span>
-            </Link>
-          ) : (
-            <EtiquetaEstado estado={estado} />
-          )
-        }
+        derecha={datos.sin_cuenta ? <span /> : <EtiquetaEstado estado={estado} />}
       >
-        {pidiendoCuenta && (
-          <CuentaVistaPrevia
-            whatsapp={ficha.whatsapp}
-            nombre={ficha.nombre_marca}
+        {pidiendoContacto && (
+          <ContactoVistaPrevia
+            whatsapp={ficha.aviso_whatsapp || ficha.whatsapp}
+            nombre={ficha.aviso_nombre || ''}
             entrega={datos.entrega_si_envia_ahora}
-            siguiente={siguiente}
-            onCerrar={() => setPidiendoCuenta(false)}
-            onListo={async () => {
-              setPidiendoCuenta(false);
-              await enviar();
-            }}
+            onCerrar={() => setPidiendoContacto(false)}
+            onEnviar={(c) => enviar(c)}
           />
         )}
         <main className="mx-auto max-w-6xl px-4 pb-36 pt-6 sm:px-6 lg:pb-16 lg:pt-10">
@@ -519,7 +517,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
                   <div className="mt-5">
                     <Aviso tono="error">
                       {errorAccion}
-                      {errorAccion.includes('sin desbloquear') && (
+                      {errorAccion.includes('sin desbloquear') && !datos.sin_cuenta && (
                         <Link href="/broker/videos" className="mt-1 block font-semibold underline">
                           Ver mis videos
                         </Link>
@@ -572,7 +570,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
   // ─────────────── Enviado: en la fila de edición ───────────────
   if (estado === 'recibido' || estado === 'en_edicion') {
     return (
-      <Pantalla derecha={<EtiquetaEstado estado={estado} />}>
+      <Pantalla sinCuenta={datos.sin_cuenta} derecha={<EtiquetaEstado estado={estado} />}>
         <main className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
           <div className={`${tarjeta} overflow-hidden`}>
             <div className="bg-gradient-to-b from-orange-50 to-white px-6 pb-6 pt-10 text-center sm:px-10">
@@ -588,7 +586,9 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
             <div className="px-6 pb-8 pt-2 sm:px-10">
               <LineaEstados estado={estado} />
               <p className="mt-6 text-center text-[14px] leading-relaxed text-zinc-500">
-                Aparece en esta misma página. Puedes cerrarla y volver cuando quieras. Editamos {TEXTO_HORARIO}.
+                {datos.sin_cuenta && v.ficha?.aviso_whatsapp
+                  ? `Te avisamos por WhatsApp al ${v.ficha.aviso_whatsapp} con el enlace para verla. También aparece en esta misma página. Editamos ${TEXTO_HORARIO}.`
+                  : `Aparece en esta misma página. Puedes cerrarla y volver cuando quieras. Editamos ${TEXTO_HORARIO}.`}
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 border-t border-zinc-100 px-6 py-4 text-[12px] text-zinc-500">
@@ -599,7 +599,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
             </div>
           </div>
           <div className="mt-6 text-center">
-            <Link href="/broker/videos" className={botonSecundario}>
+            <Link href={datos.sin_cuenta ? '/broker/videos/nuevo' : '/broker/videos'} className={botonSecundario}>
               Mientras tanto, empieza otro video
             </Link>
           </div>
@@ -622,7 +622,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
       </a>
     );
     return (
-      <Pantalla derecha={<EtiquetaEstado estado={estado} />}>
+      <Pantalla sinCuenta={datos.sin_cuenta} derecha={<EtiquetaEstado estado={estado} />}>
         <main className="mx-auto max-w-5xl px-4 pb-36 pt-6 sm:px-6 lg:pb-16 lg:pt-10">
           {encabezado}
           <div className="mt-5">
@@ -768,7 +768,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
   // ─────────────── Desbloqueado: descargas y textos ───────────────
   if (estado === 'desbloqueado') {
     return (
-      <Pantalla derecha={<EtiquetaEstado estado={estado} />}>
+      <Pantalla sinCuenta={datos.sin_cuenta} derecha={<EtiquetaEstado estado={estado} />}>
         <main className="mx-auto max-w-4xl px-4 pb-16 pt-6 sm:px-6 lg:pt-10">
           <div className="flex items-center gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/25">
@@ -836,14 +836,14 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
   }
 
   return (
-    <Pantalla>
+    <Pantalla sinCuenta={datos.sin_cuenta}>
       <main className="mx-auto max-w-xl px-4 py-12 text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400">
           <Icono nombre="basura" />
         </span>
         <h1 className="mt-4 text-[22px] font-semibold text-zinc-900">Este video fue descartado</h1>
-        <Link href="/broker/videos" className={`${botonPrimario} mt-6`}>
-          Volver a mis videos
+        <Link href={datos.sin_cuenta ? '/video-inmueble' : '/broker/videos'} className={`${botonPrimario} mt-6`}>
+          {datos.sin_cuenta ? 'Volver al inicio' : 'Volver a mis videos'}
         </Link>
       </main>
     </Pantalla>

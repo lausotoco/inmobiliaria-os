@@ -37,6 +37,8 @@ type Datos = {
   entregas: Record<string, { tamano?: number; nombre?: string; url: string | null }>;
   pagos: { id: string; referencia: string; monto: number; estado: string; medio: string | null; ambiente: string | null; creado_en: string }[];
   entrega_limite: string | null;
+  /** Enlace para el agente (sin cuenta: firmado, abre su video en cualquier celular) */
+  enlace_agente: string;
 };
 
 /**
@@ -289,9 +291,10 @@ export default function PanelVideo({ params }: { params: { id: string } }) {
   const estado = v.estado;
   const limite = datos.entrega_limite ? new Date(datos.entrega_limite) : null;
   const minutos = limite ? Math.round((limite.getTime() - Date.now()) / 60000) : null;
-  const telefono = normalizarTelefono(f.whatsapp || datos.agente?.telefono || '');
-  const nombre = datos.agente?.nombre?.split(' ')[0] || '';
-  const enlaceAgente = enlacePublicado || (typeof window !== 'undefined' ? `${window.location.origin}/broker/videos/${v.id}` : '');
+  // Sin cuenta: el WhatsApp y el nombre que dejó al pedir la vista previa
+  const telefono = normalizarTelefono(f.aviso_whatsapp || f.whatsapp || datos.agente?.telefono || '');
+  const nombre = (datos.agente?.nombre || f.aviso_nombre || '').split(' ')[0];
+  const enlaceAgente = enlacePublicado || datos.enlace_agente;
   const avisoWhatsApp = telefono.ok
     ? enlaceWhatsApp(`Hola${nombre ? ` ${nombre}` : ''}, la vista previa de tu video ${v.codigo} ya está lista. Puedes verla aquí: ${enlaceAgente}`, telefono.normalizado)
     : null;
@@ -314,7 +317,7 @@ export default function PanelVideo({ params }: { params: { id: string } }) {
           </div>
           <h1 className="mt-1 text-[26px] font-semibold leading-tight">{v.titulo}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[14px] text-zinc-500">
-            {datos.agente?.nombre || datos.agente?.email}
+            {datos.agente ? datos.agente.nombre || datos.agente.email : `${f.aviso_nombre || 'Agente'} · sin cuenta`}
             {datos.agente?.empresa ? <span>· {datos.agente.empresa}</span> : null}
             {telefono.ok && (
               <a href={`https://wa.me/${telefono.normalizado}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-emerald-700 hover:text-emerald-800">

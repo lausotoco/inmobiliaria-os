@@ -76,7 +76,7 @@ export default function MisVideos() {
           <div>
             <p className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-zinc-700 ring-1 ring-black/[0.06]">
               <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-              Video listo en menos de 40 minutos
+              Video listo en menos de 30 minutos
             </p>
             <h1 className="mt-4 text-[32px] font-semibold leading-[1.1] text-zinc-900 sm:text-[44px]">
               Graba tu inmueble.
@@ -105,7 +105,7 @@ export default function MisVideos() {
             {[
               ['texto', 'Llena la ficha', 'Precio, zona, datos y lo que lo hace diferente.'],
               ['camara', 'Sube tu video', 'Un solo video del recorrido, desde el celular. Lo revisamos al instante.'],
-              ['ojo', 'Mira la vista previa', 'En menos de 40 minutos, antes de pagar.'],
+              ['ojo', 'Mira la vista previa', 'En menos de 30 minutos, antes de pagar.'],
               ['bajar', 'Descarga y publica', 'En alta calidad, con tu logo y tu WhatsApp.'],
             ].map(([icono, t, d], i) => (
               <li key={t} className="flex gap-4 p-4 sm:p-5">
