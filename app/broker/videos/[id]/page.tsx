@@ -77,7 +77,7 @@ type Datos = {
 const AYUDA_PASO: Record<Paso, string> = {
   inmueble: 'Lo básico: qué es, cuánto vale y dónde está.',
   detalles: 'Los datos que salen en pantalla y lo que lo hace especial.',
-  tomas: 'Sube un solo video del recorrido o, si prefieres, toma por toma.',
+  tomas: 'Sube un solo video del recorrido, toma por toma o, si no tienes video, tus fotos.',
   marca: 'Cómo cierra tu video y el estilo de edición.',
 };
 
@@ -593,7 +593,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 border-t border-zinc-100 px-6 py-4 text-[12px] text-zinc-500">
               <span className="rounded-full bg-zinc-100 px-2.5 py-1">{titulo}</span>
-              <span className="rounded-full bg-zinc-100 px-2.5 py-1">{tomas.length} tomas</span>
+              <span className="rounded-full bg-zinc-100 px-2.5 py-1">{tomas.length} {tomas.every((t) => t.casilla.startsWith('foto_')) ? 'fotos' : 'tomas'}</span>
               <span className="rounded-full bg-zinc-100 px-2.5 py-1">Estilo {ESTILOS.find((e) => e.v === v.estilo)?.l.toLowerCase() ?? 'directo'}</span>
               {v.voz_en_off && <span className="rounded-full bg-zinc-100 px-2.5 py-1">Con voz en off</span>}
             </div>

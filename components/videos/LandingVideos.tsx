@@ -35,7 +35,7 @@ const PREGUNTAS = [
     r: 'Empezar y subir tu video no cuesta nada, y no necesitas cuenta para hacerlo. La creas al pedir tu vista previa, ahí ves el precio y pagas solo si te gusta.',
   },
   { p: '¿Cuánto se demora?', r: 'Menos de 40 minutos, entre 7 a. m. y 8 p. m. Lo que llega de noche sale a primera hora.' },
-  { p: '¿Tengo que cortar o editar algo?', r: 'No. Subes un solo video caminando por el inmueble y nosotros sacamos las tomas. La plataforma lo revisa al subirlo y te avisa si está horizontal, oscuro o muy movido, para que lo repitas antes de irte.' },
+  { p: '¿Tengo que cortar o editar algo?', r: 'No. Subes un solo video caminando por el inmueble y nosotros sacamos las tomas. La plataforma lo revisa al subirlo y te avisa si está horizontal, oscuro o muy movido. Y si no tienes video, subes tus fotos y armamos el video con ellas.' },
   { p: '¿El video lleva la marca de KYRELO?', r: 'No. Cierra con tu logo, tu nombre y tu WhatsApp. Las personas interesadas te escriben a ti.' },
 ];
 

@@ -20,6 +20,7 @@ import {
 } from "@/lib/videos/servidor";
 import {
   CASILLAS,
+  nombreCasilla,
   ENTREGAS,
   PREVIAS_PORTADA,
   MAX_BYTES_ARCHIVO,
@@ -57,7 +58,8 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   // Tomas en el orden del recorrido, con enlace de descarga de 1 hora
   const orden = casillasDe(ficha.tipo);
   const posicion = (casilla: string) => (orden.includes(casilla) ? orden.indexOf(casilla) : orden.length);
-  const ordenadas = (tomas ?? []).sort((a, b) => posicion(a.casilla) - posicion(b.casilla));
+  // Las fotos (foto_01 … foto_20) van al final, en su orden
+  const ordenadas = (tomas ?? []).sort((a, b) => posicion(a.casilla) - posicion(b.casilla) || a.casilla.localeCompare(b.casilla));
   const conEnlace = [];
   for (let i = 0; i < ordenadas.length; i++) {
     const t = ordenadas[i];
@@ -76,7 +78,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
         url = data?.signedUrl ?? null;
       }
     }
-    conEnlace.push({ ...t, nombre_casilla: CASILLAS[t.casilla]?.nombre ?? t.casilla, url, partes_urls: partes });
+    conEnlace.push({ ...t, nombre_casilla: nombreCasilla(t.casilla), url, partes_urls: partes });
   }
 
   let logo_url: string | null = null;

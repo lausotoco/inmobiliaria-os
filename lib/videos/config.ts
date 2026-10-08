@@ -111,6 +111,16 @@ export const MIN_SEGUNDOS_RECORRIDO = 15;
 export const partesDe = (bytes: number) => Math.max(1, Math.ceil(bytes / BYTES_PARTE));
 export const rutaParte = (ruta: string, i: number) => `${ruta}.part${String(i + 1).padStart(3, "0")}`;
 
+// Solo fotos (7 oct 2026): el agente que no tiene video sube las fotos del inmueble
+// y el video se arma con ellas. Cada foto va en su casilla foto_01 … foto_20.
+export const MIN_FOTOS = 6;
+export const MAX_FOTOS = 20;
+export const MAX_BYTES_FOTO = 10 * 1024 * 1024;
+export const esCasillaFoto = (casilla: string) => /^foto_(0[1-9]|1[0-9]|20)$/.test(casilla);
+export const casillaFoto = (n: number) => `foto_${String(n).padStart(2, "0")}`;
+export const nombreCasilla = (casilla: string) =>
+  esCasillaFoto(casilla) ? `Foto ${Number(casilla.slice(5))}` : CASILLAS[casilla]?.nombre ?? casilla;
+
 export function casillasDe(tipo?: TipoInmueble): string[] {
   return RECORRIDO[tipo ?? "apartamento"];
 }
@@ -120,7 +130,7 @@ export function obligatoriasDe(tipo?: TipoInmueble): string[] {
 }
 
 export function esCasillaValida(casilla: string): boolean {
-  return Object.prototype.hasOwnProperty.call(CASILLAS, casilla);
+  return Object.prototype.hasOwnProperty.call(CASILLAS, casilla) || esCasillaFoto(casilla);
 }
 
 // ── Estados que ve el agente ──
@@ -254,9 +264,13 @@ export function faltantesPorPaso(f: Ficha, casillasSubidas: string[]): Record<Pa
   if (conHabitaciones && f.banos == null) r.detalles.push("Baños");
   if ((f.diferenciales ?? []).filter((d) => d.trim()).length < 3) r.detalles.push("3 cosas que lo hacen diferente");
   const subidas = new Set(casillasSubidas);
-  if (!subidas.has(CASILLA_RECORRIDO)) {
-    for (const c of obligatoriasDe(f.tipo)) if (!subidas.has(c)) r.tomas.push(CASILLAS[c]?.nombre ?? c);
-    if (r.tomas.length === 0 && subidas.size < MINIMO_TOMAS) r.tomas.push(`Al menos ${MINIMO_TOMAS} tomas`);
+  const fotos = casillasSubidas.filter(esCasillaFoto).length;
+  if (!subidas.has(CASILLA_RECORRIDO) && fotos < MIN_FOTOS) {
+    if (fotos > 0) r.tomas.push(`Al menos ${MIN_FOTOS} fotos`);
+    else {
+      for (const c of obligatoriasDe(f.tipo)) if (!subidas.has(c)) r.tomas.push(CASILLAS[c]?.nombre ?? c);
+      if (r.tomas.length === 0 && subidas.size < MINIMO_TOMAS) r.tomas.push(`Al menos ${MINIMO_TOMAS} tomas`);
+    }
   }
   if (!f.nombre_marca?.trim()) r.marca.push("Nombre para el cierre");
   if (!f.whatsapp || f.whatsapp.replace(/\D/g, "").length < 10) r.marca.push("WhatsApp");

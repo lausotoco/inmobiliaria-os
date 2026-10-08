@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { formatoCOP } from '@/lib/utils';
 import { enlaceWhatsApp } from '@/lib/mensaje-whatsapp';
 import { normalizarTelefono } from '@/lib/telefono';
-import { ENTREGAS, ESTILOS, PREVIAS_PORTADA, TIPOS_INMUEBLE, entregaEstimada, formatoMB, mimeDe, type EstadoVideo, type Ficha } from '@/lib/videos/config';
+import { ENTREGAS, ESTILOS, PREVIAS_PORTADA, TIPOS_INMUEBLE, entregaEstimada, esCasillaFoto, formatoMB, mimeDe, type EstadoVideo, type Ficha } from '@/lib/videos/config';
 import { api, subirConAvance } from '@/lib/videos/subir';
 import { EtiquetaEstado, ICONO_CASILLA, Icono, botonAcento, botonPrimario, botonSecundario, tarjeta } from '@/components/videos/ui';
 
@@ -213,6 +213,29 @@ export default function PanelVideo({ params }: { params: { id: string } }) {
   }
 
   const [bajando, setBajando] = useState<number | null>(null);
+  // Solo fotos: se bajan todas, una tras otra, con su número de orden
+  async function descargarFotos(fotos: Toma[]) {
+    try {
+      for (let i = 0; i < fotos.length; i++) {
+        setBajando(i / fotos.length);
+        if (!fotos[i].url) continue;
+        const r = await fetch(fotos[i].url as string);
+        if (!r.ok) throw new Error('No se pudo bajar una foto. Recarga la página e inténtalo de nuevo.');
+        const url = URL.createObjectURL(await r.blob());
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${datos?.video.codigo ?? 'video'}-foto-${String(i + 1).padStart(2, '0')}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        await new Promise((ok) => setTimeout(ok, 350));
+      }
+    } catch (e) {
+      setMensaje({ tono: 'error', texto: (e as Error).message });
+    }
+    setBajando(null);
+  }
   // El recorrido completo se subió en partes de 45 MB: se bajan y se unen en un solo archivo
   async function descargarRecorrido(t: Toma) {
     if (!t.partes_urls?.length) return;
@@ -429,6 +452,20 @@ export default function PanelVideo({ params }: { params: { id: string } }) {
                   )}
                 </div>
               ))}
+            {datos.tomas.some((t) => esCasillaFoto(t.casilla)) && (
+              <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl bg-orange-50 p-4 ring-1 ring-orange-200">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold">Solo fotos: {datos.tomas.filter((t) => esCasillaFoto(t.casilla)).length} fotos, sin video</p>
+                  <p className="text-[13px] text-zinc-600">El video se arma con las fotos, en este orden.</p>
+                </div>
+                {!v.tomas_borradas_at && (
+                  <button className={botonPrimario} disabled={bajando !== null} onClick={() => descargarFotos(datos.tomas.filter((t) => esCasillaFoto(t.casilla)))}>
+                    <Icono nombre="bajar" className="h-4 w-4" />
+                    {bajando !== null ? `Bajando ${Math.round(bajando * 100)}%…` : 'Descargar todas las fotos'}
+                  </button>
+                )}
+              </div>
+            )}
             <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
               {datos.tomas.filter((t) => !(Number(t.partes ?? 0) > 0)).map((t, i) => (
                 <div key={t.id} className="min-w-0">

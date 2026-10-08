@@ -43,6 +43,9 @@ import {
   MIMES_VIDEO,
   MINIMO_TOMAS,
   MAX_MB_ARCHIVO,
+  MAX_BYTES_FOTO,
+  MIN_FOTOS,
+  esCasillaFoto,
   TIPOS_INMUEBLE,
   casillasDe,
   codigoVideo,
@@ -242,8 +245,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const casilla = String(cuerpo.casilla ?? "");
       if (!esCasillaValida(casilla)) return fallo(400, "Casilla desconocida.");
       const mime = String(cuerpo.mime ?? "");
-      if (!MIMES_VIDEO.includes(mime)) return fallo(400, "Ese archivo no es un video que podamos usar. Sube un MP4 o MOV.");
       const tamano = Number(cuerpo.tamano ?? 0);
+      // Solo fotos: cada foto llega ya comprimida desde el navegador
+      if (esCasillaFoto(casilla)) {
+        if (!MIMES_IMAGEN.includes(mime)) return fallo(400, "Esa foto no se puede usar. Sube fotos JPG o PNG.");
+        if (!(tamano > 0) || tamano > MAX_BYTES_FOTO) return fallo(400, "La foto pesa demasiado. Inténtalo con otra.");
+        const rutaFoto = `${carpeta}/${casilla}-${Date.now()}.${extensionSegura(mime)}`;
+        const { data, error } = await s.admin.storage.from(BUCKET_TOMAS).createSignedUploadUrl(rutaFoto);
+        if (error || !data) return fallo(500, "No se pudo preparar la subida. Inténtalo de nuevo.");
+        return sinCache({ url: data.signedUrl, ruta: rutaFoto });
+      }
+      if (!MIMES_VIDEO.includes(mime)) return fallo(400, "Ese archivo no es un video que podamos usar. Sube un MP4 o MOV.");
       const ruta = `${carpeta}/${casilla}-${Date.now()}.${extensionSegura(mime)}`;
       // Recorrido completo: un solo video grande que se sube en partes de 45 MB
       if (casilla === CASILLA_RECORRIDO) {
@@ -374,7 +386,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         .eq("video_id", video.id);
       const subidas = new Set((tomas ?? []).map((t) => t.casilla));
       const recorrido = (tomas ?? []).find((t) => t.casilla === CASILLA_RECORRIDO);
-      if (!recorrido) {
+      const fotos = (tomas ?? []).filter((t) => esCasillaFoto(t.casilla));
+      const conFotos = !recorrido && fotos.length >= MIN_FOTOS;
+      if (!recorrido && fotos.length > 0 && !conFotos) return fallo(400, `Sube al menos ${MIN_FOTOS} fotos.`);
+      if (!recorrido && !conFotos) {
         const faltanTomas = obligatoriasDe(ficha.tipo).filter((c) => !subidas.has(c));
         if (faltanTomas.length)
           return fallo(400, `Faltan tomas: ${faltanTomas.map((c) => CASILLAS[c]?.nombre ?? c).join(", ")}.`);
@@ -418,10 +433,12 @@ export async function POST(req: NextRequest, { params }: Ctx) {
           cuentaNueva ? `Agente nuevo: creó su cuenta hace ${Math.max(1, minutosCuenta ?? 1)} min para pedir este video.` : "",
           cuentaNueva && s.perfil?.telefono ? `Su WhatsApp: ${escaparHtml(s.perfil.telefono)}` : "",
           `Inmueble: ${escaparHtml(tituloVideo(ficha))}`,
-          recorrido
+          conFotos
+            ? `Material: ${fotos.length} fotos, sin video. Hay que armar el video con las fotos.`
+            : recorrido
             ? `Material: un solo video del recorrido${recorrido.duracion ? ` de ${Math.round(Number(recorrido.duracion))} s` : ""} (${Math.round(Number(recorrido.tamano ?? 0) / 1048576)} MB). Hay que sacar las tomas.${conAvisos ? " Tiene avisos para revisar." : ""}`
             : `Material completo: ${subidas.size} tomas${conAvisos ? ` (${conAvisos} para revisar)` : ""}`,
-          recorrido ? "" : `Tomas: ${orden.filter((c) => subidas.has(c)).map((c) => CASILLAS[c].nombre).join(" · ")}`,
+          recorrido || conFotos ? "" : `Tomas: ${orden.filter((c) => subidas.has(c)).map((c) => CASILLAS[c].nombre).join(" · ")}`,
           `Estilo: ${estilo} · Voz en off: ${video.voz_en_off ? "sí" : "no"}`,
           `Entregar: ${formatoEntrega(entrega, ahora)}`,
           `<a href="${enlace}">${enlace}</a>`,
