@@ -31,15 +31,15 @@ export default function DemoTelefono() {
         <div className="relative aspect-[9/16] w-full overflow-hidden rounded-[2.6rem] border-[8px] border-zinc-900 bg-zinc-900 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.5)]">
           <video
             ref={ref}
-            src="/reels/video-inmueble-antes-despues.mp4?v=5"
-            poster="/reels/video-inmueble-antes-despues.jpg?v=5"
+            src="/reels/video-inmueble-casa-cajica.mp4?v=1"
+            poster="/reels/video-inmueble-casa-cajica.jpg?v=1"
             autoPlay
             muted
             loop
             playsInline
             preload="auto"
             className="h-full w-full object-cover"
-            aria-label="Una agente presenta su casa y después el antes y después del video editado por KYRELO"
+            aria-label="Recorrido de una casa en Cajicá editado por KYRELO, con subtítulos, textos y música"
           />
           <span className="absolute left-1/2 top-2 h-5 w-20 -translate-x-1/2 rounded-full bg-zinc-900" aria-hidden />
           <button
@@ -56,7 +56,7 @@ export default function DemoTelefono() {
           </button>
         </div>
       </div>
-      <figcaption className="mt-4 text-center text-[12px] text-zinc-500">Un video real: la agente presenta su casa y después, el antes y el después</figcaption>
+      <figcaption className="mt-4 text-center text-[12px] text-zinc-500">Un video real: recorrido de una casa en Cajicá, editado por KYRELO</figcaption>
     </figure>
   );
 }
