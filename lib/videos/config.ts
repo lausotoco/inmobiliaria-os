@@ -29,6 +29,8 @@ export type Ficha = {
   municipio?: string;
   barrio?: string;
   diferenciales?: string[];
+  /** Pantalla única (10 oct 2026): todo lo que el agente quiere que salga en el video, escrito por él. */
+  descripcion?: string;
   nombre_marca?: string;
   whatsapp?: string;
   logo_ruta?: string | null;
@@ -79,7 +81,15 @@ export const CASILLAS: Record<string, { nombre: string; ayuda: string }> = {
   detalle_1: { nombre: "Detalle 1", ayuda: "Acabados, la vista desde una ventana o lo más bonito del inmueble." },
   detalle_2: { nombre: "Detalle 2", ayuda: "Opcional." },
   detalle_3: { nombre: "Detalle 3", ayuda: "Opcional." },
+  // Material de apoyo: lo que el agente quiere mostrar además del inmueble (el centro comercial cercano, la vía…)
+  apoyo_1: { nombre: "Apoyo 1", ayuda: "Un lugar cercano o algo que quieras mostrar." },
+  apoyo_2: { nombre: "Apoyo 2", ayuda: "Opcional." },
+  apoyo_3: { nombre: "Apoyo 3", ayuda: "Opcional." },
 };
+export const CASILLAS_APOYO = ["apoyo_1", "apoyo_2", "apoyo_3"];
+/** Lo mínimo que debe escribir el agente para que el video tenga con qué contar el inmueble. */
+export const MIN_DESCRIPCION = 80;
+export const MAX_DESCRIPCION = 3000;
 
 const RECORRIDO: Record<TipoInmueble, string[]> = {
   apartamento: [
@@ -229,20 +239,32 @@ export const TEXTO_HORARIO = "de 7 a. m. a 8 p. m.";
 // ── Ficha: qué falta para poder enviar ──
 export function faltantesFicha(f: Ficha): string[] {
   const falta: string[] = [];
-  const conHabitaciones = f.tipo === "apartamento" || f.tipo === "casa";
   if (!f.tipo) falta.push("el tipo de inmueble");
   if (!f.operacion) falta.push("si es venta o arriendo");
-  if (!f.precio || f.precio <= 0) falta.push("el precio");
-  if (!f.area_construida && !f.area_privada) falta.push(f.tipo === "lote" ? "el área del lote" : "el área");
-  if (conHabitaciones && f.habitaciones == null) falta.push("las habitaciones");
-  if (conHabitaciones && f.banos == null) falta.push("los baños");
   if (!f.municipio?.trim()) falta.push("el municipio");
-  if (!f.barrio?.trim()) falta.push("el barrio o sector");
-  const dif = (f.diferenciales ?? []).filter((d) => d.trim());
-  if (dif.length < 3) falta.push("las 3 cosas que lo hacen diferente");
+  if ((f.descripcion ?? "").trim().length < MIN_DESCRIPCION) falta.push("la información del inmueble");
   if (!f.nombre_marca?.trim()) falta.push("tu nombre o el de tu oficina para el cierre");
   if (!f.whatsapp || f.whatsapp.replace(/\D/g, "").length < 10) falta.push("tu WhatsApp");
   if (!f.permiso_propietario) falta.push("confirmar que tienes permiso del propietario");
+  return falta;
+}
+
+/** Lo que falta en la pantalla única, en palabras cortas para el botón. */
+export function faltantesUnica(f: Ficha, casillasSubidas: string[]): string[] {
+  const falta: string[] = [];
+  if (!f.tipo) falta.push("Tipo de inmueble");
+  if (!f.operacion) falta.push("Venta o arriendo");
+  if (!f.municipio?.trim()) falta.push("Municipio");
+  const subidas = new Set(casillasSubidas);
+  const fotos = casillasSubidas.filter(esCasillaFoto).length;
+  const tomas = casillasSubidas.filter((c) => !esCasillaFoto(c) && !CASILLAS_APOYO.includes(c)).length;
+  if (!subidas.has(CASILLA_RECORRIDO) && fotos < MIN_FOTOS && tomas < MINIMO_TOMAS)
+    falta.push(fotos > 0 ? `Al menos ${MIN_FOTOS} fotos` : "Tu video o tus fotos");
+  const d = (f.descripcion ?? "").trim().length;
+  if (d < MIN_DESCRIPCION) falta.push(d ? `Escribe un poco más del inmueble (${d}/${MIN_DESCRIPCION})` : "La información del inmueble");
+  if (!f.nombre_marca?.trim()) falta.push("Tu nombre para el cierre");
+  if (!f.whatsapp || f.whatsapp.replace(/\D/g, "").length < 10) falta.push("Tu WhatsApp");
+  if (!f.permiso_propietario) falta.push("Permiso del propietario");
   return falta;
 }
 

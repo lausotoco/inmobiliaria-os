@@ -55,7 +55,7 @@ function Anillo({ fraccion }: { fraccion: number }) {
   );
 }
 
-function Casilla({ videoId, casilla, obligatoria, toma, onCambio, compacta }: { videoId: string; casilla: string; obligatoria: boolean; toma?: Toma; onCambio: (casilla: string, toma: Toma | null) => void; compacta?: boolean }) {
+export function Casilla({ videoId, casilla, obligatoria, toma, onCambio, compacta }: { videoId: string; casilla: string; obligatoria: boolean; toma?: Toma; onCambio: (casilla: string, toma: Toma | null) => void; compacta?: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   const [proceso, setProceso] = useState<Proceso | null>(null);
   const info = CASILLAS[casilla];

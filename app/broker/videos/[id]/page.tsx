@@ -20,6 +20,7 @@ import {
   TEXTO_HORARIO,
   casillasDe,
   faltantesPorPaso,
+  faltantesUnica,
   tituloVideo,
   type EstadoVideo,
   type Ficha,
@@ -29,6 +30,7 @@ import { api } from '@/lib/videos/subir';
 import { PasoDetalles, PasoInmueble, PasoMarca } from '@/components/videos/FichaVideo';
 import CasillasTomas, { type Toma } from '@/components/videos/CasillasTomas';
 import VistaPreviaProtegida from '@/components/videos/VistaPreviaProtegida';
+import PantallaUnica, { AdvertenciaEnvio } from '@/components/videos/PantallaUnica';
 import ContactoVistaPrevia, { type Contacto } from '@/components/videos/ContactoVistaPrevia';
 import {
   Aviso,
@@ -114,6 +116,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
   const [verificando, setVerificando] = useState(false);
   const [copiado, setCopiado] = useState('');
   const [pidiendoContacto, setPidiendoContacto] = useState(false);
+  const [advirtiendo, setAdvirtiendo] = useState(false);
   const pendiente = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fichaPorGuardar = useRef<Ficha | null>(null);
   const arriba = useRef<HTMLDivElement>(null);
@@ -313,8 +316,8 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
 
   const v = datos.video;
   const editable = estado === 'borrador' || estado === 'rechazado';
-  const faltan = faltantesPorPaso(ficha, tomas.map((t) => t.casilla));
-  const listo = PASOS.every((p) => faltan[p.v].length === 0);
+  const faltan = faltantesUnica(ficha, tomas.map((t) => t.casilla));
+  const listo = faltan.length === 0;
   const indice = PASOS.findIndex((p) => p.v === paso);
   const pagoEnCurso = datos.pagos.some((p) => p.estado === 'pendiente' && Date.now() - new Date(p.creado_en).getTime() < 30 * 60000);
   const mensajeWhatsApp = enlaceWhatsApp(`Hola, quiero desbloquear mi video ${v.codigo} (${tituloVideo(ficha)}).`);
@@ -331,16 +334,10 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
 
   // ─────────────── Asistente: sin enviar o por regrabar ───────────────
   if (editable) {
-    const ultimo = indice === PASOS.length - 1;
-    const botonSiguiente = ultimo ? (
-      <button onClick={pedirVistaPrevia} disabled={!listo || enviando} className={`${botonAcento} flex-1 lg:flex-none`}>
-        {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Pedir mi vista previa'}
+    const botonSiguiente = (
+      <button onClick={() => setAdvirtiendo(true)} disabled={!listo || enviando} className={`${botonAcento} flex-1 lg:flex-none`}>
+        {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Hacer mi video'}
         {!enviando && <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />}
-      </button>
-    ) : (
-      <button onClick={() => irA(PASOS[indice + 1].v)} className={`${botonPrimario} flex-1 lg:flex-none`}>
-        Siguiente: {PASOS[indice + 1]?.corto}
-        <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />
       </button>
     );
 
@@ -363,24 +360,24 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
         ) : (
           <p className="mt-2 text-[13px] text-zinc-500">Aquí verás tus tomas en orden.</p>
         )}
-        <ul className="mt-4 space-y-1">
-          {PASOS.map((p) => {
-            const ok = faltan[p.v].length === 0;
-            return (
-              <li key={p.v}>
-                <button onClick={() => irA(p.v)} className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-zinc-50">
-                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${ok ? 'bg-emerald-500 text-white' : 'bg-zinc-100 text-zinc-400'}`}>
-                    {ok ? <Icono nombre="check" className="h-3.5 w-3.5" grosor={2.6} /> : <span className="h-1.5 w-1.5 rounded-full bg-zinc-400" />}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className={`block text-[14px] ${paso === p.v ? 'font-semibold text-zinc-900' : 'text-zinc-700'}`}>{p.l}</span>
-                    {!ok && <span className="block truncate text-[12px] text-zinc-500">Falta: {faltan[p.v].join(', ').toLowerCase()}</span>}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        {faltan.length > 0 ? (
+          <div className="mt-4">
+            <p className="text-[13px] font-medium text-zinc-700">Para enviar te falta:</p>
+            <ul className="mt-1.5 space-y-1">
+              {faltan.map((f) => (
+                <li key={f} className="flex items-center gap-2 text-[13px] text-zinc-600">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="mt-4 flex items-center gap-2 text-[13px] font-medium text-emerald-700">
+            <Icono nombre="check" className="h-4 w-4" grosor={2.4} />
+            Todo listo para enviar
+          </p>
+        )}
         <div className="mt-4 space-y-2 border-t border-zinc-100 pt-4 text-[13px]">
           <p className="flex items-start gap-2 text-zinc-600">
             <Icono nombre="reloj" className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" />
@@ -408,8 +405,8 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
             </p>
           )}
         </div>
-        <button onClick={pedirVistaPrevia} disabled={!listo || enviando} className={`${botonAcento} mt-5 w-full`}>
-          {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Pedir mi vista previa'}
+        <button onClick={() => setAdvirtiendo(true)} disabled={!listo || enviando} className={`${botonAcento} mt-5 w-full`}>
+          {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Hacer mi video'}
         </button>
         <p className="mt-2 text-center text-[12px] text-zinc-400">
           {guardado === 'guardando'
@@ -428,6 +425,15 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
         sinCuenta={datos.sin_cuenta}
         derecha={datos.sin_cuenta ? <span /> : <EtiquetaEstado estado={estado} />}
       >
+        {advirtiendo && (
+          <AdvertenciaEnvio
+            onVolver={() => setAdvirtiendo(false)}
+            onSeguir={() => {
+              setAdvirtiendo(false);
+              pedirVistaPrevia();
+            }}
+          />
+        )}
         {pidiendoContacto && (
           <ContactoVistaPrevia
             whatsapp={ficha.aviso_whatsapp || ficha.whatsapp}
@@ -449,70 +455,23 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
             </div>
           )}
 
-          {/* Pasos */}
-          <nav className="mt-6 grid grid-cols-4 gap-1.5 sm:gap-2" aria-label="Pasos">
-            {PASOS.map((p, i) => {
-              const ok = faltan[p.v].length === 0;
-              const activo = paso === p.v;
-              return (
-                <button key={p.v} onClick={() => irA(p.v)} className="group text-left">
-                  <span className={`block h-1.5 rounded-full transition ${activo ? 'bg-zinc-900' : ok ? 'bg-orange-500' : 'bg-zinc-200 group-hover:bg-zinc-300'}`} />
-                  <span className={`mt-2 flex items-center gap-1.5 text-[12px] sm:text-[13px] ${activo ? 'font-semibold text-zinc-900' : 'text-zinc-500'}`}>
-                    {ok && !activo ? <Icono nombre="check" className="hidden h-3.5 w-3.5 text-orange-600 sm:block" grosor={2.6} /> : <span className="hidden text-zinc-400 sm:inline">{i + 1}.</span>}
-                    <span className="truncate">
-                      <span className="sm:hidden">{p.corto}</span>
-                      <span className="hidden sm:inline">{p.l}</span>
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
           <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
             <div className="min-w-0 space-y-4">
               <section className={tarjetaDesdeSm}>
-                <div className="mb-6">
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-orange-600">Paso {indice + 1} de 4</p>
-                  <h2 className="mt-1 text-[22px] font-semibold text-zinc-900">{PASOS[indice]?.l}</h2>
-                  <p className="mt-1 text-[14px] text-zinc-500">{paso ? AYUDA_PASO[paso] : ''}</p>
-                </div>
-                {paso === 'inmueble' && <PasoInmueble ficha={ficha} onChange={cambiarFicha} />}
-                {paso === 'detalles' && <PasoDetalles ficha={ficha} onChange={cambiarFicha} />}
-                {paso === 'tomas' && (
-                  <CasillasTomas videoId={id} tipo={ficha.tipo} tomas={tomas} onCambio={cambiarToma} />
-                )}
-                {paso === 'marca' && (
-                  <PasoMarca
-                    ficha={ficha}
-                    onChange={cambiarFicha}
-                    videoId={id}
-                    logoUrl={logoUrl}
-                    onLogo={(url, ruta) => {
-                      setLogoUrl(url);
-                      setFicha((f) => ({ ...f, logo_ruta: ruta }));
-                    }}
-                    estilo={v.estilo}
-                    voz={v.voz_en_off}
-                    onEstilo={cambiarEstilo}
-                  />
-                )}
-
-                {paso === 'marca' && !listo && (
-                  <div className="mt-7">
-                    <Aviso tono="atencion" titulo="Para enviar te falta">
-                      <ul className="mt-1 space-y-1">
-                        {PASOS.filter((p) => faltan[p.v].length).map((p) => (
-                          <li key={p.v}>
-                            <button onClick={() => irA(p.v)} className="text-left underline decoration-amber-400 underline-offset-2">
-                              {p.l}: {faltan[p.v].join(', ').toLowerCase()}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </Aviso>
-                  </div>
-                )}
+                <PantallaUnica
+                  videoId={id}
+                  ficha={ficha}
+                  onChange={cambiarFicha}
+                  tomas={tomas}
+                  onCambioToma={cambiarToma}
+                  logoUrl={logoUrl}
+                  onLogo={(url, ruta) => {
+                    setLogoUrl(url);
+                    setFicha((f) => ({ ...f, logo_ruta: ruta }));
+                  }}
+                  voz={v.voz_en_off}
+                  onVoz={(voz_en_off) => cambiarEstilo({ voz_en_off })}
+                />
                 {errorAccion && (
                   <div className="mt-5">
                     <Aviso tono="error">
@@ -526,18 +485,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
                   </div>
                 )}
 
-                {/* Navegación en computador */}
-                <div className="mt-8 hidden items-center justify-between gap-3 border-t border-zinc-100 pt-6 lg:flex">
-                  {indice > 0 ? (
-                    <button onClick={() => irA(PASOS[indice - 1].v)} className={botonSecundario}>
-                      <Icono nombre="flechaIzq" className="h-4 w-4" />
-                      Atrás
-                    </button>
-                  ) : (
-                    <span />
-                  )}
-                  {botonSiguiente}
-                </div>
+                <div className="mt-8 hidden items-center justify-end gap-3 border-t border-zinc-100 pt-6 lg:flex">{botonSiguiente}</div>
               </section>
 
               {estado === 'borrador' && (
@@ -545,7 +493,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
                   Borrar este borrador
                 </button>
               )}
-              {paso === 'marca' && <div className="lg:hidden">{resumen}</div>}
+              <div className="lg:hidden">{resumen}</div>
             </div>
 
             <aside className="hidden lg:sticky lg:top-20 lg:block">{resumen}</aside>
@@ -555,11 +503,6 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
         {/* Barra fija en el celular */}
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:hidden">
           <div className="mx-auto flex max-w-xl items-center gap-2.5">
-            {indice > 0 && (
-              <button onClick={() => irA(PASOS[indice - 1].v)} aria-label="Atrás" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-zinc-200 text-zinc-700">
-                <Icono nombre="flechaIzq" />
-              </button>
-            )}
             {botonSiguiente}
           </div>
         </div>

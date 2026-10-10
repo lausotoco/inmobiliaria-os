@@ -39,3 +39,30 @@ export async function avisarLaura(
     return false;
   }
 }
+
+type Boton = { text: string; url?: string; callback_data?: string };
+
+/** Aviso con varios botones (enlaces https o botones de acción). Nunca lanza error. */
+export async function avisarLauraBotones(texto: string, filas: Boton[][]): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return false;
+  const validas = filas
+    .map((f) => f.filter((b) => b.callback_data || (b.url && b.url.startsWith("https://"))))
+    .filter((f) => f.length > 0);
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: LAURA_TELEGRAM_ID,
+        text: texto,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+        ...(validas.length ? { reply_markup: { inline_keyboard: validas } } : {}),
+      }),
+    });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}

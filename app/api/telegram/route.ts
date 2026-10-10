@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { cambiarVideo, enlaceAgente } from "@/lib/videos/servidor";
+import { codigoVideo, tituloVideo, type Ficha } from "@/lib/videos/config";
+import { enlaceWhatsapp } from "@/lib/videos/motor";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -355,6 +358,43 @@ export async function POST(req: NextRequest) {
           message_id: cb.message?.message_id,
           reply_markup: { inline_keyboard: nuevas },
         });
+        return NextResponse.json({ ok: true });
+      }
+
+      // Video del motor automático: Laura lo aprueba y queda publicado para el agente.
+      if (data.startsWith("vid_ok:")) {
+        const id = data.slice(7);
+        const { data: v } = await db.from("videos_inmueble").select("*").eq("id", id).maybeSingle();
+        if (!v) {
+          await enviar(chatId, "No encontré ese video.");
+          return NextResponse.json({ ok: true });
+        }
+        if (v.estado === "vista_previa" || v.estado === "desbloqueado") {
+          await enviar(chatId, `Ese video ya estaba publicado (${codigoVideo(v.id)}).`);
+          return NextResponse.json({ ok: true });
+        }
+        if (!v.ruta_vista_previa || !(v.entregas as any)?.final_vertical?.ruta) {
+          await enviar(chatId, "A ese video le faltan la vista previa o el final. Revísalo en el panel.");
+          return NextResponse.json({ ok: true });
+        }
+        const r = await cambiarVideo(db, id, ["en_edicion", "recibido"], {
+          estado: "vista_previa",
+          vista_previa_at: new Date().toISOString(),
+        });
+        if (!r.ok) {
+          await enviar(chatId, `No lo pude publicar: ${r.mensaje}`);
+          return NextResponse.json({ ok: true });
+        }
+        const f = (v.ficha ?? {}) as Ficha;
+        const nombre = (f.aviso_nombre || "").split(" ")[0];
+        const enlace = enlaceAgente("https://kyrelocorp.com", v as { id: string; agente_id: string | null });
+        const mensaje = `Hola${nombre ? ` ${nombre}` : ""}, tu video de ${tituloVideo(f)} ya está listo. Míralo aquí: ${enlace}`;
+        const wa = enlaceWhatsapp(f.aviso_whatsapp || f.whatsapp, mensaje);
+        await enviar(
+          chatId,
+          `Publicado ✅ ${codigoVideo(v.id)}. El agente ya puede ver su vista previa.${wa ? "\nToca el botón para mandarle el mensaje por WhatsApp." : `\nMándale este enlace: ${enlace}`}`,
+          wa ? { inline_keyboard: [[{ text: "Avisarle por WhatsApp", url: wa }]] } : undefined
+        );
         return NextResponse.json({ ok: true });
       }
 

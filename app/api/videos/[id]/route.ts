@@ -28,6 +28,7 @@ import {
 } from "@/lib/videos/servidor";
 import { configWompi, precioDesbloqueo } from "@/lib/videos/wompi";
 import { avisarLaura, escaparHtml } from "@/lib/telegram";
+import { dispararMotor } from "@/lib/videos/motor";
 import {
   CASILLAS,
   CASILLA_RECORRIDO,
@@ -54,6 +55,8 @@ import {
   dentroDelHorario,
   entregaEstimada,
   esCasillaValida,
+  MAX_DESCRIPCION,
+  CASILLAS_APOYO,
   extensionSegura,
   faltantesFicha,
   formatoEntrega,
@@ -100,6 +103,7 @@ function limpiarFicha(entrada: any, anterior: Ficha): Ficha {
     diferenciales: Array.isArray(f.diferenciales)
       ? f.diferenciales.slice(0, 3).map((d: unknown) => txt(d, 90))
       : ["", "", ""],
+    descripcion: txt(f.descripcion, MAX_DESCRIPCION),
     nombre_marca: txt(f.nombre_marca, 80),
     whatsapp: txt(f.whatsapp, 20),
     // Contacto del agente sin cuenta: solo cambia al enviar
@@ -406,10 +410,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const conFotos = !recorrido && fotos.length >= MIN_FOTOS;
       if (!recorrido && fotos.length > 0 && !conFotos) return fallo(400, `Sube al menos ${MIN_FOTOS} fotos.`);
       if (!recorrido && !conFotos) {
-        const faltanTomas = obligatoriasDe(ficha.tipo).filter((c) => !subidas.has(c));
-        if (faltanTomas.length)
-          return fallo(400, `Faltan tomas: ${faltanTomas.map((c) => CASILLAS[c]?.nombre ?? c).join(", ")}.`);
-        if (subidas.size < MINIMO_TOMAS) return fallo(400, `Sube al menos ${MINIMO_TOMAS} tomas.`);
+        const propias = Array.from(subidas).filter((c) => !CASILLAS_APOYO.includes(c));
+        if (propias.length < MINIMO_TOMAS) return fallo(400, `Sube tu video del recorrido, ${MIN_FOTOS} fotos o al menos ${MINIMO_TOMAS} tomas.`);
       }
 
       const pendientes = s.admin
@@ -447,6 +449,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const minutosCuenta = s.creadoEn ? Math.round((ahora.getTime() - Date.parse(s.creadoEn)) / 60000) : null;
       const cuentaNueva = minutosCuenta !== null && minutosCuenta >= 0 && minutosCuenta < 180;
       const enlace = `${origenDe(req)}/videos/${video.id}`;
+      // Motor automático: edita solo (menos los pedidos con voz en off, que siguen a mano)
+      const conMotor = !video.voz_en_off && (await dispararMotor(video.id));
       await avisarLaura(
         [
           `<b>${reenvio ? "Material corregido" : "Nuevo video por editar"} · ${codigoVideo(video.id)}</b>`,
@@ -465,6 +469,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
           recorrido || conFotos ? "" : `Tomas: ${orden.filter((c) => subidas.has(c)).map((c) => CASILLAS[c].nombre).join(" · ")}`,
           `Estilo: ${estilo} · Voz en off: ${video.voz_en_off ? "sí" : "no"}`,
           `Entregar: ${formatoEntrega(entrega, ahora)}`,
+          conMotor ? "El motor automático ya lo está editando: te aviso cuando esté listo para aprobar." : "",
           `<a href="${enlace}">${enlace}</a>`,
         ]
           .filter(Boolean)
