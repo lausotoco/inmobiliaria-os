@@ -98,7 +98,7 @@ export default function LandingVideos() {
           </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href={EMPEZAR} className={`${botonPrimario} px-7 py-4 text-[16px]`}>
-              Empezar mi primer video
+              Hacer mi video de prueba gratis
               <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />
             </Link>
             <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className={`${botonSecundario} px-6 py-4 text-[15px]`}>
@@ -108,7 +108,7 @@ export default function LandingVideos() {
           </div>
           <p className="mt-3 flex items-center gap-1.5 text-[13px] text-zinc-500">
             <Icono nombre="check" className="h-4 w-4 text-orange-600" grosor={2.2} />
-            No necesitas crear cuenta para empezar.
+            No necesitas crear cuenta. Ves tu video y lo pagas solo si te gusta.
           </p>
         </div>
         <DemoTelefono />
@@ -155,7 +155,7 @@ export default function LandingVideos() {
             Tu próximo inmueble, <span className="text-orange-400">en video hoy mismo.</span>
           </h2>
           <Link href={EMPEZAR} className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-7 py-4 text-[16px] font-semibold text-white transition hover:bg-orange-500">
-            Empezar mi primer video
+            Hacer mi video de prueba gratis
             <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />
           </Link>
         </div>
