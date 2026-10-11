@@ -336,7 +336,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
   if (editable) {
     const botonSiguiente = (
       <button onClick={() => setAdvirtiendo(true)} disabled={!listo || enviando} className={`${botonAcento} flex-1 lg:flex-none`}>
-        {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Hacer mi video'}
+        {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Pedir mi vista previa gratis'}
         {!enviando && <Icono nombre="flechaDer" className="h-4 w-4" grosor={2.2} />}
       </button>
     );
@@ -406,7 +406,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
           )}
         </div>
         <button onClick={() => setAdvirtiendo(true)} disabled={!listo || enviando} className={`${botonAcento} mt-5 w-full`}>
-          {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Hacer mi video'}
+          {enviando ? 'Enviando…' : estado === 'rechazado' ? 'Volver a enviar' : 'Pedir mi vista previa gratis'}
         </button>
         <p className="mt-2 text-center text-[12px] text-zinc-400">
           {guardado === 'guardando'
@@ -485,7 +485,14 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
                   </div>
                 )}
 
-                <div className="mt-8 hidden items-center justify-end gap-3 border-t border-zinc-100 pt-6 lg:flex">{botonSiguiente}</div>
+                <div className="mt-8 hidden items-center justify-end gap-4 border-t border-zinc-100 pt-6 lg:flex">
+                  <p className="text-right text-[13px] leading-snug text-zinc-500">
+                    No pagas nada ahora.
+                    <br />
+                    Ves tu video y lo pagas solo si te gusta.
+                  </p>
+                  {botonSiguiente}
+                </div>
               </section>
 
               {estado === 'borrador' && (
@@ -502,6 +509,7 @@ export default function VideoInmueble({ params }: { params: { id: string } }) {
 
         {/* Barra fija en el celular */}
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/95 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:hidden">
+          <p className="mx-auto mb-2 max-w-xl text-center text-[12px] text-zinc-500">No pagas nada ahora. Ves tu video y lo pagas solo si te gusta.</p>
           <div className="mx-auto flex max-w-xl items-center gap-2.5">
             {botonSiguiente}
           </div>
