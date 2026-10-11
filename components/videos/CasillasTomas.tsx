@@ -17,6 +17,7 @@ import {
   casillasDe,
   obligatoriasDe,
   mimeDe,
+  MIMES_IMAGEN,
   MIMES_VIDEO,
   MINIMO_TOMAS,
   MAX_FOTOS,
@@ -55,7 +56,7 @@ function Anillo({ fraccion }: { fraccion: number }) {
   );
 }
 
-export function Casilla({ videoId, casilla, obligatoria, toma, onCambio, compacta }: { videoId: string; casilla: string; obligatoria: boolean; toma?: Toma; onCambio: (casilla: string, toma: Toma | null) => void; compacta?: boolean }) {
+export function Casilla({ videoId, casilla, obligatoria, toma, onCambio, compacta, libre }: { videoId: string; casilla: string; obligatoria: boolean; toma?: Toma; onCambio: (casilla: string, toma: Toma | null) => void; compacta?: boolean; libre?: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   const [proceso, setProceso] = useState<Proceso | null>(null);
   const info = CASILLAS[casilla];
@@ -63,9 +64,50 @@ export function Casilla({ videoId, casilla, obligatoria, toma, onCambio, compact
   const fallo = proceso?.fase === 'bloqueada' || proceso?.fase === 'error';
   const miniatura = proceso?.miniatura ?? toma?.miniatura ?? null;
 
+  /** Material de apoyo: foto o video tal como venga, sin revisar calidad ni duración. */
+  async function elegirLibre(archivo: File) {
+    const mime = mimeDe(archivo.name, archivo.type);
+    const esFoto = MIMES_IMAGEN.includes(mime) || archivo.type.startsWith('image/');
+    if (!esFoto && !MIMES_VIDEO.includes(mime)) {
+      setProceso({ fase: 'bloqueada', mensajes: ['Sube una foto o un video.'] });
+      return;
+    }
+    setProceso({ fase: 'revisando' });
+    try {
+      if (esFoto) {
+        const foto = await prepararFoto(archivo);
+        setProceso({ fase: 'subiendo', avance: 0, miniatura: foto.miniatura });
+        const firma = await api<{ url: string; ruta: string }>(`/api/videos/${videoId}`, 'POST', { accion: 'firmar_subida', casilla, mime: 'image/jpeg', tamano: foto.archivo.size });
+        await subirConAvance(firma.url, foto.archivo, 'image/jpeg', (f) => setProceso({ fase: 'subiendo', avance: f, miniatura: foto.miniatura }));
+        setProceso({ fase: 'guardando', miniatura: foto.miniatura });
+        const r = await api<{ toma: Toma }>(`/api/videos/${videoId}`, 'POST', {
+          accion: 'registrar_toma', casilla, ruta: firma.ruta, nombre: archivo.name, ancho: foto.ancho, alto: foto.alto,
+          revision: 'ok', observaciones: [], miniatura: foto.miniatura,
+        });
+        setProceso(null);
+        onCambio(casilla, r.toma);
+        return;
+      }
+      const rev = await revisarToma(archivo, { recorrido: true });  // solo para la duración y la miniatura
+      setProceso({ fase: 'subiendo', avance: 0, miniatura: rev.miniatura });
+      const firma = await api<{ urls: string[]; ruta: string; partes: number }>(`/api/videos/${videoId}`, 'POST', { accion: 'firmar_subida', casilla, mime, tamano: archivo.size });
+      await subirEnPartes(firma.urls, archivo, mime, BYTES_PARTE, (f) => setProceso({ fase: 'subiendo', avance: f, miniatura: rev.miniatura }));
+      setProceso({ fase: 'guardando', miniatura: rev.miniatura });
+      const r = await api<{ toma: Toma }>(`/api/videos/${videoId}`, 'POST', {
+        accion: 'registrar_toma', casilla, ruta: firma.ruta, partes: firma.partes, nombre: archivo.name,
+        duracion: rev.duracion, ancho: rev.ancho, alto: rev.alto, revision: 'ok', observaciones: [], miniatura: rev.miniatura,
+      });
+      setProceso(null);
+      onCambio(casilla, r.toma);
+    } catch (e) {
+      setProceso({ fase: 'error', mensajes: [(e as Error).message] });
+    }
+  }
+
   async function elegir(archivo?: File) {
     if (input.current) input.current.value = '';
     if (!archivo) return;
+    if (libre) return elegirLibre(archivo);
     const mime = mimeDe(archivo.name, archivo.type);
     if (!MIMES_VIDEO.includes(mime)) {
       setProceso({ fase: 'bloqueada', mensajes: ['Ese archivo no es un video que podamos usar. Sube un MP4 o MOV desde la galería.'] });
@@ -194,7 +236,7 @@ export function Casilla({ videoId, casilla, obligatoria, toma, onCambio, compact
           {m}
         </p>
       ))}
-      <input ref={input} type="file" accept="video/*" className="hidden" onChange={(e) => elegir(e.target.files?.[0])} />
+      <input ref={input} type="file" accept={libre ? 'image/*,video/*' : 'video/*'} className="hidden" onChange={(e) => elegir(e.target.files?.[0])} />
     </div>
   );
 }

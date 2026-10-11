@@ -265,10 +265,19 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         if (error || !data) return fallo(500, "No se pudo preparar la subida. Inténtalo de nuevo.");
         return sinCache({ url: data.signedUrl, ruta: rutaFoto });
       }
-      if (!MIMES_VIDEO.includes(mime)) return fallo(400, "Ese archivo no es un video que podamos usar. Sube un MP4 o MOV.");
+      // Material de apoyo (11 oct 2026): foto o video, sin requisitos de calidad ni duración
+      const apoyo = CASILLAS_APOYO.includes(casilla);
+      if (apoyo && MIMES_IMAGEN.includes(mime)) {
+        if (!(tamano > 0) || tamano > MAX_BYTES_FOTO) return fallo(400, "La foto pesa demasiado. Inténtalo con otra.");
+        const rutaFoto = `${carpeta}/${casilla}-${Date.now()}.${extensionSegura(mime)}`;
+        const { data, error } = await s.admin.storage.from(BUCKET_TOMAS).createSignedUploadUrl(rutaFoto);
+        if (error || !data) return fallo(500, "No se pudo preparar la subida. Inténtalo de nuevo.");
+        return sinCache({ url: data.signedUrl, ruta: rutaFoto });
+      }
+      if (!MIMES_VIDEO.includes(mime)) return fallo(400, apoyo ? "Sube una foto o un video." : "Ese archivo no es un video que podamos usar. Sube un MP4 o MOV.");
       const ruta = `${carpeta}/${casilla}-${Date.now()}.${extensionSegura(mime)}`;
-      // Recorrido completo: un solo video grande que se sube en partes de 45 MB
-      if (casilla === CASILLA_RECORRIDO) {
+      // Recorrido completo (y videos de apoyo): un video grande que se sube en partes de 45 MB
+      if (casilla === CASILLA_RECORRIDO || apoyo) {
         if (!(tamano > 0) || tamano > MAX_BYTES_RECORRIDO)
           return fallo(400, `El video pesa más de ${MAX_MB_RECORRIDO} MB. Grábalo en 1080p (no en 4K) y en 1 a 3 minutos.`);
         const partes = partesDe(tamano);
@@ -294,7 +303,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const ruta = String(cuerpo.ruta ?? "");
       if (!esCasillaValida(casilla) || !carpetasValidas.some((c) => ruta.startsWith(`${c}/${casilla}-`)) || ruta.includes(".."))
         return fallo(400, "Ruta de la toma no válida.");
-      const partes = casilla === CASILLA_RECORRIDO ? Math.min(20, Math.max(1, Math.floor(Number(cuerpo.partes ?? 1)))) : 0;
+      const enPartes = casilla === CASILLA_RECORRIDO || (CASILLAS_APOYO.includes(casilla) && Number(cuerpo.partes ?? 0) > 0);
+      const partes = enPartes ? Math.min(20, Math.max(1, Math.floor(Number(cuerpo.partes ?? 1)))) : 0;
       let peso = 0;
       for (const archivo of archivosDeToma({ ruta, partes })) {
         const p = await pesoArchivo(s.admin, BUCKET_TOMAS, archivo);

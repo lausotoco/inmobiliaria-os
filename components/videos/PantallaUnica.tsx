@@ -115,11 +115,11 @@ export default function PantallaUnica({ videoId, ficha, onChange, tomas, onCambi
         <div className="mt-6 rounded-2xl bg-zinc-50 p-4">
           <p className="text-[14px] font-semibold text-zinc-900">Material de apoyo (opcional)</p>
           <p className="mt-0.5 text-[13px] leading-relaxed text-zinc-500">
-            Si quieres que en el video salga algo más, súbelo tú: el centro comercial que queda cerca, la vía de acceso, el parque. Solo usamos el material que subas.
+            Si quieres que en el video salga algo más, súbelo tú: el centro comercial que queda cerca, la vía de acceso, el parque. Fotos o videos, como los tengas. Solo usamos el material que subas.
           </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {CASILLAS_APOYO.map((c) => (
-              <Casilla key={c} videoId={videoId} casilla={c} obligatoria={false} toma={tomas.find((t) => t.casilla === c)} onCambio={onCambioToma} compacta />
+              <Casilla key={c} videoId={videoId} casilla={c} obligatoria={false} toma={tomas.find((t) => t.casilla === c)} onCambio={onCambioToma} compacta libre />
             ))}
           </div>
         </div>
