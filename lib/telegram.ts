@@ -14,7 +14,8 @@ export function escaparHtml(texto: string): string {
 /** Manda un aviso a Laura. Nunca lanza error: si falla, devuelve false. */
 export async function avisarLaura(
   texto: string,
-  boton?: { texto: string; url: string }
+  boton?: { texto: string; url: string },
+  accion?: { texto: string; callback: string }
 ): Promise<boolean> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return false;
@@ -29,8 +30,15 @@ export async function avisarLaura(
         text: texto,
         parse_mode: "HTML",
         disable_web_page_preview: true,
-        ...(conBoton
-          ? { reply_markup: { inline_keyboard: [[{ text: boton!.texto, url: boton!.url }]] } }
+        ...(conBoton || accion
+          ? {
+              reply_markup: {
+                inline_keyboard: [
+                  ...(conBoton ? [[{ text: boton!.texto, url: boton!.url }]] : []),
+                  ...(accion ? [[{ text: accion.texto, callback_data: accion.callback }]] : []),
+                ],
+              },
+            }
           : {}),
       }),
     });

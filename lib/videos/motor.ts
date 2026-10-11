@@ -7,10 +7,10 @@ import { timingSafeEqual } from "crypto";
 
 const REPO_MOTOR = "lausotoco/kyrelo-motor-video";
 
-/** Pide a GitHub que edite el video. Nunca lanza error: si no se pudo, devuelve false. */
-export async function dispararMotor(id: string): Promise<boolean> {
+/** Pide a GitHub que edite el video. Nunca lanza error: dice si arrancó y, si no, por qué. */
+export async function dispararMotor(id: string): Promise<{ ok: boolean; motivo?: string }> {
   const token = process.env.GITHUB_MOTOR_TOKEN;
-  if (!token) return false;
+  if (!token) return { ok: false, motivo: "falta la variable GITHUB_MOTOR_TOKEN en Netlify" };
   try {
     const r = await fetch(`https://api.github.com/repos/${REPO_MOTOR}/dispatches`, {
       method: "POST",
@@ -22,9 +22,13 @@ export async function dispararMotor(id: string): Promise<boolean> {
       },
       body: JSON.stringify({ event_type: "pedido", client_payload: { id } }),
     });
-    return r.status === 204;
+    if (r.status === 204) return { ok: true };
+    if (r.status === 401) return { ok: false, motivo: "GitHub no aceptó el token (GITHUB_MOTOR_TOKEN vencido o mal copiado)" };
+    if (r.status === 403 || r.status === 404)
+      return { ok: false, motivo: "el token no tiene permiso sobre kyrelo-motor-video (Contents: Read and write)" };
+    return { ok: false, motivo: `GitHub respondió ${r.status}` };
   } catch {
-    return false;
+    return { ok: false, motivo: "no hubo conexión con GitHub" };
   }
 }
 

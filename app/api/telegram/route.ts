@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cambiarVideo, enlaceAgente } from "@/lib/videos/servidor";
 import { codigoVideo, tituloVideo, type Ficha } from "@/lib/videos/config";
-import { enlaceWhatsapp } from "@/lib/videos/motor";
+import { dispararMotor, enlaceWhatsapp } from "@/lib/videos/motor";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -358,6 +358,24 @@ export async function POST(req: NextRequest) {
           message_id: cb.message?.message_id,
           reply_markup: { inline_keyboard: nuevas },
         });
+        return NextResponse.json({ ok: true });
+      }
+
+      // Lanzar (o relanzar) el motor automático para un video ya enviado.
+      if (data.startsWith("vid_motor:")) {
+        const id = data.slice(10);
+        const { data: v } = await db.from("videos_inmueble").select("id, estado").eq("id", id).maybeSingle();
+        if (!v || !["recibido", "en_edicion"].includes(v.estado)) {
+          await enviar(chatId, "Ese video ya no está esperando edición.");
+          return NextResponse.json({ ok: true });
+        }
+        const r = await dispararMotor(id);
+        await enviar(
+          chatId,
+          r.ok
+            ? `Listo, el motor ya está editando ${codigoVideo(id)}. Te aviso en unos 12 minutos.`
+            : `El motor no arrancó: ${r.motivo}.`
+        );
         return NextResponse.json({ ok: true });
       }
 

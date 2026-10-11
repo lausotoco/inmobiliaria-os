@@ -460,7 +460,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const cuentaNueva = minutosCuenta !== null && minutosCuenta >= 0 && minutosCuenta < 180;
       const enlace = `${origenDe(req)}/videos/${video.id}`;
       // Motor automático: edita solo (menos los pedidos con voz en off, que siguen a mano)
-      const conMotor = !video.voz_en_off && (await dispararMotor(video.id));
+      const motor = video.voz_en_off ? null : await dispararMotor(video.id);
       await avisarLaura(
         [
           `<b>${reenvio ? "Material corregido" : "Nuevo video por editar"} · ${codigoVideo(video.id)}</b>`,
@@ -479,12 +479,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
           recorrido || conFotos ? "" : `Tomas: ${orden.filter((c) => subidas.has(c)).map((c) => CASILLAS[c].nombre).join(" · ")}`,
           `Estilo: ${estilo} · Voz en off: ${video.voz_en_off ? "sí" : "no"}`,
           `Entregar: ${formatoEntrega(entrega, ahora)}`,
-          conMotor ? "El motor automático ya lo está editando: te aviso cuando esté listo para aprobar." : "",
+          video.voz_en_off
+            ? "Motor: no lo edita, porque pidió voz narrada. Hazlo a mano."
+            : motor?.ok
+              ? "Motor: ya lo está editando (unos 12 min). Te aviso cuando esté listo para aprobar."
+              : `Motor: NO arrancó (${escaparHtml(motor?.motivo ?? "")}). Toca «Editar con el motor» para intentarlo otra vez.`,
           `<a href="${enlace}">${enlace}</a>`,
         ]
           .filter(Boolean)
           .join("\n"),
-        { texto: "Abrir en el panel", url: enlace }
+        { texto: "Abrir en el panel", url: enlace },
+        video.voz_en_off || motor?.ok ? undefined : { texto: "Editar con el motor", callback: `vid_motor:${video.id}` }
       );
       return sinCache({ ok: true, entrega: formatoEntrega(entrega, ahora) });
     }
