@@ -84,10 +84,11 @@ export async function revisarToma(archivo: File, opciones: { recorrido?: boolean
     r.alto = video.videoHeight || null;
 
     if (r.ancho && r.alto) {
-      if (r.ancho > r.alto) r.bloqueos.push("Está horizontal. Grábala con el celular vertical.");
-      else if (Math.min(r.ancho, r.alto) < MIN_LADO_CORTO)
-        r.bloqueos.push(
-          "La calidad es muy baja (parece reenviada por WhatsApp). Sube el video original desde la galería, grabado en 1080p."
+      // Solo avisos (11 oct 2026): el video se acepta igual; el editor limpia la imagen de WhatsApp y acomoda el horizontal.
+      if (r.ancho > r.alto) r.advertencias.push("Está horizontal. Sirve igual; si puedes, la próxima vez grábalo vertical.");
+      if (Math.min(r.ancho, r.alto) < MIN_LADO_CORTO)
+        r.advertencias.push(
+          "La calidad es baja (parece reenviada por WhatsApp). Sirve igual; si tienes el original de la galería, se verá mejor."
         );
     }
     if (r.duracion != null) {
