@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cambiarVideo, enlaceAgente } from "@/lib/videos/servidor";
 import { codigoVideo, tituloVideo, type Ficha } from "@/lib/videos/config";
 import { dispararMotor, enlaceWhatsapp } from "@/lib/videos/motor";
+import { avisarListo } from "@/lib/videos/whatsapp";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -404,6 +405,15 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ ok: true });
         }
         const f = (v.ficha ?? {}) as Ficha;
+        // Pedido por WhatsApp: la vista previa le llega sola por WhatsApp
+        if (v.wa_numero) {
+          const aviso = await avisarListo(v as { id: string; agente_id: string | null; wa_numero: string; ficha: unknown });
+          if (aviso.ok) {
+            await enviar(chatId, `Publicado ✅ ${codigoVideo(v.id)}. Ya le mandé la vista previa por WhatsApp.`);
+            return NextResponse.json({ ok: true });
+          }
+          await enviar(chatId, `No le pude mandar la vista previa por WhatsApp (${aviso.mensaje ?? "error"}). Mándasela tú:`);
+        }
         const nombre = (f.aviso_nombre || "").split(" ")[0];
         const enlace = enlaceAgente("https://kyrelocorp.com", v as { id: string; agente_id: string | null });
         const mensaje = `Hola${nombre ? ` ${nombre}` : ""}, tu video de ${tituloVideo(f)} ya está listo. Míralo aquí: ${enlace}`;

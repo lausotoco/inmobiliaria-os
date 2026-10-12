@@ -49,7 +49,9 @@ export async function POST(req: NextRequest) {
       `<b>Video listo para aprobar · ${titulo}</b>`,
       minutos ? `El motor lo hizo en ${minutos} min.` : "",
       notas.length ? `Lo que revisó y corrigió:\n${notas.map((n) => `· ${escaparHtml(n)}`).join("\n")}` : "",
-      "Míralo. Si está bien, toca «Aprobar»: queda publicado para el agente y te doy el mensaje de WhatsApp.",
+      video.wa_numero
+        ? "Míralo. Si está bien, toca «Aprobar»: queda publicado y le mando la vista previa por WhatsApp (lo pidió por ahí)."
+        : "Míralo. Si está bien, toca «Aprobar»: queda publicado para el agente y te doy el mensaje de WhatsApp.",
     ]
       .filter(Boolean)
       .join("\n\n"),

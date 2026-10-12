@@ -190,6 +190,8 @@ export async function reclamarBorradores(s: Visitante): Promise<string[]> {
  */
 export async function limpiarInvitados(admin: SupabaseClient) {
   const limite = new Date(Date.now() - HORAS_BORRADOR_INVITADO * 3600000).toISOString();
+  // Registro de mensajes de WhatsApp (solo sirve para no atender dos veces el mismo): 7 días
+  await admin.from("whatsapp_mensajes").delete().lt("creado_en", new Date(Date.now() - 7 * 86400000).toISOString());
   const { data: viejos } = await admin
     .from("videos_inmueble")
     .select("id")

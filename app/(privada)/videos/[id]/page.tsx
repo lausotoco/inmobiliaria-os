@@ -204,9 +204,11 @@ export default function PanelVideo({ params }: { params: { id: string } }) {
     setOcupado(true);
     setMensaje(null);
     try {
-      const r = await api<{ enlace?: string }>(`/api/videos/${id}/panel`, 'POST', cuerpo);
+      const r = await api<{ enlace?: string; whatsapp_enviado?: boolean }>(`/api/videos/${id}/panel`, 'POST', cuerpo);
       if (r.enlace) setEnlacePublicado(r.enlace);
-      if (exito) setMensaje({ tono: 'ok', texto: exito });
+      // Pedido por WhatsApp: la plataforma ya le mandó la vista previa
+      if (r.whatsapp_enviado) setMensaje({ tono: 'ok', texto: 'Vista previa publicada. Ya se la mandé al agente por WhatsApp.' });
+      else if (exito) setMensaje({ tono: 'ok', texto: exito });
       await cargar();
     } catch (e) {
       setMensaje({ tono: 'error', texto: (e as Error).message });

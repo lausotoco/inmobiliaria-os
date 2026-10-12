@@ -56,6 +56,8 @@ export async function updateSession(request: NextRequest) {
     path === "/nueva-clave" ||
     path === "/oportunidades" ||
     path.startsWith("/api/telegram") ||
+    // Webhook del WhatsApp de KYRELO (Meta lo firma; la ruta revisa la firma)
+    path.startsWith("/api/whatsapp") ||
     // Video por inmueble: cada ruta revisa la sesión y el dueño del video;
     // Wompi avisa los pagos sin sesión (con firma).
     path.startsWith("/api/videos") ||

@@ -132,8 +132,17 @@ export const MAX_FOTOS = 20;
 export const MAX_BYTES_FOTO = 10 * 1024 * 1024;
 export const esCasillaFoto = (casilla: string) => /^foto_(0[1-9]|1[0-9]|20)$/.test(casilla);
 export const casillaFoto = (n: number) => `foto_${String(n).padStart(2, "0")}`;
+// Pedidos por WhatsApp (12 oct 2026): el agente puede mandar varios videos seguidos.
+// El primero va en «recorrido» y los demás en video_02 … video_10, en el orden en que llegan.
+export const MAX_VIDEOS_WHATSAPP = 10;
+export const esCasillaVideoExtra = (casilla: string) => /^video_(0[2-9]|10)$/.test(casilla);
+export const casillaVideoExtra = (n: number) => `video_${String(n).padStart(2, "0")}`;
 export const nombreCasilla = (casilla: string) =>
-  esCasillaFoto(casilla) ? `Foto ${Number(casilla.slice(5))}` : CASILLAS[casilla]?.nombre ?? casilla;
+  esCasillaFoto(casilla)
+    ? `Foto ${Number(casilla.slice(5))}`
+    : esCasillaVideoExtra(casilla)
+      ? `Video ${Number(casilla.slice(6))}`
+      : CASILLAS[casilla]?.nombre ?? casilla;
 
 export function casillasDe(tipo?: TipoInmueble): string[] {
   return RECORRIDO[tipo ?? "apartamento"];
@@ -144,7 +153,7 @@ export function obligatoriasDe(tipo?: TipoInmueble): string[] {
 }
 
 export function esCasillaValida(casilla: string): boolean {
-  return Object.prototype.hasOwnProperty.call(CASILLAS, casilla) || esCasillaFoto(casilla);
+  return Object.prototype.hasOwnProperty.call(CASILLAS, casilla) || esCasillaFoto(casilla) || esCasillaVideoExtra(casilla);
 }
 
 // ── Estados que ve el agente ──

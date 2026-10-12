@@ -4,6 +4,7 @@
 //         textos · publicar · desbloquear_manual · liberar_tomas
 
 import { NextRequest } from "next/server";
+import { avisarListo } from "@/lib/videos/whatsapp";
 import {
   BUCKET_ENTREGAS,
   BUCKET_TOMAS,
@@ -204,7 +205,13 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         vista_previa_at: ahora,
       });
       if (!r.ok) return fallo(409, r.mensaje);
-      return sinCache({ ok: true, enlace: enlaceAgente(origenDe(req), { id: video.id, agente_id: video.agente_id }) });
+      // Pedido por WhatsApp: la vista previa le llega sola por WhatsApp
+      const whatsapp = video.wa_numero ? await avisarListo(r.video as { id: string; agente_id: string | null; wa_numero: string; ficha: unknown }) : null;
+      return sinCache({
+        ok: true,
+        enlace: enlaceAgente(origenDe(req), { id: video.id, agente_id: video.agente_id }),
+        whatsapp_enviado: !!whatsapp?.ok,
+      });
     }
 
     // Pago recibido por fuera de Wompi (Nequi, Bre-B, transferencia) o cortesía
