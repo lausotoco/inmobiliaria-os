@@ -9,7 +9,7 @@
 //  · el mensaje pide un video («VIDEO», «quiero hacer mi video»…),
 //  · la persona ya tiene un pedido abierto por WhatsApp, o
 //  · llega un video suelto (pregunta una vez si quiere que se lo editemos).
-// Todo lo demás lo sigue contestando Laura desde su celular.
+// Todo lo demás lo atiende el asistente de KYRELO (lib/asistente/whatsapp.ts, 21 oct 2026).
 //
 // Los archivos NO se bajan aquí (Netlify corta a los pocos segundos): la toma guarda el
 // identificador de Meta (ruta «wa/<id>») y el motor en GitHub lo baja y lo pasa a Supabase.
@@ -456,8 +456,12 @@ async function sumarPendientes(admin: SupabaseClient, numero: string, video: Rec
   }
 }
 
-/** Atiende un mensaje que llegó al WhatsApp de KYRELO. Nunca lanza error. */
-export async function atenderMensaje(admin: SupabaseClient, m: MensajeWa, nombrePerfil: string) {
+/**
+ * Atiende un mensaje que llegó al WhatsApp de KYRELO. Nunca lanza error.
+ * Devuelve "libre" cuando el mensaje no es un pedido de video: ahí lo atiende el asistente
+ * (lib/asistente/whatsapp.ts). Los mensajes repetidos no devuelven nada.
+ */
+export async function atenderMensaje(admin: SupabaseClient, m: MensajeWa, nombrePerfil: string): Promise<"libre" | void> {
   const numero = String(m.from ?? "").replace(/\D/g, "");
   if (!m.id || !numero) return;
   const archivo = archivoDe(m);
@@ -486,7 +490,8 @@ export async function atenderMensaje(admin: SupabaseClient, m: MensajeWa, nombre
         await responder(ctx, instrucciones(nombrePerfil));
         return await informar(ctx, video.id, "siempre");
       }
-      if (boton === "vid_no") return;
+      if (boton === "vid_no") return "libre";
+      if (!boton.startsWith("vid_")) return "libre";
     }
 
     // Texto
@@ -494,7 +499,7 @@ export async function atenderMensaje(admin: SupabaseClient, m: MensajeWa, nombre
       const texto = String(m.text?.body ?? "").trim();
       if (!texto) return;
       if (!video) {
-        if (!pideVideo(texto)) return; // no es un pedido: lo contesta Laura
+        if (!pideVideo(texto)) return "libre"; // no es un pedido: lo atiende el asistente
         video = await crearPedido(ctx);
         if (!video) return;
         await marcar(video.id);
@@ -521,15 +526,16 @@ export async function atenderMensaje(admin: SupabaseClient, m: MensajeWa, nombre
       if (video) {
         await marcar(video.id);
         await responder(ctx, "Por ahora no puedo usar notas de voz. Escríbeme la información del inmueble en un mensaje, por favor.");
+        return;
       }
-      return;
+      return "libre";
     }
 
     // Videos y fotos
     if (archivo) {
       if (!video) {
         // Video suelto sin pedido: pregunta una vez (en las últimas horas) si quiere que se lo editemos
-        if (archivo.clase !== "video") return;
+        if (archivo.clase !== "video") return "libre";
         const desde = new Date(Date.now() - HORAS_PENDIENTES * 3600000).toISOString();
         const { count } = await admin
           .from("whatsapp_mensajes")
@@ -579,7 +585,9 @@ export async function atenderMensaje(admin: SupabaseClient, m: MensajeWa, nombre
     if (video && m.type === "document") {
       await marcar(video.id);
       await responder(ctx, "Solo puedo usar videos y fotos. Si es información del inmueble, escríbela en un mensaje, por favor.");
+      return;
     }
+    if (!video) return "libre";
   } catch (e) {
     await avisarLaura(
       `<b>WhatsApp: no pude atender un mensaje</b>\nDe ${escaparHtml(numeroLocal(numero))} (${escaparHtml(m.type)}): ${escaparHtml(String((e as Error)?.message ?? e)).slice(0, 300)}\nRespóndele tú desde el celular.`

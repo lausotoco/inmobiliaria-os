@@ -4,6 +4,7 @@ import { cambiarVideo, enlaceAgente } from "@/lib/videos/servidor";
 import { codigoVideo, tituloVideo, type Ficha } from "@/lib/videos/config";
 import { dispararMotor, enlaceWhatsapp } from "@/lib/videos/motor";
 import { avisarListo } from "@/lib/videos/whatsapp";
+import { avisarPortafolio, retomarBot } from "@/lib/asistente/whatsapp";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -511,10 +512,20 @@ export async function POST(req: NextRequest) {
         }
         await db.from("matches").update({ estado: "aceptado" }).eq("id", matchId).select("id");
         await marcar("✅ En el portafolio");
+        // El comprador recibe el enlace de su portafolio por WhatsApp
+        const wa = ei ? { ok: false, mensaje: "ya estaba en el portafolio" } : await avisarPortafolio(db, clienteId, pf.token, 1);
         await enviar(
           chatId,
-          `En el portafolio de ${nombre} (${(count ?? 0) + (ei ? 0 : 1)} inmuebles): https://kyrelocorp.com/p/${pf.token}`
+          `En el portafolio de ${nombre} (${(count ?? 0) + (ei ? 0 : 1)} inmuebles): https://kyrelocorp.com/p/${pf.token}\n` +
+            (wa.ok ? "Ya le mandé el enlace por WhatsApp." : `No le mandé el enlace por WhatsApp (${wa.mensaje ?? "error"}).`)
         );
+        return NextResponse.json({ ok: true });
+      }
+
+      // Laura devuelve una conversación de WhatsApp al asistente
+      if (data.startsWith("wa_bot:")) {
+        const ok = await retomarBot(db, data.slice(7));
+        await enviar(chatId, ok ? "Listo, el asistente retoma esa conversación." : "No encontré esa conversación.");
         return NextResponse.json({ ok: true });
       }
 

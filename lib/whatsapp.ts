@@ -40,6 +40,23 @@ export function numeroInternacional(numero: string): string | null {
   return null;
 }
 
+/** Baja un archivo que llegó por WhatsApp (nota de voz, foto…) con su identificador de Meta. */
+export async function descargarMedia(id: string): Promise<{ datos: ArrayBuffer; mime: string } | null> {
+  const token = process.env.WHATSAPP_TOKEN;
+  if (!token || !id) return null;
+  try {
+    const r = await fetch(`${GRAPH}/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j?.url) return null;
+    const f = await fetch(j.url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!f.ok) return null;
+    return { datos: await f.arrayBuffer(), mime: String(j.mime_type ?? "") };
+  } catch {
+    return null;
+  }
+}
+
 export type Envio = { ok: boolean; codigo?: number; mensaje?: string };
 
 async function enviar(cuerpo: Record<string, unknown>): Promise<Envio> {

@@ -88,6 +88,25 @@ async function telegram(texto: string, teclado?: unknown) {
   });
 }
 
+/** Los requerimientos activos de la plataforma, para que el buscador sepa por quién buscar. */
+export async function GET(req: NextRequest) {
+  const llave = process.env.BUSCADOR_KEY;
+  if (!llave || req.headers.get("x-buscador-key") !== llave) {
+    return NextResponse.json({ mensaje: "No autorizado." }, { status: 401 });
+  }
+  const db = createAdminClient();
+  if (!db) return NextResponse.json({ mensaje: "Falta la llave de Supabase." }, { status: 500 });
+  const { data, error } = await db
+    .from("requerimientos")
+    .select(
+      "id, titulo, presupuesto_min, presupuesto_max, ciudad, zonas, barrio, area_min, habitaciones, banos, parqueaderos, tipo_inmueble, preferencias, financiacion, urgencia, observaciones, created_at, clientes(id, nombre, whatsapp, urgencia)"
+    )
+    .eq("estado", "activo")
+    .order("created_at", { ascending: false });
+  if (error) return NextResponse.json({ mensaje: error.message }, { status: 500 });
+  return NextResponse.json({ requerimientos: data ?? [] });
+}
+
 export async function POST(req: NextRequest) {
   const llave = process.env.BUSCADOR_KEY;
   if (!llave || req.headers.get("x-buscador-key") !== llave) {

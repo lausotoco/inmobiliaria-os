@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { firmaValida } from "@/lib/whatsapp";
 import { atenderMensaje, type MensajeWa } from "@/lib/videos/whatsapp";
+import { atenderPersona } from "@/lib/asistente/whatsapp";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -45,7 +46,10 @@ export async function POST(req: NextRequest) {
         (v.contacts ?? []).map((c: any) => [String(c?.wa_id ?? ""), String(c?.profile?.name ?? "")])
       );
       for (const m of (v.messages ?? []) as MensajeWa[]) {
-        await atenderMensaje(admin, m, nombres.get(String(m.from)) ?? "");
+        const nombre = nombres.get(String(m.from)) ?? "";
+        // Primero los pedidos de video; lo que no es un pedido lo atiende el asistente
+        const r = await atenderMensaje(admin, m, nombre);
+        if (r === "libre") await atenderPersona(admin, m, nombre);
       }
     }
   }
