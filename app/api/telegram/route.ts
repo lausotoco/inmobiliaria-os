@@ -426,6 +426,98 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
+      // Opciones del buscador de portales: «Al portafolio» la pone en el portafolio
+      // privado del comprador; «No» la descarta. Los botones del mensaje cambian para
+      // que se vea qué se decidió.
+      if (data.startsWith("opc_ok:") || data.startsWith("opc_no:")) {
+        const aprobar = data.startsWith("opc_ok:");
+        const matchId = data.slice(7);
+        const { data: m } = await db
+          .from("matches")
+          .select("id, estado, explicacion, propiedad_id, requerimiento_id, requerimientos(cliente_id, clientes(nombre))")
+          .eq("id", matchId)
+          .maybeSingle();
+        if (!m) {
+          await enviar(chatId, "No encontré esa opción.");
+          return NextResponse.json({ ok: true });
+        }
+        const marcar = async (texto: string) => {
+          const filas: { text: string; url?: string }[][] = cb.message?.reply_markup?.inline_keyboard ?? [];
+          await tg("editMessageReplyMarkup", {
+            chat_id: chatId,
+            message_id: cb.message?.message_id,
+            reply_markup: { inline_keyboard: [[{ text: texto, callback_data: "nada" }], ...filas.filter((f) => f.some((b) => b.url))] },
+          });
+        };
+        if (m.estado !== "sugerido") {
+          await marcar(m.estado === "aceptado" ? "✅ En el portafolio" : "✖ Descartada");
+          return NextResponse.json({ ok: true });
+        }
+        if (!aprobar) {
+          await db.from("matches").update({ estado: "descartado" }).eq("id", matchId).select("id");
+          await marcar("✖ Descartada");
+          return NextResponse.json({ ok: true });
+        }
+        const req = m.requerimientos as unknown as { cliente_id: string; clientes: { nombre: string } | { nombre: string }[] | null } | null;
+        const clienteId = req?.cliente_id;
+        if (!clienteId) {
+          await enviar(chatId, "Esa opción no tiene comprador.");
+          return NextResponse.json({ ok: true });
+        }
+        const cl = req?.clientes;
+        const nombre = (Array.isArray(cl) ? cl[0]?.nombre : cl?.nombre) ?? "el comprador";
+
+        // El portafolio del comprador: el más reciente, o uno nuevo
+        let { data: pf } = await db
+          .from("portafolios")
+          .select("id, token")
+          .eq("cliente_id", clienteId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!pf) {
+          const { data: nuevo } = await db
+            .from("portafolios")
+            .insert({
+              organization_id: ORG_ID,
+              cliente_id: clienteId,
+              titulo: "Tu portafolio KYRELO",
+              mensaje_personal: "Estas son las opciones que encajan con lo que buscas. Marca las que te interesan y las conseguimos por ti.",
+              estado: "enviado",
+              fecha_envio: new Date().toISOString(),
+            })
+            .select("id, token")
+            .single();
+          pf = nuevo;
+        }
+        if (!pf) {
+          await enviar(chatId, "No pude crear el portafolio.");
+          return NextResponse.json({ ok: true });
+        }
+        const { count } = await db
+          .from("portafolio_items")
+          .select("id", { count: "exact", head: true })
+          .eq("portafolio_id", pf.id);
+        const { error: ei } = await db.from("portafolio_items").insert({
+          organization_id: ORG_ID,
+          portafolio_id: pf.id,
+          propiedad_id: m.propiedad_id,
+          orden: count ?? 0,
+          nota: m.explicacion,
+        });
+        if (ei && !/duplicate|unique/i.test(ei.message)) {
+          await enviar(chatId, `No la pude agregar: ${ei.message}`);
+          return NextResponse.json({ ok: true });
+        }
+        await db.from("matches").update({ estado: "aceptado" }).eq("id", matchId).select("id");
+        await marcar("✅ En el portafolio");
+        await enviar(
+          chatId,
+          `En el portafolio de ${nombre} (${(count ?? 0) + (ei ? 0 : 1)} inmuebles): https://kyrelocorp.com/p/${pf.token}`
+        );
+        return NextResponse.json({ ok: true });
+      }
+
       if (data.startsWith("descartar:")) {
         const reqId = data.split(":")[1];
         const { data: r } = await db
