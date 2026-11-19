@@ -58,6 +58,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/api/telegram") ||
     // Webhook del WhatsApp de KYRELO (Meta lo firma; la ruta revisa la firma)
     path.startsWith("/api/whatsapp") ||
+    // Buscador de portales (lo llama el Mac de Laura sin sesión; la ruta exige BUSCADOR_KEY)
+    path.startsWith("/api/buscador") ||
     // Video por inmueble: cada ruta revisa la sesión y el dueño del video;
     // Wompi avisa los pagos sin sesión (con firma).
     path.startsWith("/api/videos") ||
